@@ -1,3 +1,5 @@
+// Licensed under the Apache-2.0 license.
+
 //! Helpers shared by the integration tests.
 
 use std::collections::BTreeMap;

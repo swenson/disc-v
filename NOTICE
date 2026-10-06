@@ -1,3 +1,15 @@
+disc-v
+Licensed under the Apache License, Version 2.0; see LICENSE.
+
+disc-v is based on the RISC-V disassembler in the Caliptra MCU emulator
+(https://github.com/chipsalliance/caliptra-mcu-sw, emulator/app/src/dis.rs),
+which is licensed under the Apache License, Version 2.0.
+
+That code, and therefore disc-v, is derived from riscv-disassembler
+(https://github.com/michaeljclark/riscv-disassembler), which was distributed
+under the following license:
+
+----------------------------------------------------------------------------
 Copyright (c) 2016-2017 Michael Clark <michaeljclark@mac.com>
 Copyright (c) 2017-2018 SiFive, Inc.
 
@@ -18,3 +30,10 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+----------------------------------------------------------------------------
+
+The test data in tests/data/riscv-opcodes.txt and the CSR names in
+src/csr.rs are derived from riscv-opcodes
+(https://github.com/riscv/riscv-opcodes), Copyright (c) 2022 RISC-V
+International, under the BSD 3-Clause license in
+tests/data/LICENSE-riscv-opcodes.

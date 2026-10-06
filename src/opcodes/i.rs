@@ -1,3 +1,8 @@
+// Licensed under the Apache-2.0 license.
+//
+// Derived from riscv-disassembler, Copyright (c) 2016-2017 Michael Clark
+// and Copyright (c) 2017-2018 SiFive, Inc., under the MIT license; see NOTICE.
+
 //! RV32I, RV64I and RV128I base integer instructions, including Zifencei.
 
 use super::Constraint::*;

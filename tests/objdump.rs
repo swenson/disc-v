@@ -1,3 +1,5 @@
+// Licensed under the Apache-2.0 license.
+
 //! Compares disc-v's output with GNU objdump.
 //!
 //! The encodings tested are every compressed encoding, random 32-bit

@@ -1,3 +1,8 @@
+// Licensed under the Apache-2.0 license.
+//
+// Derived from riscv-disassembler, Copyright (c) 2016-2017 Michael Clark
+// and Copyright (c) 2017-2018 SiFive, Inc., under the MIT license; see NOTICE.
+
 //! The decoded instruction type.
 
 use crate::opcodes::c::C_UNIMP;
@@ -9,8 +14,8 @@ use crate::Isa;
 /// Create one with [`decode`](crate::decode),
 /// [`decode_bytes`](crate::decode_bytes), or by iterating over
 /// [`disassemble`](crate::disassemble). Its [`Display`](core::fmt::Display)
-/// output matches GNU objdump's, such as `addi gp,gp,256` or
-/// `beqz a0,0x1040`.
+/// output follows GNU objdump's for a raw binary, such as `addi gp,gp,256`
+/// or `beqz a0,0x1040`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Instruction {
     pub(crate) isa: Isa,

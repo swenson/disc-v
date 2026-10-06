@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Licensed under the Apache-2.0 license.
 """Generates tests/data/riscv-opcodes.txt from a checkout of
 https://github.com/riscv/riscv-opcodes.
 

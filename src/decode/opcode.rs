@@ -1,3 +1,8 @@
+// Licensed under the Apache-2.0 license.
+//
+// Derived from riscv-disassembler, Copyright (c) 2016-2017 Michael Clark
+// and Copyright (c) 2017-2018 SiFive, Inc., under the MIT license; see NOTICE.
+
 //! Maps instruction encodings to opcode table entries.
 
 use crate::opcodes::{a, b, c, d, f, i, m, q, system, Opcode};

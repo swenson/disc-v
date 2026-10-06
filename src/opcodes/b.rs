@@ -1,3 +1,8 @@
+// Licensed under the Apache-2.0 license.
+//
+// Derived from riscv-disassembler, Copyright (c) 2016-2017 Michael Clark
+// and Copyright (c) 2017-2018 SiFive, Inc., under the MIT license; see NOTICE.
+
 //! Bit-manipulation extensions: Zba, Zbb, Zbc and Zbs.
 
 use super::Constraint::*;

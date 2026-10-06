@@ -1,3 +1,5 @@
+// Licensed under the Apache-2.0 license.
+
 //! Decoding and formatting of specific instructions, and the public API.
 
 use disc_v::{decode, decode_bytes, disassemble, Isa};

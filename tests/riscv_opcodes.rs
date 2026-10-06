@@ -1,3 +1,5 @@
+// Licensed under the Apache-2.0 license.
+
 //! Checks the decoder against the official encodings in
 //! [riscv-opcodes](https://github.com/riscv/riscv-opcodes), as extracted into
 //! `tests/data/riscv-opcodes.txt` by `scripts/gen-riscv-opcodes.py`.

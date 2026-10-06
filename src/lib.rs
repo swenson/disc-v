@@ -1,8 +1,14 @@
+// Licensed under the Apache-2.0 license.
+//
+// Derived from riscv-disassembler, Copyright (c) 2016-2017 Michael Clark
+// and Copyright (c) 2017-2018 SiFive, Inc., under the MIT license; see NOTICE.
+
 //! A RISC-V disassembler.
 //!
 //! Supports RV32, RV64 and RV128 with the I, M, A, F, D, Q and C extensions,
 //! Zicsr, Zifencei, and the bit-manipulation extensions Zba, Zbb, Zbc and
-//! Zbs. Output matches GNU objdump's.
+//! Zbs. The text follows GNU objdump's for a raw binary
+//! (`objdump -D -b binary`), so branch targets are written as `0x1008`.
 //!
 //! ```
 //! use disc_v::{disassemble, Isa};
