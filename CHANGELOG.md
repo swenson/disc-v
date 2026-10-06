@@ -18,6 +18,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   instructions.
 - Zcb (`c.lbu`, `c.lhu`, `c.lh`, `c.sb`, `c.sh`, `c.zext.*`, `c.sext.*`,
   `c.not`, `c.mul`).
+- Zfh and Zfhmin (half-precision floating point).
 
 ### Changed
 

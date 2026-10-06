@@ -7,7 +7,9 @@
 //! Maps instruction encodings to opcode table entries.
 
 use crate::Isa;
-use crate::opcodes::{Opcode, a, b, c, d, f, i, m, q, system, zawrs, zcb, zicbo, zicond, zimop};
+use crate::opcodes::{
+    Opcode, a, b, c, d, f, i, m, q, system, zawrs, zcb, zfh, zicbo, zicond, zimop,
+};
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 13) & 7 {
@@ -165,6 +167,7 @@ fn load(inst: u64) -> Option<&'static Opcode> {
 
 fn load_fp(inst: u64) -> Option<&'static Opcode> {
     match (inst >> 12) & 7 {
+        1 => Some(&zfh::FLH),
         2 => Some(&f::FLW),
         3 => Some(&d::FLD),
         4 => Some(&q::FLQ),
@@ -299,6 +302,7 @@ fn store(inst: u64) -> Option<&'static Opcode> {
 
 fn store_fp(inst: u64) -> Option<&'static Opcode> {
     match (inst >> 12) & 7 {
+        1 => Some(&zfh::FSH),
         2 => Some(&f::FSW),
         3 => Some(&d::FSD),
         4 => Some(&q::FSQ),
@@ -438,6 +442,7 @@ fn madd(inst: u64) -> Option<&'static Opcode> {
     match (inst >> 25) & 3 {
         0 => Some(&f::FMADD_S),
         1 => Some(&d::FMADD_D),
+        2 => Some(&zfh::FMADD_H),
         3 => Some(&q::FMADD_Q),
         _ => None,
     }
@@ -447,6 +452,7 @@ fn msub(inst: u64) -> Option<&'static Opcode> {
     match (inst >> 25) & 3 {
         0 => Some(&f::FMSUB_S),
         1 => Some(&d::FMSUB_D),
+        2 => Some(&zfh::FMSUB_H),
         3 => Some(&q::FMSUB_Q),
         _ => None,
     }
@@ -456,6 +462,7 @@ fn nmsub(inst: u64) -> Option<&'static Opcode> {
     match (inst >> 25) & 3 {
         0 => Some(&f::FNMSUB_S),
         1 => Some(&d::FNMSUB_D),
+        2 => Some(&zfh::FNMSUB_H),
         3 => Some(&q::FNMSUB_Q),
         _ => None,
     }
@@ -465,6 +472,7 @@ fn nmadd(inst: u64) -> Option<&'static Opcode> {
     match (inst >> 25) & 3 {
         0 => Some(&f::FNMADD_S),
         1 => Some(&d::FNMADD_D),
+        2 => Some(&zfh::FNMADD_H),
         3 => Some(&q::FNMADD_Q),
         _ => None,
     }
@@ -473,6 +481,36 @@ fn nmadd(inst: u64) -> Option<&'static Opcode> {
 fn op_fp(inst: u64) -> Option<&'static Opcode> {
     match ((inst >> 25) & 0x7f, (inst >> 20) & 0x1f, (inst >> 12) & 7) {
         (0, _, _) => Some(&f::FADD_S),
+        (2, _, _) => Some(&zfh::FADD_H),
+        (6, _, _) => Some(&zfh::FSUB_H),
+        (10, _, _) => Some(&zfh::FMUL_H),
+        (14, _, _) => Some(&zfh::FDIV_H),
+        (18, _, 0) => Some(&zfh::FSGNJ_H),
+        (18, _, 1) => Some(&zfh::FSGNJN_H),
+        (18, _, 2) => Some(&zfh::FSGNJX_H),
+        (22, _, 0) => Some(&zfh::FMIN_H),
+        (22, _, 1) => Some(&zfh::FMAX_H),
+        (32, 2, _) => Some(&zfh::FCVT_S_H),
+        (33, 2, _) => Some(&zfh::FCVT_D_H),
+        (35, 2, _) => Some(&zfh::FCVT_Q_H),
+        (34, 0, _) => Some(&zfh::FCVT_H_S),
+        (34, 1, _) => Some(&zfh::FCVT_H_D),
+        (34, 3, _) => Some(&zfh::FCVT_H_Q),
+        (46, 0, _) => Some(&zfh::FSQRT_H),
+        (82, _, 0) => Some(&zfh::FLE_H),
+        (82, _, 1) => Some(&zfh::FLT_H),
+        (82, _, 2) => Some(&zfh::FEQ_H),
+        (98, 0, _) => Some(&zfh::FCVT_W_H),
+        (98, 1, _) => Some(&zfh::FCVT_WU_H),
+        (98, 2, _) => Some(&zfh::FCVT_L_H),
+        (98, 3, _) => Some(&zfh::FCVT_LU_H),
+        (106, 0, _) => Some(&zfh::FCVT_H_W),
+        (106, 1, _) => Some(&zfh::FCVT_H_WU),
+        (106, 2, _) => Some(&zfh::FCVT_H_L),
+        (106, 3, _) => Some(&zfh::FCVT_H_LU),
+        (114, 0, 0) => Some(&zfh::FMV_X_H),
+        (114, 0, 1) => Some(&zfh::FCLASS_H),
+        (122, 0, 0) => Some(&zfh::FMV_H_X),
         (1, _, _) => Some(&d::FADD_D),
         (3, _, _) => Some(&q::FADD_Q),
         (4, _, _) => Some(&f::FSUB_S),

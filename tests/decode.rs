@@ -172,6 +172,15 @@ fn cache_management_and_hints() {
 }
 
 #[test]
+fn half_precision() {
+    check(Isa::Rv64, 0x00051507, "flh fa0,0(a0)");
+    check(Isa::Rv64, 0x04b57553, "fadd.h fa0,fa0,fa1");
+    check(Isa::Rv64, 0x24b58553, "fmv.h fa0,fa1");
+    check(Isa::Rv64, 0x40258553, "fcvt.s.h fa0,fa1");
+    check(Isa::Rv64, 0xe4058553, "fmv.x.h a0,fa1");
+}
+
+#[test]
 fn zcb() {
     check(Isa::Rv64, 0x85a8, "lhu a0,2(a1)");
     check(Isa::Rv64, 0x8da8, "sh a0,2(a1)");

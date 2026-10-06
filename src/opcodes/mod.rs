@@ -18,6 +18,7 @@ pub(crate) mod q;
 pub(crate) mod system;
 pub(crate) mod zawrs;
 pub(crate) mod zcb;
+pub(crate) mod zfh;
 pub(crate) mod zicbo;
 pub(crate) mod zicond;
 pub(crate) mod zimop;
