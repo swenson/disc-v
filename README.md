@@ -51,6 +51,7 @@ ISA specification disagree; see [Testing](#testing).
 - Zawrs
 - Zicbom, Zicboz and Zicbop; Zihintntl and Zihintpause
 - Zimop and Zcmop, with the Zicfiss and Zicfilp instructions
+- Zcb
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`
 
 48- and 64-bit encodings are recognized (so disassembly stays in sync) but

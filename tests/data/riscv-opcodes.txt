@@ -436,3 +436,16 @@
 32,64 c.sspush.x1 c.mop.N 6081 ffff - -
 32,64 c.sspopchk.x5 c.mop.N 6281 ffff - -
 32,64 lpad auipc 17 fff - -
+32,64 c.lbu - 8000 fc03 - -
+32,64 c.lhu - 8400 fc43 - -
+32,64 c.lh - 8440 fc43 - -
+32,64 c.sb - 8800 fc03 - -
+32,64 c.sh - 8c00 fc43 - -
+32,64 c.zext.b - 9c61 fc7f - -
+32,64 c.sext.b - 9c65 fc7f - -
+32,64 c.zext.h - 9c69 fc7f - -
+32,64 c.sext.h - 9c6d fc7f - -
+32,64 c.not - 9c75 fc7f - -
+32,64 c.mul - 9c41 fc63 - -
+64 c.zext.w - 9c71 fc7f - -
+64 c.sext.w c.addiw 2001 f07f f80 -

@@ -16,6 +16,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Zimop and Zcmop (`mop.r.N`, `mop.rr.N`, `c.mop.N`), with the Zicfiss
   (`sspush`, `sspopchk`, `ssrdp`, `ssamoswap.w`/`.d`) and Zicfilp (`lpad`)
   instructions.
+- Zcb (`c.lbu`, `c.lhu`, `c.lh`, `c.sb`, `c.sh`, `c.zext.*`, `c.sext.*`,
+  `c.not`, `c.mul`).
 
 ### Changed
 

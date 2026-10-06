@@ -172,6 +172,20 @@ fn cache_management_and_hints() {
 }
 
 #[test]
+fn zcb() {
+    check(Isa::Rv64, 0x85a8, "lhu a0,2(a1)");
+    check(Isa::Rv64, 0x8da8, "sh a0,2(a1)");
+    check(Isa::Rv64, 0x9d61, "zext.b a0,a0");
+    check(Isa::Rv64, 0x9d71, "zext.w a0,a0");
+    check(Isa::Rv32, 0x9d71, ".insn 2, 0x9d71"); // c.zext.w is RV64-only
+    check(Isa::Rv64, 0x9d4d, "mul a0,a0,a1");
+    assert_eq!(
+        decode(Isa::Rv64, 0, 0x9d75).without_aliases().to_string(),
+        "c.not a0"
+    );
+}
+
+#[test]
 fn may_be_operations() {
     check(Isa::Rv64, 0x81c5c573, "mop.r.0 a0,a1");
     check(Isa::Rv64, 0x82c5c573, "mop.rr.0 a0,a1,a2");

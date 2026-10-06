@@ -164,6 +164,13 @@ fn operand_cimmq(inst: u64) -> u32 {
     (((inst << 51 >> 62) << 4) | ((inst << 53 >> 63) << 8) | ((inst << 57 >> 62) << 6)) as u32
 }
 
+/// The offset of a Zcb load or store: bit 5 is offset bit 1, and for bytes
+/// bit 6 is offset bit 0.
+fn operand_czcb(inst: u64, halfword: bool) -> i32 {
+    let low = if halfword { 0 } else { (inst >> 6) & 1 };
+    ((inst >> 5 & 1) << 1 | low) as i32
+}
+
 /// Extracts the operands of `inst` into `ins` according to the layout given by `codec`.
 pub(super) fn extract(ins: &mut Instruction, codec: Codec) {
     let inst = ins.inst;
@@ -381,6 +388,24 @@ pub(super) fn extract(ins: &mut Instruction, codec: Codec) {
             ins.rs1 = (operand_crs1q(inst)).wrapping_add(8) as u8;
             ins.rs2 = reg::ZERO;
             ins.imm = operand_cimmq(inst) as i32;
+        }
+        Codec::ClB | Codec::ClH => {
+            ins.rd = (operand_crdq(inst)).wrapping_add(8) as u8;
+            ins.rs1 = (operand_crs1q(inst)).wrapping_add(8) as u8;
+            ins.rs2 = reg::ZERO;
+            ins.imm = operand_czcb(inst, codec == Codec::ClH);
+        }
+        Codec::CsB | Codec::CsH => {
+            ins.rd = reg::ZERO;
+            ins.rs1 = (operand_crs1q(inst)).wrapping_add(8) as u8;
+            ins.rs2 = (operand_crs2q(inst)).wrapping_add(8) as u8;
+            ins.imm = operand_czcb(inst, codec == Codec::CsH);
+        }
+        Codec::CuRd => {
+            ins.rs1 = (operand_crs1rdq(inst)).wrapping_add(8) as u8;
+            ins.rd = ins.rs1;
+            ins.rs2 = reg::ZERO;
+            ins.imm = 0;
         }
         Codec::Cr => {
             ins.rs1 = operand_crs1rd(inst) as u8;

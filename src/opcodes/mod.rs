@@ -17,6 +17,7 @@ pub(crate) mod pseudo;
 pub(crate) mod q;
 pub(crate) mod system;
 pub(crate) mod zawrs;
+pub(crate) mod zcb;
 pub(crate) mod zicbo;
 pub(crate) mod zicond;
 pub(crate) mod zimop;
@@ -45,6 +46,16 @@ pub(crate) enum Codec {
     ClLq,
     ClLd,
     ClLw,
+    /// Zcb byte load: rd', rs1' and a 2-bit unsigned offset.
+    ClB,
+    /// Zcb halfword load: rd', rs1' and a 2-byte-aligned 2-bit offset.
+    ClH,
+    /// Zcb byte store: rs2', rs1' and a 2-bit unsigned offset.
+    CsB,
+    /// Zcb halfword store: rs2', rs1' and a 2-byte-aligned 2-bit offset.
+    CsH,
+    /// Zcb unary operation on rd' (which is also rs1').
+    CuRd,
     CjJal,
     Cj,
     Ciw4spn,

@@ -7,7 +7,7 @@
 //! Maps instruction encodings to opcode table entries.
 
 use crate::Isa;
-use crate::opcodes::{Opcode, a, b, c, d, f, i, m, q, system, zawrs, zicbo, zicond, zimop};
+use crate::opcodes::{Opcode, a, b, c, d, f, i, m, q, system, zawrs, zcb, zicbo, zicond, zimop};
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 13) & 7 {
@@ -24,7 +24,14 @@ fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
         } else {
             &c::C_LD
         }),
-        4 => None,
+        4 => match ((inst >> 10) & 7, (inst >> 6) & 1) {
+            (0, _) => Some(&zcb::C_LBU),
+            (1, 0) => Some(&zcb::C_LHU),
+            (1, _) => Some(&zcb::C_LH),
+            (2, _) => Some(&zcb::C_SB),
+            (3, 0) => Some(&zcb::C_SH),
+            _ => None,
+        },
         5 => Some(if isa == Isa::Rv128 {
             &c::C_SQ
         } else {
@@ -70,6 +77,16 @@ fn compressed_1(isa: Isa, inst: u64) -> Option<&'static Opcode> {
                 3 => Some(&c::C_AND),
                 4 => Some(&c::C_SUBW),
                 5 => Some(&c::C_ADDW),
+                6 => Some(&zcb::C_MUL),
+                7 => match (inst >> 2) & 7 {
+                    0 => Some(&zcb::C_ZEXT_B),
+                    1 => Some(&zcb::C_SEXT_B),
+                    2 => Some(&zcb::C_ZEXT_H),
+                    3 => Some(&zcb::C_SEXT_H),
+                    4 => Some(&zcb::C_ZEXT_W),
+                    5 => Some(&zcb::C_NOT),
+                    _ => None,
+                },
                 _ => None,
             },
             _ => unreachable!(),

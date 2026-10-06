@@ -15,6 +15,7 @@
 //! - Zawrs
 //! - Zicbom, Zicboz and Zicbop; Zihintntl and Zihintpause
 //! - Zimop and Zcmop, with the Zicfiss and Zicfilp instructions
+//! - Zcb
 //!
 //! The text follows GNU objdump's for a raw binary (`objdump -D -b binary`),
 //! so branch targets are written as `0x1008`.
