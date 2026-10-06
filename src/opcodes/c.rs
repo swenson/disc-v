@@ -3,11 +3,13 @@
 //! Each compressed instruction lists the instruction it expands to for each
 //! base ISA; `None` means the encoding is not valid for that ISA.
 
-use super::{d, f, fmt, i, system, Codec, Opcode};
+use super::Constraint::*;
+use super::{d, f, fmt, i, pseudo, system, Codec, Opcode, Pseudo};
+use crate::reg;
 
 pub(crate) static C_ADDI4SPN: Opcode = Opcode {
     decompress: [Some(&i::ADDI), Some(&i::ADDI), Some(&i::ADDI)],
-    check_imm_nz: true,
+    illegal_if: &[ImmEq(0)],
     ..Opcode::new("c.addi4spn", Codec::Ciw4spn, fmt::RD_RS1_IMM)
 };
 pub(crate) static C_FLD: Opcode = Opcode {
@@ -34,6 +36,12 @@ pub(crate) static C_FSW: Opcode = Opcode {
     decompress: [Some(&f::FSW), None, None],
     ..Opcode::new("c.fsw", Codec::CsSw, fmt::FRS2_OFFSET_RS1)
 };
+/// `c.nop` with a nonzero immediate, which is a HINT.
+pub(crate) static C_NOP_HINT: Opcode = Opcode::new("c.nop", Codec::Ci, fmt::IMM);
+pub(crate) static C_UNIMP: Opcode = Opcode {
+    pseudo: &[Pseudo::new(&pseudo::UNIMP, &[])],
+    ..Opcode::new("c.unimp", Codec::None, fmt::NONE)
+};
 pub(crate) static C_NOP: Opcode = Opcode {
     decompress: [Some(&i::ADDI), Some(&i::ADDI), Some(&i::ADDI)],
     ..Opcode::new("c.nop", Codec::CiNone, fmt::NONE)
@@ -48,31 +56,32 @@ pub(crate) static C_JAL: Opcode = Opcode {
 };
 pub(crate) static C_LI: Opcode = Opcode {
     decompress: [Some(&i::ADDI), Some(&i::ADDI), Some(&i::ADDI)],
-    ..Opcode::new("c.li", Codec::CiLi, fmt::RD_RS1_IMM)
+    hint_if: &[RdEq(reg::ZERO)],
+    ..Opcode::new("c.li", Codec::CiLi, fmt::RD_IMM)
 };
 pub(crate) static C_ADDI16SP: Opcode = Opcode {
     decompress: [Some(&i::ADDI), Some(&i::ADDI), Some(&i::ADDI)],
-    check_imm_nz: true,
+    illegal_if: &[ImmEq(0)],
     ..Opcode::new("c.addi16sp", Codec::Ci16sp, fmt::RD_RS1_IMM)
 };
 pub(crate) static C_LUI: Opcode = Opcode {
     decompress: [Some(&i::LUI), Some(&i::LUI), Some(&i::LUI)],
-    check_imm_nz: true,
-    ..Opcode::new("c.lui", Codec::CiLui, fmt::RD_IMM)
+    illegal_if: &[ImmEq(0)],
+    hint_if: &[RdEq(reg::ZERO)],
+    ..Opcode::new("c.lui", Codec::CiLui, fmt::RD_UIMM)
 };
 pub(crate) static C_SRLI: Opcode = Opcode {
     decompress: [Some(&i::SRLI), Some(&i::SRLI), Some(&i::SRLI)],
-    check_imm_nz: true,
-    ..Opcode::new("c.srli", Codec::CbSh6, fmt::RD_RS1_IMM)
+    hint_if: &[ImmEq(0)],
+    ..Opcode::new("c.srli", Codec::CbSh6, fmt::RD_SHAMT)
 };
 pub(crate) static C_SRAI: Opcode = Opcode {
     decompress: [Some(&i::SRAI), Some(&i::SRAI), Some(&i::SRAI)],
-    check_imm_nz: true,
-    ..Opcode::new("c.srai", Codec::CbSh6, fmt::RD_RS1_IMM)
+    hint_if: &[ImmEq(0)],
+    ..Opcode::new("c.srai", Codec::CbSh6, fmt::RD_SHAMT)
 };
 pub(crate) static C_ANDI: Opcode = Opcode {
     decompress: [Some(&i::ANDI), Some(&i::ANDI), Some(&i::ANDI)],
-    check_imm_nz: true,
     ..Opcode::new("c.andi", Codec::CbImm, fmt::RD_RS1_IMM)
 };
 pub(crate) static C_SUB: Opcode = Opcode {
@@ -113,8 +122,8 @@ pub(crate) static C_BNEZ: Opcode = Opcode {
 };
 pub(crate) static C_SLLI: Opcode = Opcode {
     decompress: [Some(&i::SLLI), Some(&i::SLLI), Some(&i::SLLI)],
-    check_imm_nz: true,
-    ..Opcode::new("c.slli", Codec::CiSh6, fmt::RD_RS1_IMM)
+    hint_if: &[RdEq(reg::ZERO), ImmEq(0)],
+    ..Opcode::new("c.slli", Codec::CiSh6, fmt::RD_SHAMT)
 };
 pub(crate) static C_FLDSP: Opcode = Opcode {
     decompress: [Some(&d::FLD), Some(&d::FLD), Some(&d::FLD)],
@@ -122,6 +131,7 @@ pub(crate) static C_FLDSP: Opcode = Opcode {
 };
 pub(crate) static C_LWSP: Opcode = Opcode {
     decompress: [Some(&i::LW), Some(&i::LW), Some(&i::LW)],
+    illegal_if: &[RdEq(reg::ZERO)],
     ..Opcode::new("c.lwsp", Codec::CiLwsp, fmt::RD_OFFSET_RS1)
 };
 pub(crate) static C_FLWSP: Opcode = Opcode {
@@ -130,11 +140,13 @@ pub(crate) static C_FLWSP: Opcode = Opcode {
 };
 pub(crate) static C_JR: Opcode = Opcode {
     decompress: [Some(&i::JALR), Some(&i::JALR), Some(&i::JALR)],
-    ..Opcode::new("c.jr", Codec::CrJr, fmt::RD_RS1_OFFSET)
+    illegal_if: &[Rs1Eq(reg::ZERO)],
+    ..Opcode::new("c.jr", Codec::CrJr, fmt::RS1)
 };
 pub(crate) static C_MV: Opcode = Opcode {
     decompress: [Some(&i::ADDI), Some(&i::ADDI), Some(&i::ADDI)],
-    ..Opcode::new("c.mv", Codec::CrMv, fmt::RD_RS1_RS2)
+    hint_if: &[RdEq(reg::ZERO)],
+    ..Opcode::new("c.mv", Codec::CrMv, fmt::RD_RS1)
 };
 pub(crate) static C_EBREAK: Opcode = Opcode {
     decompress: [
@@ -146,11 +158,12 @@ pub(crate) static C_EBREAK: Opcode = Opcode {
 };
 pub(crate) static C_JALR: Opcode = Opcode {
     decompress: [Some(&i::JALR), Some(&i::JALR), Some(&i::JALR)],
-    ..Opcode::new("c.jalr", Codec::CrJalr, fmt::RD_RS1_OFFSET)
+    ..Opcode::new("c.jalr", Codec::CrJalr, fmt::RS1)
 };
 pub(crate) static C_ADD: Opcode = Opcode {
     decompress: [Some(&i::ADD), Some(&i::ADD), Some(&i::ADD)],
-    ..Opcode::new("c.add", Codec::Cr, fmt::RD_RS1_RS2)
+    hint_if: &[RdEq(reg::ZERO)],
+    ..Opcode::new("c.add", Codec::Cr, fmt::RD_RS2)
 };
 pub(crate) static C_FSDSP: Opcode = Opcode {
     decompress: [Some(&d::FSD), Some(&d::FSD), Some(&d::FSD)],
@@ -174,10 +187,12 @@ pub(crate) static C_SD: Opcode = Opcode {
 };
 pub(crate) static C_ADDIW: Opcode = Opcode {
     decompress: [None, Some(&i::ADDIW), Some(&i::ADDIW)],
+    illegal_if: &[RdEq(reg::ZERO)],
     ..Opcode::new("c.addiw", Codec::Ci, fmt::RD_RS1_IMM)
 };
 pub(crate) static C_LDSP: Opcode = Opcode {
     decompress: [None, Some(&i::LD), Some(&i::LD)],
+    illegal_if: &[RdEq(reg::ZERO)],
     ..Opcode::new("c.ldsp", Codec::CiLdsp, fmt::RD_OFFSET_RS1)
 };
 pub(crate) static C_SDSP: Opcode = Opcode {
@@ -194,6 +209,7 @@ pub(crate) static C_SQ: Opcode = Opcode {
 };
 pub(crate) static C_LQSP: Opcode = Opcode {
     decompress: [None, None, Some(&i::LQ)],
+    illegal_if: &[RdEq(reg::ZERO)],
     ..Opcode::new("c.lqsp", Codec::CiLqsp, fmt::RD_OFFSET_RS1)
 };
 pub(crate) static C_SQSP: Opcode = Opcode {

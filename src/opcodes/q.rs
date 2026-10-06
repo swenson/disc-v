@@ -16,44 +16,36 @@ pub(crate) static FSUB_Q: Opcode = Opcode::new("fsub.q", Codec::RM, fmt::RM_FRD_
 pub(crate) static FMUL_Q: Opcode = Opcode::new("fmul.q", Codec::RM, fmt::RM_FRD_FRS1_FRS2);
 pub(crate) static FDIV_Q: Opcode = Opcode::new("fdiv.q", Codec::RM, fmt::RM_FRD_FRS1_FRS2);
 pub(crate) static FSGNJ_Q: Opcode = Opcode {
-    pseudo: &[Pseudo {
-        op: &pseudo::FMV_Q,
-        when: &[Rs2EqRs1],
-    }],
+    pseudo: &[Pseudo::new(&pseudo::FMV_Q, &[Rs2EqRs1])],
     ..Opcode::new("fsgnj.q", Codec::R, fmt::FRD_FRS1_FRS2)
 };
 pub(crate) static FSGNJN_Q: Opcode = Opcode {
-    pseudo: &[Pseudo {
-        op: &pseudo::FNEG_Q,
-        when: &[Rs2EqRs1],
-    }],
+    pseudo: &[Pseudo::new(&pseudo::FNEG_Q, &[Rs2EqRs1])],
     ..Opcode::new("fsgnjn.q", Codec::R, fmt::FRD_FRS1_FRS2)
 };
 pub(crate) static FSGNJX_Q: Opcode = Opcode {
-    pseudo: &[Pseudo {
-        op: &pseudo::FABS_Q,
-        when: &[Rs2EqRs1],
-    }],
+    pseudo: &[Pseudo::new(&pseudo::FABS_Q, &[Rs2EqRs1])],
     ..Opcode::new("fsgnjx.q", Codec::R, fmt::FRD_FRS1_FRS2)
 };
 pub(crate) static FMIN_Q: Opcode = Opcode::new("fmin.q", Codec::R, fmt::FRD_FRS1_FRS2);
 pub(crate) static FMAX_Q: Opcode = Opcode::new("fmax.q", Codec::R, fmt::FRD_FRS1_FRS2);
 pub(crate) static FCVT_S_Q: Opcode = Opcode::new("fcvt.s.q", Codec::RM, fmt::RM_FRD_FRS1);
-pub(crate) static FCVT_Q_S: Opcode = Opcode::new("fcvt.q.s", Codec::RM, fmt::RM_FRD_FRS1);
+pub(crate) static FCVT_Q_S: Opcode = Opcode::new("fcvt.q.s", Codec::RM, fmt::WIDEN_FRD_FRS1);
 pub(crate) static FCVT_D_Q: Opcode = Opcode::new("fcvt.d.q", Codec::RM, fmt::RM_FRD_FRS1);
-pub(crate) static FCVT_Q_D: Opcode = Opcode::new("fcvt.q.d", Codec::RM, fmt::RM_FRD_FRS1);
+pub(crate) static FCVT_Q_D: Opcode = Opcode::new("fcvt.q.d", Codec::RM, fmt::WIDEN_FRD_FRS1);
 pub(crate) static FSQRT_Q: Opcode = Opcode::new("fsqrt.q", Codec::RM, fmt::RM_FRD_FRS1);
 pub(crate) static FLE_Q: Opcode = Opcode::new("fle.q", Codec::R, fmt::RD_FRS1_FRS2);
 pub(crate) static FLT_Q: Opcode = Opcode::new("flt.q", Codec::R, fmt::RD_FRS1_FRS2);
 pub(crate) static FEQ_Q: Opcode = Opcode::new("feq.q", Codec::R, fmt::RD_FRS1_FRS2);
 pub(crate) static FCVT_W_Q: Opcode = Opcode::new("fcvt.w.q", Codec::RM, fmt::RM_RD_FRS1);
 pub(crate) static FCVT_WU_Q: Opcode = Opcode::new("fcvt.wu.q", Codec::RM, fmt::RM_RD_FRS1);
-pub(crate) static FCVT_Q_W: Opcode = Opcode::new("fcvt.q.w", Codec::RM, fmt::RM_FRD_RS1);
-pub(crate) static FCVT_Q_WU: Opcode = Opcode::new("fcvt.q.wu", Codec::RM, fmt::RM_FRD_RS1);
+pub(crate) static FCVT_Q_W: Opcode = Opcode::new("fcvt.q.w", Codec::RM, fmt::WIDEN_FRD_RS1);
+pub(crate) static FCVT_Q_WU: Opcode = Opcode::new("fcvt.q.wu", Codec::RM, fmt::WIDEN_FRD_RS1);
 pub(crate) static FCLASS_Q: Opcode = Opcode::new("fclass.q", Codec::R, fmt::RD_FRS1);
-pub(crate) static FCVT_L_Q: Opcode = Opcode::new("fcvt.l.q", Codec::RM, fmt::RM_RD_FRS1);
-pub(crate) static FCVT_LU_Q: Opcode = Opcode::new("fcvt.lu.q", Codec::RM, fmt::RM_RD_FRS1);
-pub(crate) static FCVT_Q_L: Opcode = Opcode::new("fcvt.q.l", Codec::RM, fmt::RM_FRD_RS1);
-pub(crate) static FCVT_Q_LU: Opcode = Opcode::new("fcvt.q.lu", Codec::RM, fmt::RM_FRD_RS1);
-pub(crate) static FMV_X_Q: Opcode = Opcode::new("fmv.x.q", Codec::R, fmt::RD_FRS1);
-pub(crate) static FMV_Q_X: Opcode = Opcode::new("fmv.q.x", Codec::R, fmt::FRD_RS1);
+pub(crate) static FCVT_L_Q: Opcode = Opcode::new("fcvt.l.q", Codec::RM, fmt::RM_RD_FRS1).rv64();
+pub(crate) static FCVT_LU_Q: Opcode = Opcode::new("fcvt.lu.q", Codec::RM, fmt::RM_RD_FRS1).rv64();
+pub(crate) static FCVT_Q_L: Opcode = Opcode::new("fcvt.q.l", Codec::RM, fmt::WIDEN_FRD_RS1).rv64();
+pub(crate) static FCVT_Q_LU: Opcode =
+    Opcode::new("fcvt.q.lu", Codec::RM, fmt::WIDEN_FRD_RS1).rv64();
+pub(crate) static FMV_X_Q: Opcode = Opcode::new("fmv.x.q", Codec::R, fmt::RD_FRS1).rv128();
+pub(crate) static FMV_Q_X: Opcode = Opcode::new("fmv.q.x", Codec::R, fmt::FRD_RS1).rv128();

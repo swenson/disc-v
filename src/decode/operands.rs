@@ -248,16 +248,16 @@ pub(super) fn extract(ins: &mut Instruction, codec: Codec) {
             ins.rs1 = operand_rs1(inst) as u8;
             ins.rs2 = operand_rs2(inst) as u8;
             ins.imm = 0;
-            ins.aq = operand_aq(inst) as u8;
-            ins.rl = operand_rl(inst) as u8;
+            ins.aq = operand_aq(inst) != 0;
+            ins.rl = operand_rl(inst) != 0;
         }
         Codec::RL => {
             ins.rd = operand_rd(inst) as u8;
             ins.rs1 = operand_rs1(inst) as u8;
             ins.rs2 = reg::ZERO;
             ins.imm = 0;
-            ins.aq = operand_aq(inst) as u8;
-            ins.rl = operand_rl(inst) as u8;
+            ins.aq = operand_aq(inst) != 0;
+            ins.rl = operand_rl(inst) != 0;
         }
         Codec::RF => {
             ins.rd = reg::ZERO;

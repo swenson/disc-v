@@ -1,16 +1,27 @@
 //! The decoded instruction type.
 
+use crate::opcodes::c::C_UNIMP;
 use crate::opcodes::{Opcode, ILLEGAL};
+use crate::Isa;
 
 /// A decoded instruction.
 ///
-/// Create one with [`decode`](crate::decode) or by iterating over
-/// [`disassemble`](crate::disassemble).
+/// Create one with [`decode`](crate::decode),
+/// [`decode_bytes`](crate::decode_bytes), or by iterating over
+/// [`disassemble`](crate::disassemble). Its [`Display`](core::fmt::Display)
+/// output matches GNU objdump's, such as `addi gp,gp,256` or
+/// `beqz a0,0x1040`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Instruction {
+    pub(crate) isa: Isa,
     pub(crate) pc: u64,
     pub(crate) inst: u64,
+    pub(crate) len: u8,
+    /// The opcode to show: expanded if compressed, and aliased if a
+    /// pseudoinstruction applies.
     pub(crate) op: &'static Opcode,
+    /// The opcode as encoded, before expansion and aliasing.
+    pub(crate) decoded: &'static Opcode,
     pub(crate) rd: u8,
     pub(crate) rs1: u8,
     pub(crate) rs2: u8,
@@ -18,17 +29,26 @@ pub struct Instruction {
     pub(crate) rm: u8,
     pub(crate) pred: u8,
     pub(crate) succ: u8,
-    pub(crate) aq: u8,
-    pub(crate) rl: u8,
+    pub(crate) aq: bool,
+    pub(crate) rl: bool,
     pub(crate) imm: i32,
 }
 
 impl Instruction {
-    pub(crate) fn new(pc: u64, inst: u64, op: &'static Opcode) -> Self {
+    pub(crate) fn new(isa: Isa, pc: u64, inst: u64, op: &'static Opcode) -> Self {
+        // Reserved lengths are treated as a 2-byte illegal instruction so
+        // that disassembly can continue.
+        let len = match crate::inst_length(inst) {
+            0 => 2,
+            len => len as u8,
+        };
         Instruction {
+            isa,
             pc,
             inst,
+            len,
             op,
+            decoded: op,
             rd: 0,
             rs1: 0,
             rs2: 0,
@@ -36,10 +56,15 @@ impl Instruction {
             rm: 0,
             pred: 0,
             succ: 0,
-            aq: 0,
-            rl: 0,
+            aq: false,
+            rl: false,
             imm: 0,
         }
+    }
+
+    /// The base ISA the instruction was decoded for.
+    pub fn isa(&self) -> Isa {
+        self.isa
     }
 
     /// The address of the instruction.
@@ -52,18 +77,50 @@ impl Instruction {
         self.inst
     }
 
-    /// The length of the encoding in bytes; see [`inst_length`](crate::inst_length).
+    /// The length of the encoding in bytes: 2, 4, 6 or 8.
+    ///
+    /// Encodings with a reserved length (10 bytes or more) are decoded as a
+    /// 2-byte illegal instruction.
     pub fn length(&self) -> usize {
-        crate::inst_length(self.inst)
+        self.len as usize
     }
 
-    /// The mnemonic, such as `"addi"` or `"c.addi"`, or `"illegal"`.
+    /// The mnemonic, such as `"addi"`, `"li"` or `"amoadd.w"`, or `"illegal"`.
+    ///
+    /// Compressed instructions are shown as the instruction they expand to,
+    /// and aliases (pseudoinstructions) are used where objdump uses them.
+    /// [`without_aliases`](Self::without_aliases) gives the instruction as
+    /// encoded. The mnemonic does not include the `.aq`/`.rl` ordering
+    /// suffixes of atomic instructions, which [`Display`](core::fmt::Display)
+    /// adds.
     pub fn mnemonic(&self) -> &'static str {
         self.op.name
     }
 
-    /// Whether the encoding was not recognized.
+    /// Whether the encoding is not a valid instruction. This includes the
+    /// all-zeros 16-bit encoding, which the ISA defines to be illegal and
+    /// which is shown as `unimp`.
     pub fn is_illegal(&self) -> bool {
-        *self.op == ILLEGAL
+        *self.op == ILLEGAL || *self.decoded == C_UNIMP
+    }
+
+    /// The same instruction, shown as encoded: compressed instructions keep
+    /// their `c.` names and pseudoinstructions are not used. This matches
+    /// `objdump -M no-aliases`.
+    pub fn without_aliases(&self) -> Instruction {
+        Instruction {
+            op: self.decoded,
+            ..*self
+        }
+    }
+
+    /// The target address of a PC-relative operand, wrapped to the
+    /// register width.
+    pub(crate) fn target(&self) -> u64 {
+        let target = self.pc.wrapping_add(self.imm as i64 as u64);
+        match self.isa {
+            Isa::Rv32 => target & 0xffff_ffff,
+            Isa::Rv64 | Isa::Rv128 => target,
+        }
     }
 }

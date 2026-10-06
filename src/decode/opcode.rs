@@ -5,6 +5,7 @@ use crate::Isa;
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 13) & 7 {
+        0 if inst == 0 => Some(&c::C_UNIMP),
         0 => Some(&c::C_ADDI4SPN),
         1 => Some(if isa == Isa::Rv128 {
             &c::C_LQ
@@ -35,8 +36,9 @@ fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
 
 fn compressed_1(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 13) & 7 {
-        0 => Some(match (inst >> 2) & 0x7ff {
-            0 => &c::C_NOP,
+        0 => Some(match ((inst >> 7) & 0x1f, inst & 0x107c) {
+            (0, 0) => &c::C_NOP,
+            (0, _) => &c::C_NOP_HINT,
             _ => &c::C_ADDI,
         }),
         1 => Some(if isa == Isa::Rv32 {
@@ -147,6 +149,8 @@ fn load_fp(inst: u64) -> Option<&'static Opcode> {
 
 fn misc_mem(inst: u64) -> Option<&'static Opcode> {
     match (inst >> 12) & 7 {
+        // fence.tso is fm=1000 with pred=succ=rw.
+        0 if inst >> 20 == 0x833 => Some(&i::FENCE_TSO),
         0 => Some(&i::FENCE),
         1 => Some(&i::FENCE_I),
         2 => Some(&i::LQ),
@@ -206,7 +210,11 @@ fn op_imm(isa: Isa, inst: u64) -> Option<&'static Opcode> {
                 match (inst >> 27) & 0x1f {
                     0 => Some(&i::SRLI),
                     8 => Some(&i::SRAI),
-                    9 => Some(&b::BEXTI),
+                    9 => match isa {
+                        Isa::Rv32 if (inst >> 25) & 0x7f == 0x24 => Some(&b::BEXTI),
+                        Isa::Rv64 if (inst >> 26) & 0x3f == 0x12 => Some(&b::BEXTI_64),
+                        _ => None,
+                    },
                     _ => None,
                 }
             }
@@ -377,7 +385,7 @@ fn op_32(inst: u64) -> Option<&'static Opcode> {
         14 => Some(&m::REMW),
         15 => Some(&m::REMUW),
         32 => Some(&b::ADD_UW),
-        36 => Some(&b::ZEXT_H),
+        36 if inst >> 20 == 0x080 => Some(&b::ZEXT_H),
         130 => Some(&b::SH1ADD_UW),
         132 => Some(&b::SH2ADD_UW),
         134 => Some(&b::SH3ADD_UW),
@@ -497,7 +505,7 @@ fn op_fp(inst: u64) -> Option<&'static Opcode> {
         (107, 2, _) => Some(&q::FCVT_Q_L),
         (107, 3, _) => Some(&q::FCVT_Q_LU),
         (112, _, _) => match (inst >> 17) & 0xf8 | (inst >> 12) & 7 {
-            0 => Some(&f::FMV_X_S),
+            0 => Some(&f::FMV_X_W),
             1 => Some(&f::FCLASS_S),
             _ => None,
         },
@@ -513,7 +521,7 @@ fn op_fp(inst: u64) -> Option<&'static Opcode> {
         },
         (120, _, _) => {
             if (inst >> 17) & 0xf8 | (inst >> 12) & 7 == 0 {
-                Some(&f::FMV_S_X)
+                Some(&f::FMV_W_X)
             } else {
                 None
             }
@@ -577,53 +585,14 @@ fn jalr(inst: u64) -> Option<&'static Opcode> {
 
 fn system_inst(inst: u64) -> Option<&'static Opcode> {
     match (inst >> 12) & 7 {
-        0 => match (inst >> 20) & 0xfe0 | (inst >> 7) & 0x1f {
-            0 => match (inst >> 15) & 0x3ff {
-                0 => Some(&system::ECALL),
-                32 => Some(&system::EBREAK),
-                64 => Some(&system::URET),
-                _ => None,
-            },
-            256 => match (inst >> 20) & 0x1f {
-                2 => {
-                    if (inst >> 15) & 0x1f == 0 {
-                        Some(&system::SRET)
-                    } else {
-                        None
-                    }
-                }
-                4 => Some(&system::SFENCE_VM),
-                5 => {
-                    if (inst >> 15) & 0x1f == 0 {
-                        Some(&system::WFI)
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
-            },
-            288 => Some(&system::SFENCE_VMA),
-            512 => {
-                if (inst >> 15) & 0x3ff == 64 {
-                    Some(&system::HRET)
-                } else {
-                    None
-                }
-            }
-            768 => {
-                if (inst >> 15) & 0x3ff == 64 {
-                    Some(&system::MRET)
-                } else {
-                    None
-                }
-            }
-            1952 => {
-                if (inst >> 15) & 0x3ff == 576 {
-                    Some(&system::DRET)
-                } else {
-                    None
-                }
-            }
+        0 => match inst {
+            0x0000_0073 => Some(&system::ECALL),
+            0x0010_0073 => Some(&system::EBREAK),
+            0x1020_0073 => Some(&system::SRET),
+            0x1050_0073 => Some(&system::WFI),
+            0x3020_0073 => Some(&system::MRET),
+            0x7b20_0073 => Some(&system::DRET),
+            _ if inst & 0xfe00_7fff == 0x1200_0073 => Some(&system::SFENCE_VMA),
             _ => None,
         },
         1 => Some(&system::CSRRW),

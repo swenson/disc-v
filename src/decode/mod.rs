@@ -4,28 +4,41 @@ mod opcode;
 mod operands;
 
 use crate::instruction::Instruction;
-use crate::opcodes::{Constraint, ILLEGAL};
+use crate::opcodes::{Codec, Constraint, ILLEGAL};
 use crate::Isa;
 
 /// Decodes the instruction `inst` located at address `pc`.
 pub(crate) fn decode(isa: Isa, pc: u64, inst: u64) -> Instruction {
+    let inst = match crate::inst_length(inst) {
+        0 | 2 => inst & 0xffff,
+        len => inst & (u64::MAX >> (64 - 8 * len)),
+    };
     let op = opcode::lookup(isa, inst).unwrap_or(&ILLEGAL);
-    let mut ins = Instruction::new(pc, inst, op);
+    let mut ins = Instruction::new(isa, pc, inst, op);
     operands::extract(&mut ins, op.codec);
-    decompress(&mut ins, isa);
+    if is_reserved(&ins) {
+        return Instruction::new(isa, pc, inst, &ILLEGAL);
+    }
+    // HINTs are shown as encoded, as objdump does.
+    if op.hint_if.iter().any(|&c| holds(&ins, c)) {
+        return ins;
+    }
+    if let Some(expanded) = op.decompress[isa as usize] {
+        ins.op = expanded;
+    }
     lift_pseudo(&mut ins);
     ins
 }
 
-/// Replaces a compressed instruction with the instruction it expands to.
-fn decompress(ins: &mut Instruction, isa: Isa) {
-    if let Some(expanded) = ins.op.decompress[isa as usize] {
-        ins.op = if ins.op.check_imm_nz && ins.imm == 0 {
-            &ILLEGAL
-        } else {
-            expanded
-        };
-    }
+/// Whether the decoded opcode and operands are not a valid instruction for
+/// the ISA.
+fn is_reserved(ins: &Instruction) -> bool {
+    let op = ins.op;
+    let shift_too_big = matches!(
+        op.codec,
+        Codec::ISh5 | Codec::ISh6 | Codec::ISh7 | Codec::CiSh6 | Codec::CbSh6
+    ) && ins.imm >= ins.isa.xlen() as i32;
+    !op.exists_in(ins.isa) || shift_too_big || op.illegal_if.iter().any(|&c| holds(ins, c))
 }
 
 /// Replaces an instruction with the first of its pseudoinstructions whose

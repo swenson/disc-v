@@ -11,6 +11,8 @@ pub(crate) mod pseudo;
 pub(crate) mod q;
 pub(crate) mod system;
 
+use crate::Isa;
+
 /// How an instruction's operands are laid out in its encoding.
 ///
 /// The names follow the instruction formats in the RISC-V specification
@@ -69,58 +71,67 @@ pub(crate) enum Codec {
 
 /// Operand format strings.
 ///
-/// Each character expands to one piece of the output:
+/// Each character expands to one piece of the operand text:
 ///
 /// | Char | Output |
 /// |------|--------|
-/// | `O` | mnemonic |
-/// | `\t` | separator between the mnemonic and the operands |
 /// | `0` `1` `2` | integer register `rd`, `rs1`, `rs2` |
 /// | `3` `4` `5` `6` | floating-point register `rd`, `rs1`, `rs2`, `rs3` |
 /// | `7` | `rs1` field as an unsigned immediate (CSR `zimm`) |
-/// | `i` | immediate |
-/// | `o` | PC-relative offset |
+/// | `i` | immediate, in decimal |
+/// | `>` | shift amount, in hex |
+/// | `u` | upper immediate (bits 31:12), in hex |
+/// | `o` | target address of a PC-relative offset |
 /// | `c` | CSR name |
-/// | `r` | rounding mode |
+/// | `r` | `,` and the rounding mode, unless it is dynamic |
+/// | `R` | `,` and the rounding mode, unless it is RNE (for exact conversions) |
 /// | `p` `s` | fence predecessor and successor sets |
-/// | `A` `R` | `.aq` and `.rl` suffixes, when set |
 /// | `,` `(` `)` | themselves |
 pub(crate) mod fmt {
-    pub(crate) const NONE: &str = "O";
-    pub(crate) const RS1: &str = "O\t1";
-    pub(crate) const OFFSET: &str = "O\to";
-    pub(crate) const PRED_SUCC: &str = "O\tp,s";
-    pub(crate) const RS1_RS2: &str = "O\t1,2";
-    pub(crate) const RD_IMM: &str = "O\t0,i";
-    pub(crate) const RD_OFFSET: &str = "O\t0,o";
-    pub(crate) const RD_RS1_RS2: &str = "O\t0,1,2";
-    pub(crate) const FRD_RS1: &str = "O\t3,1";
-    pub(crate) const RD_FRS1: &str = "O\t0,4";
-    pub(crate) const RD_FRS1_FRS2: &str = "O\t0,4,5";
-    pub(crate) const FRD_FRS1_FRS2: &str = "O\t3,4,5";
-    pub(crate) const RM_FRD_FRS1: &str = "O\tr,3,4";
-    pub(crate) const RM_FRD_RS1: &str = "O\tr,3,1";
-    pub(crate) const RM_RD_FRS1: &str = "O\tr,0,4";
-    pub(crate) const RM_FRD_FRS1_FRS2: &str = "O\tr,3,4,5";
-    pub(crate) const RM_FRD_FRS1_FRS2_FRS3: &str = "O\tr,3,4,5,6";
-    pub(crate) const RD_RS1_IMM: &str = "O\t0,1,i";
-    pub(crate) const RD_RS1_OFFSET: &str = "O\t0,1,i";
-    pub(crate) const RD_OFFSET_RS1: &str = "O\t0,i(1)";
-    pub(crate) const FRD_OFFSET_RS1: &str = "O\t3,i(1)";
-    pub(crate) const RD_CSR_RS1: &str = "O\t0,c,1";
-    pub(crate) const RD_CSR_ZIMM: &str = "O\t0,c,7";
-    pub(crate) const RS2_OFFSET_RS1: &str = "O\t2,i(1)";
-    pub(crate) const FRS2_OFFSET_RS1: &str = "O\t5,i(1)";
-    pub(crate) const RS1_RS2_OFFSET: &str = "O\t1,2,o";
-    pub(crate) const RS2_RS1_OFFSET: &str = "O\t2,1,o";
-    pub(crate) const AQRL_RD_RS2_RS1: &str = "OAR\t0,2,(1)";
-    pub(crate) const AQRL_RD_RS1: &str = "OAR\t0,(1)";
-    pub(crate) const RD: &str = "O\t0";
-    pub(crate) const RD_ZIMM: &str = "O\t0,7";
-    pub(crate) const RD_RS1: &str = "O\t0,1";
-    pub(crate) const RD_RS2: &str = "O\t0,2";
-    pub(crate) const RS1_OFFSET: &str = "O\t1,o";
-    pub(crate) const RS2_OFFSET: &str = "O\t2,o";
+    pub(crate) const NONE: &str = "";
+    pub(crate) const RS1: &str = "1";
+    pub(crate) const OFFSET: &str = "o";
+    pub(crate) const PRED_SUCC: &str = "p,s";
+    pub(crate) const RS1_RS2: &str = "1,2";
+    pub(crate) const RD_IMM: &str = "0,i";
+    pub(crate) const RD_UIMM: &str = "0,u";
+    pub(crate) const RD_OFFSET: &str = "0,o";
+    pub(crate) const RD_RS1_RS2: &str = "0,1,2";
+    pub(crate) const FRD_RS1: &str = "3,1";
+    pub(crate) const FRD_FRS1: &str = "3,4";
+    pub(crate) const RD_FRS1: &str = "0,4";
+    pub(crate) const RD_FRS1_FRS2: &str = "0,4,5";
+    pub(crate) const FRD_FRS1_FRS2: &str = "3,4,5";
+    pub(crate) const RM_FRD_FRS1: &str = "3,4r";
+    pub(crate) const RM_FRD_RS1: &str = "3,1r";
+    pub(crate) const RM_RD_FRS1: &str = "0,4r";
+    pub(crate) const RM_FRD_FRS1_FRS2: &str = "3,4,5r";
+    pub(crate) const RM_FRD_FRS1_FRS2_FRS3: &str = "3,4,5,6r";
+    pub(crate) const RD_RS1_IMM: &str = "0,1,i";
+    pub(crate) const RD_RS1_SHAMT: &str = "0,1,>";
+    pub(crate) const RD_OFFSET_RS1: &str = "0,i(1)";
+    pub(crate) const FRD_OFFSET_RS1: &str = "3,i(1)";
+    pub(crate) const RD_CSR_RS1: &str = "0,c,1";
+    pub(crate) const RD_CSR_ZIMM: &str = "0,c,7";
+    pub(crate) const RS2_OFFSET_RS1: &str = "2,i(1)";
+    pub(crate) const FRS2_OFFSET_RS1: &str = "5,i(1)";
+    pub(crate) const RS1_RS2_OFFSET: &str = "1,2,o";
+    pub(crate) const RD_RS2_ADDR_RS1: &str = "0,2,(1)";
+    pub(crate) const RD_ADDR_RS1: &str = "0,(1)";
+    pub(crate) const RD: &str = "0";
+    pub(crate) const RD_ZIMM: &str = "0,7";
+    pub(crate) const RD_RS1: &str = "0,1";
+    pub(crate) const RD_RS2: &str = "0,2";
+    pub(crate) const RS1_OFFSET: &str = "1,o";
+    pub(crate) const RS2_OFFSET: &str = "2,o";
+    pub(crate) const OFFSET_RS1: &str = "i(1)";
+    pub(crate) const RD_SHAMT: &str = "0,>";
+    pub(crate) const RD_CSR: &str = "0,c";
+    pub(crate) const CSR_RS1: &str = "c,1";
+    pub(crate) const CSR_ZIMM: &str = "c,7";
+    pub(crate) const IMM: &str = "i";
+    pub(crate) const WIDEN_FRD_FRS1: &str = "3,4R";
+    pub(crate) const WIDEN_FRD_RS1: &str = "3,1R";
 }
 
 /// A condition on decoded operands, used to pick a pseudoinstruction.
@@ -141,6 +152,12 @@ pub(crate) struct Pseudo {
     pub(crate) when: &'static [Constraint],
 }
 
+impl Pseudo {
+    pub(crate) const fn new(op: &'static Opcode, when: &'static [Constraint]) -> Self {
+        Pseudo { op, when }
+    }
+}
+
 /// One entry in the opcode tables.
 pub(crate) struct Opcode {
     pub(crate) name: &'static str,
@@ -149,10 +166,18 @@ pub(crate) struct Opcode {
     pub(crate) format: &'static str,
     /// Pseudoinstructions to try, in order; the first match is shown instead.
     pub(crate) pseudo: &'static [Pseudo],
-    /// For compressed instructions, the expansion for RV32, RV64 and RV128.
+    /// For compressed instructions, the expansion for RV32, RV64 and RV128;
+    /// `None` means the encoding is not valid for that ISA.
     pub(crate) decompress: [Option<&'static Opcode>; 3],
-    /// The encoding is reserved (illegal) when its immediate is zero.
-    pub(crate) check_imm_nz: bool,
+    /// Operand values that make the encoding reserved: it is illegal if any
+    /// of these hold.
+    pub(crate) illegal_if: &'static [Constraint],
+    /// Operand values that make the encoding a HINT, which objdump shows as
+    /// encoded rather than expanded: it is a HINT if any of these hold.
+    pub(crate) hint_if: &'static [Constraint],
+    /// The base ISAs the instruction exists in, as a bit set indexed by
+    /// [`Isa`].
+    pub(crate) isas: u8,
 }
 
 impl Opcode {
@@ -163,7 +188,32 @@ impl Opcode {
             format,
             pseudo: &[],
             decompress: [None; 3],
-            check_imm_nz: false,
+            illegal_if: &[],
+            hint_if: &[],
+            isas: 0b111,
+        }
+    }
+
+    /// Marks an instruction as existing only in RV64 and RV128.
+    pub(crate) const fn rv64(self) -> Self {
+        Opcode {
+            isas: 0b110,
+            ..self
+        }
+    }
+
+    /// Marks an instruction as existing only in RV128.
+    pub(crate) const fn rv128(self) -> Self {
+        Opcode {
+            isas: 0b100,
+            ..self
+        }
+    }
+
+    pub(crate) fn exists_in(&self, isa: Isa) -> bool {
+        match self.decompress {
+            [None, None, None] => self.isas & (1 << isa as u8) != 0,
+            expansions => expansions[isa as usize].is_some_and(|e| e.exists_in(isa)),
         }
     }
 }
