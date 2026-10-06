@@ -2,3 +2,8 @@
 name = "disc-v"
 version = "0.1.0"
 edition = "2021"
+description = "A RISC-V disassembler"
+license = "MIT AND Apache-2.0"
+readme = "README.md"
+keywords = ["riscv", "disassembler", "risc-v"]
+categories = ["development-tools", "no-std"]

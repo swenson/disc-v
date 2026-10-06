@@ -1,4 +1,8 @@
 // Licensed under the Apache-2.0 license
+//
+// Origin: imported from emulator/app/src/dis_test.rs in
+// https://github.com/chipsalliance/caliptra-mcu-sw
+// (commit 20f7fcff1b51d69b03d0b352685fc7360536ad9a).
 
 #[cfg(test)]
 mod test {

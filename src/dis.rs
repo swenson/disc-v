@@ -1,3 +1,10 @@
+// Origin: this file was imported into disc-v from the Caliptra MCU
+// emulator, emulator/app/src/dis.rs in
+// https://github.com/chipsalliance/caliptra-mcu-sw
+// (commit 20f7fcff1b51d69b03d0b352685fc7360536ad9a), where the Caliptra
+// authors ported it to Rust and added the bit-manipulation extensions
+// (Zba, Zbb, Zbc, Zbs). Caliptra's changes are licensed under Apache-2.0.
+//
 // Based on the RISC-V Disassembler by Michael Clark and SiFive:
 // https://github.com/michaeljclark/riscv-disassembler/
 /*
