@@ -6,6 +6,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-06
+
 ### Added
 
 - Zicond (`czero.eqz`, `czero.nez`).
@@ -37,7 +39,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `c.lui` with an odd destination below `x16` and a zero immediate, previously
   reserved, is decoded as `c.mop.N`.
 
-## [0.1.0]
+## [0.1.0] - 2026-10-06
 
 Initial release.
 
@@ -53,5 +55,6 @@ Initial release.
   1.85.1.
 - Tests against the encodings in riscv-opcodes and against GNU objdump.
 
-[Unreleased]: https://github.com/swenson/disc-v/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/swenson/disc-v/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/swenson/disc-v/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/swenson/disc-v/releases/tag/v0.1.0
