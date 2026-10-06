@@ -10,6 +10,7 @@ use core::fmt::{self, Display, Write};
 
 use crate::csr::csr_name;
 use crate::instruction::Instruction;
+use crate::opcodes::zfa::FLI_CONSTANTS;
 use crate::reg::{FP_NAMES, INT_NAMES};
 
 impl Display for Instruction {
@@ -76,6 +77,7 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
             write!(out, ",{}", names[ins.rm as usize])
         }
         'P' => write!(out, "{}", ins.imm & !0x1f),
+        'F' => out.write_str(FLI_CONSTANTS[ins.rs1 as usize]),
         'l' => write!(out, "{}", ins.len),
         'x' => {
             // As objdump does, padded to a whole number of 16-bit parcels.

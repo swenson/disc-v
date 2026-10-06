@@ -18,6 +18,7 @@ pub(crate) mod q;
 pub(crate) mod system;
 pub(crate) mod zawrs;
 pub(crate) mod zcb;
+pub(crate) mod zfa;
 pub(crate) mod zfh;
 pub(crate) mod zicbo;
 pub(crate) mod zicond;
@@ -108,6 +109,7 @@ pub(crate) enum Codec {
 /// | `r` | `,` and the rounding mode, unless it is dynamic |
 /// | `R` | `,` and the rounding mode, unless it is RNE (for exact conversions) |
 /// | `p` `s` | fence predecessor and successor sets |
+/// | `F` | the `fli` constant selected by the rs1 field |
 /// | `P` | prefetch offset: the immediate with its low five bits cleared |
 /// | `l` | length of the encoding in bytes |
 /// | `x` | the encoding, in hex, padded to a whole number of 16-bit parcels |
@@ -162,6 +164,8 @@ pub(crate) mod fmt {
     pub(crate) const ADDR_RS1: &str = "(1)";
     pub(crate) const RS2: &str = "2";
     pub(crate) const UIMM: &str = "u";
+    pub(crate) const FRD_FLI: &str = "3,F";
+    pub(crate) const FRD_RS1_RS2: &str = "3,1,2";
     pub(crate) const PREFETCH: &str = "P(1)";
 }
 
@@ -231,6 +235,22 @@ impl Opcode {
     pub(crate) const fn rv64(self) -> Self {
         Opcode {
             isas: 0b110,
+            ..self
+        }
+    }
+
+    /// Marks an instruction as existing only in RV32.
+    pub(crate) const fn rv32_only(self) -> Self {
+        Opcode {
+            isas: 0b001,
+            ..self
+        }
+    }
+
+    /// Marks an instruction as existing only in RV64.
+    pub(crate) const fn rv64_only(self) -> Self {
+        Opcode {
+            isas: 0b010,
             ..self
         }
     }

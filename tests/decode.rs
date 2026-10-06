@@ -181,6 +181,18 @@ fn half_precision() {
 }
 
 #[test]
+fn zfa() {
+    check(Isa::Rv64, 0xf0100553, "fli.s fa0,-0x1p+0");
+    check(Isa::Rv64, 0xf0108553, "fli.s fa0,min");
+    check(Isa::Rv64, 0xf0180553, "fli.s fa0,0x1p+0");
+    check(Isa::Rv64, 0xf01f8553, "fli.s fa0,nan");
+    check(Isa::Rv64, 0x40458553, "fround.s fa0,fa1,rne");
+    check(Isa::Rv64, 0xc2859553, "fcvtmod.w.d a0,fa1,rtz");
+    check(Isa::Rv32, 0xe2158553, "fmvh.x.d a0,fa1");
+    check(Isa::Rv64, 0xe2158553, ".insn 4, 0xe2158553"); // fmvh.x.d is RV32-only
+}
+
+#[test]
 fn zcb() {
     check(Isa::Rv64, 0x85a8, "lhu a0,2(a1)");
     check(Isa::Rv64, 0x8da8, "sh a0,2(a1)");

@@ -19,6 +19,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Zcb (`c.lbu`, `c.lhu`, `c.lh`, `c.sb`, `c.sh`, `c.zext.*`, `c.sext.*`,
   `c.not`, `c.mul`).
 - Zfh and Zfhmin (half-precision floating point).
+- Zfa (`fli`, `fminm`, `fmaxm`, `fround`, `froundnx`, `fleq`, `fltq`,
+  `fcvtmod.w.d`, `fmvh.x.*`, `fmvp.*.x`) for each floating-point format.
 
 ### Changed
 

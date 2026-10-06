@@ -8,7 +8,7 @@
 
 use crate::Isa;
 use crate::opcodes::{
-    Opcode, a, b, c, d, f, i, m, q, system, zawrs, zcb, zfh, zicbo, zicond, zimop,
+    Opcode, a, b, c, d, f, i, m, q, system, zawrs, zcb, zfa, zfh, zicbo, zicond, zimop,
 };
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
@@ -480,6 +480,40 @@ fn nmadd(inst: u64) -> Option<&'static Opcode> {
 
 fn op_fp(inst: u64) -> Option<&'static Opcode> {
     match ((inst >> 25) & 0x7f, (inst >> 20) & 0x1f, (inst >> 12) & 7) {
+        // Zfa. These come first because some share a funct7 with arms below.
+        (120, 1, 0) => Some(&zfa::FLI_S),
+        (20, _, 2) => Some(&zfa::FMINM_S),
+        (20, _, 3) => Some(&zfa::FMAXM_S),
+        (32, 4, _) => Some(&zfa::FROUND_S),
+        (32, 5, _) => Some(&zfa::FROUNDNX_S),
+        (80, _, 4) => Some(&zfa::FLEQ_S),
+        (80, _, 5) => Some(&zfa::FLTQ_S),
+        (121, 1, 0) => Some(&zfa::FLI_D),
+        (21, _, 2) => Some(&zfa::FMINM_D),
+        (21, _, 3) => Some(&zfa::FMAXM_D),
+        (33, 4, _) => Some(&zfa::FROUND_D),
+        (33, 5, _) => Some(&zfa::FROUNDNX_D),
+        (81, _, 4) => Some(&zfa::FLEQ_D),
+        (81, _, 5) => Some(&zfa::FLTQ_D),
+        (122, 1, 0) => Some(&zfa::FLI_H),
+        (22, _, 2) => Some(&zfa::FMINM_H),
+        (22, _, 3) => Some(&zfa::FMAXM_H),
+        (34, 4, _) => Some(&zfa::FROUND_H),
+        (34, 5, _) => Some(&zfa::FROUNDNX_H),
+        (82, _, 4) => Some(&zfa::FLEQ_H),
+        (82, _, 5) => Some(&zfa::FLTQ_H),
+        (123, 1, 0) => Some(&zfa::FLI_Q),
+        (23, _, 2) => Some(&zfa::FMINM_Q),
+        (23, _, 3) => Some(&zfa::FMAXM_Q),
+        (35, 4, _) => Some(&zfa::FROUND_Q),
+        (35, 5, _) => Some(&zfa::FROUNDNX_Q),
+        (83, _, 4) => Some(&zfa::FLEQ_Q),
+        (83, _, 5) => Some(&zfa::FLTQ_Q),
+        (97, 8, 1) => Some(&zfa::FCVTMOD_W_D),
+        (113, 1, 0) => Some(&zfa::FMVH_X_D),
+        (89, _, 0) => Some(&zfa::FMVP_D_X),
+        (115, 1, 0) => Some(&zfa::FMVH_X_Q),
+        (91, _, 0) => Some(&zfa::FMVP_Q_X),
         (0, _, _) => Some(&f::FADD_S),
         (2, _, _) => Some(&zfh::FADD_H),
         (6, _, _) => Some(&zfh::FSUB_H),
