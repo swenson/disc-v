@@ -33,6 +33,7 @@ impl Display for Instruction {
 /// The operands of an instruction, formatted as objdump does: `a0,8(sp)`.
 ///
 /// Create one with [`Instruction::operands`].
+#[derive(Clone, Copy, Debug)]
 pub struct Operands<'a>(pub(crate) &'a Instruction);
 
 impl Display for Operands<'_> {
