@@ -7,7 +7,8 @@ of https://github.com/riscv/riscv-opcodes.
 Usage: scripts/gen-vector-opcodes.py <riscv-opcodes checkout> > src/opcodes/v.rs
 
 Each instruction becomes a match/mask entry with an operand format string
-(see `fmt` in src/opcodes/mod.rs). The operand order follows GNU objdump.
+(see `fmt` in src/opcodes/mod.rs). The operand order follows GNU objdump. The
+output is formatted with rustfmt, which must be installed.
 """
 import os, re, subprocess, sys
 
@@ -40,6 +41,12 @@ ALIASES = [
 
 TABLES = {0x57: "OP_V", 0x77: "OP_VE", 0x07: "LOAD_FP", 0x27: "STORE_FP"}
 
+
+def rustfmt(code):
+    """Formats Rust code as `cargo fmt` does, so generated files pass
+    `cargo fmt --check` like the rest of the crate."""
+    return subprocess.run(["rustfmt", "--edition", "2024"], input=code, capture_output=True,
+                          text=True, check=True).stdout
 
 def parse(tokens):
     """Returns (name, bits, mask, args) for a riscv-opcodes line."""
@@ -163,4 +170,4 @@ for base, alias, _, fmt in ALIASES:
     e = next(e for e in entries if e[0] == base)
     codec = operands(*e)[0]
     out.append(f'static {ident(alias)}: Opcode = Opcode::new("{alias}", Codec::{codec}, "{fmt}");')
-print("\n".join(out))
+sys.stdout.write(rustfmt("\n".join(out) + "\n"))

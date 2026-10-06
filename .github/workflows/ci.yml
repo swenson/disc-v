@@ -83,6 +83,10 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
+      # The generators format their Rust output with rustfmt.
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
       - name: Check out the riscv-opcodes commit the data was generated from
         run: |
           rev=$(sed -n '1s/.* riscv-opcodes \([0-9a-f]\{40\}\)\..*/\1/p' tests/data/riscv-opcodes.txt)

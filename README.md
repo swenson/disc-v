@@ -89,7 +89,9 @@ listed in `NOT_IN_SPEC` in `tests/riscv_opcodes.rs`.
 
 CSR names come from riscv-opcodes, via `scripts/gen-csr-names.py`, and so do
 the vector instruction tables in `src/opcodes/v.rs`, via
-`scripts/gen-vector-opcodes.py`, which encodes objdump's operand order.
+`scripts/gen-vector-opcodes.py`, which encodes objdump's operand order. The
+generators format their output with `rustfmt`, so generated code is formatted
+and linted like the rest of the crate.
 
 ## Origins
 
