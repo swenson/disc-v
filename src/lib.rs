@@ -37,8 +37,11 @@ pub use instruction::Instruction;
 /// encodings are valid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Isa {
+    /// RV32: 32-bit registers.
     Rv32,
+    /// RV64: 64-bit registers.
     Rv64,
+    /// RV128: 128-bit registers. The RV128 encodings are not yet ratified.
     Rv128,
 }
 

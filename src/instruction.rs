@@ -7,12 +7,13 @@
 //! The decoded instruction type.
 
 use crate::Isa;
+use crate::format::Operands;
 use crate::opcodes::c::C_UNIMP;
 use crate::opcodes::{ILLEGAL, Opcode};
 
 /// A decoded instruction.
 ///
-/// Create one with [`decode`](crate::decode),
+/// Create one with [`decode`](fn@crate::decode),
 /// [`decode_bytes`](crate::decode_bytes), or by iterating over
 /// [`disassemble`](crate::disassemble). Its [`Display`](core::fmt::Display)
 /// output follows GNU objdump's for a raw binary, such as `addi gp,gp,256`
@@ -101,6 +102,11 @@ impl Instruction {
     /// adds.
     pub fn mnemonic(&self) -> &'static str {
         self.op.name
+    }
+
+    /// The operands, without the mnemonic, such as `a0,8(sp)`.
+    pub fn operands(&self) -> Operands<'_> {
+        Operands(self)
     }
 
     /// Whether the encoding is not a valid instruction. This includes the

@@ -33,14 +33,7 @@ impl Display for Instruction {
 /// The operands of an instruction, formatted as objdump does: `a0,8(sp)`.
 ///
 /// Create one with [`Instruction::operands`].
-pub struct Operands<'a>(&'a Instruction);
-
-impl Instruction {
-    /// The operands, without the mnemonic.
-    pub fn operands(&self) -> Operands<'_> {
-        Operands(self)
-    }
-}
+pub struct Operands<'a>(pub(crate) &'a Instruction);
 
 impl Display for Operands<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
