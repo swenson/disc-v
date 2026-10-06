@@ -21,6 +21,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Zfh and Zfhmin (half-precision floating point).
 - Zfa (`fli`, `fminm`, `fmaxm`, `fround`, `froundnx`, `fleq`, `fltq`,
   `fcvtmod.w.d`, `fmvh.x.*`, `fmvp.*.x`) for each floating-point format.
+- V (vectors), including segment loads and stores and objdump's aliases
+  (`vnot.v`, `vneg.v`, `vmmv.m`, ...). The tables are generated from
+  riscv-opcodes by `scripts/gen-vector-opcodes.py`.
 
 ### Changed
 

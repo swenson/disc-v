@@ -8,7 +8,8 @@
 
 use crate::Isa;
 use crate::opcodes::{
-    Opcode, a, b, c, d, f, i, m, q, system, zawrs, zcb, zfa, zfh, zicbo, zicond, zimop,
+    Opcode, a, b, c, d, f, i, lookup_masked, m, q, system, v, zawrs, zcb, zfa, zfh, zicbo, zicond,
+    zimop,
 };
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
@@ -171,7 +172,7 @@ fn load_fp(inst: u64) -> Option<&'static Opcode> {
         2 => Some(&f::FLW),
         3 => Some(&d::FLD),
         4 => Some(&q::FLQ),
-        _ => None,
+        _ => lookup_masked(&v::LOAD_FP, inst),
     }
 }
 
@@ -306,7 +307,7 @@ fn store_fp(inst: u64) -> Option<&'static Opcode> {
         2 => Some(&f::FSW),
         3 => Some(&d::FSD),
         4 => Some(&q::FSQ),
-        _ => None,
+        _ => lookup_masked(&v::STORE_FP, inst),
     }
 }
 
@@ -773,6 +774,7 @@ fn uncompressed(isa: Isa, inst: u64) -> Option<&'static Opcode> {
         18 => nmsub(inst),
         19 => nmadd(inst),
         20 => op_fp(inst),
+        21 => lookup_masked(&v::OP_V, inst),
         22 => custom2_rv128(inst),
         24 => branch(inst),
         25 => jalr(inst),

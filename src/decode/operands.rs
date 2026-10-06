@@ -76,6 +76,10 @@ fn operand_crs2(inst: u64) -> u32 {
 fn operand_csr12(inst: u64) -> u32 {
     (inst << 32 >> 52) as u32
 }
+/// A signed 5-bit immediate in the rs1 field, as the vector `.vi` forms use.
+fn operand_simm5(inst: u64) -> i32 {
+    ((inst as i64) << 44 >> 59) as i32
+}
 fn operand_imm12(inst: u64) -> i32 {
     ((inst as i64) << 32 >> 52) as i32
 }
@@ -478,6 +482,29 @@ pub(super) fn extract(ins: &mut Instruction, codec: Codec) {
             ins.rs1 = reg::ZERO;
             ins.rs2 = reg::ZERO;
             ins.imm = operand_imm12(inst);
+        }
+        Codec::V | Codec::Vu => {
+            ins.rd = operand_rd(inst) as u8;
+            ins.rs1 = operand_rs1(inst) as u8;
+            ins.rs2 = operand_rs2(inst) as u8;
+            ins.imm = if codec == Codec::V {
+                operand_simm5(inst)
+            } else {
+                operand_rs1(inst) as i32
+            };
+            ins.masked = (inst >> 25) & 1 == 0;
+        }
+        Codec::VsetVli => {
+            ins.rd = operand_rd(inst) as u8;
+            ins.rs1 = operand_rs1(inst) as u8;
+            ins.rs2 = reg::ZERO;
+            ins.imm = ((inst >> 20) & 0x7ff) as i32;
+        }
+        Codec::VsetIvli => {
+            ins.rd = operand_rd(inst) as u8;
+            ins.rs1 = operand_rs1(inst) as u8;
+            ins.rs2 = reg::ZERO;
+            ins.imm = ((inst >> 20) & 0x3ff) as i32;
         }
         Codec::Illegal => {}
     }

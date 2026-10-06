@@ -23,7 +23,7 @@ use std::process::Command;
 use common::{Failures, Rng, riscv_opcodes_samples};
 use disc_v::{Isa, decode};
 
-const MARCH_EXTENSIONS: &str = "imafdqc_zicsr_zifencei_zba_zbb_zbc_zbs_zicond_zawrs_zicbom_zicboz_zicbop_zihintntl_zihintpause_zimop_zcmop_zicfiss_zicfilp_zcb_zfh_zfa";
+const MARCH_EXTENSIONS: &str = "imafdqcv_zicsr_zifencei_zba_zbb_zbc_zbs_zicond_zawrs_zicbom_zicboz_zicbop_zihintntl_zihintpause_zimop_zcmop_zicfiss_zicfilp_zcb_zfh_zfa";
 
 fn binutils_prefix() -> Option<String> {
     let candidates = match std::env::var("DISC_V_BINUTILS_PREFIX") {

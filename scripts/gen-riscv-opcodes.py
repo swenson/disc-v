@@ -29,7 +29,7 @@ rv32_zbs rv64_zbs rv_zicond rv_zawrs rv_zicbo
 rv_zihintntl rv_c_zihintntl rv_zimop rv_zcmop rv_zicfiss rv_c_zicfiss
 rv_zicfilp rv_zcb rv64_zcb
 rv_zfh rv64_zfh rv_zfhmin rv_d_zfhmin rv_q_zfhmin rv_f_zfa rv_d_zfa rv32_d_zfa
-rv_q_zfa rv64_q_zfa rv_zfh_zfa""".split()
+rv_q_zfa rv64_q_zfa rv_zfh_zfa rv_v""".split()
 
 root = sys.argv[1]
 ext_dir = os.path.join(root, 'extensions')
@@ -73,6 +73,13 @@ def find_def(f, name):
             return tokens
     raise KeyError(f'{name} not in {f}')
 
+def segment_name(name, fields):
+    """The name of a vector load or store with `fields` fields (nf + 1), as
+    in vlseg2e32.v for vle32.v. riscv-opcodes leaves nf as an operand."""
+    m = re.fullmatch(r'v([ls])(e|se|uxei|oxei)(\d+)(ff)?\.v', name)
+    kind = {'e': 'seg{n}e', 'se': 'sseg{n}e', 'uxei': 'uxseg{n}ei', 'oxei': 'oxseg{n}ei'}
+    return f"v{m.group(1)}{kind[m.group(2)].format(n=fields)}{m.group(3)}{m.group(4) or ''}.v"
+
 def strip_suffix(name):
     return re.sub(r'[._]rv(32|64)$', '', name)
 
@@ -92,5 +99,13 @@ for f in FILES:
             tokens = tokens[2:]
         name, match, mask, nz, n2 = parse_line(tokens)
         nzs = ','.join(f'{m:x}' for m in nz) or '-'
-        print(f"{isas} {strip_suffix(name)} {base} {match:x} {mask:x} {nzs} {n2:x}" if n2 else
-              f"{isas} {strip_suffix(name)} {base} {match:x} {mask:x} {nzs} -")
+        n2s = f'{n2:x}' if n2 else '-'
+        variants = [(strip_suffix(name), base, match, mask)]
+        if 'nf' in tokens:
+            # Each value of nf is a separately named segment instruction.
+            nf_mask = 7 << 29
+            variants = [(name, base, match, mask | nf_mask)] + [
+                (segment_name(name, nf + 1), name, match | nf << 29, mask | nf_mask)
+                for nf in range(1, 8)]
+        for n, b, m, k in variants:
+            print(f"{isas} {n} {b} {m:x} {k:x} {nzs} {n2s}")

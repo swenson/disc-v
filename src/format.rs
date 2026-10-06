@@ -77,6 +77,13 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
             write!(out, ",{}", names[ins.rm as usize])
         }
         'P' => write!(out, "{}", ins.imm & !0x1f),
+        'D' => write!(out, "v{}", ins.rd),
+        'A' => write!(out, "v{}", ins.rs1),
+        'B' => write!(out, "v{}", ins.rs2),
+        'M' if ins.masked => out.write_str(",v0.t"),
+        'M' => Ok(()),
+        'Z' => out.write_str("v0"),
+        'T' => write_vtype(out, ins.imm as u32),
         'F' => out.write_str(FLI_CONSTANTS[ins.rs1 as usize]),
         'l' => write!(out, "{}", ins.len),
         'x' => {
@@ -88,6 +95,19 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
         's' => write_fence_set(out, ins.succ),
         _ => unreachable!("unknown format character {c:?}"),
     }
+}
+
+/// Writes a `vtype` immediate as objdump does, such as `e32,m1,ta,ma`, or as
+/// a number if it has reserved values.
+fn write_vtype(out: &mut fmt::Formatter<'_>, vtype: u32) -> fmt::Result {
+    let (sew, lmul) = ((vtype >> 3) & 7, vtype & 7);
+    let lmul = ["m1", "m2", "m4", "m8", "", "mf8", "mf4", "mf2"][lmul as usize];
+    if vtype >> 8 != 0 || sew > 3 || lmul.is_empty() {
+        return write!(out, "{vtype}");
+    }
+    let tail = if vtype & 0x40 != 0 { "ta" } else { "tu" };
+    let mask = if vtype & 0x80 != 0 { "ma" } else { "mu" };
+    write!(out, "e{},{lmul},{tail},{mask}", 8 << sew)
 }
 
 /// Writes the device input, device output, memory read and memory write bits

@@ -54,6 +54,7 @@ ISA specification disagree; see [Testing](#testing).
 - Zcb
 - Zfh and Zfhmin
 - Zfa
+- V (vectors)
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`
 
 48- and 64-bit encodings are recognized (so disassembly stays in sync) but
@@ -83,7 +84,9 @@ amounts of 32 or more (reserved, but decoded by objdump), are listed in
 the specification, disc-v follows the specification, and the differences are
 listed in `NOT_IN_SPEC` in `tests/riscv_opcodes.rs`.
 
-CSR names come from riscv-opcodes, via `scripts/gen-csr-names.py`.
+CSR names come from riscv-opcodes, via `scripts/gen-csr-names.py`, and so do
+the vector instruction tables in `src/opcodes/v.rs`, via
+`scripts/gen-vector-opcodes.py`, which encodes objdump's operand order.
 
 ## Origins
 

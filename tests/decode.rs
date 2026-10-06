@@ -172,6 +172,19 @@ fn cache_management_and_hints() {
 }
 
 #[test]
+fn vector() {
+    check(Isa::Rv64, 0x022180d7, "vadd.vv v1,v2,v3");
+    check(Isa::Rv64, 0x002180d7, "vadd.vv v1,v2,v3,v0.t");
+    check(Isa::Rv64, 0xb62560d7, "vmacc.vx v1,a0,v2");
+    check(Isa::Rv64, 0x402180d7, "vadc.vvm v1,v2,v3,v0");
+    check(Isa::Rv64, 0x0d05f557, "vsetvli a0,a1,e32,m1,ta,ma");
+    check(Isa::Rv64, 0x0045f557, "vsetvli a0,a1,4"); // reserved LMUL
+    check(Isa::Rv64, 0x22056087, "vlseg2e32.v v1,(a0)");
+    check(Isa::Rv64, 0x2e2fb0d7, "vnot.v v1,v2");
+    check(Isa::Rv32, 0x02056087, "vle32.v v1,(a0)");
+}
+
+#[test]
 fn half_precision() {
     check(Isa::Rv64, 0x00051507, "flh fa0,0(a0)");
     check(Isa::Rv64, 0x04b57553, "fadd.h fa0,fa0,fa1");

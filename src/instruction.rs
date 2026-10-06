@@ -39,6 +39,8 @@ pub struct Instruction {
     pub(crate) aq: bool,
     pub(crate) rl: bool,
     pub(crate) imm: i32,
+    /// For vector instructions, whether the operation is masked by `v0`.
+    pub(crate) masked: bool,
 }
 
 impl Instruction {
@@ -63,6 +65,7 @@ impl Instruction {
             aq: false,
             rl: false,
             imm: 0,
+            masked: false,
         }
     }
 
