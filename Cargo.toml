@@ -7,3 +7,8 @@ license = "MIT AND Apache-2.0"
 readme = "README.md"
 keywords = ["riscv", "disassembler", "risc-v"]
 categories = ["development-tools", "no-std"]
+
+[features]
+default = ["alloc"]
+# Enables `disasm_inst`, which returns a `String`.
+alloc = []
