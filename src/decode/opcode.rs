@@ -6,8 +6,8 @@
 
 //! Maps instruction encodings to opcode table entries.
 
-use crate::opcodes::{a, b, c, d, f, i, m, q, system, Opcode};
 use crate::Isa;
+use crate::opcodes::{Opcode, a, b, c, d, f, i, m, q, system};
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 13) & 7 {

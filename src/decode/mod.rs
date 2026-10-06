@@ -9,9 +9,9 @@
 mod opcode;
 mod operands;
 
+use crate::Isa;
 use crate::instruction::Instruction;
 use crate::opcodes::{Codec, Constraint, ILLEGAL};
-use crate::Isa;
 
 /// Decodes the instruction `inst` located at address `pc`.
 pub(crate) fn decode(isa: Isa, pc: u64, inst: u64) -> Instruction {

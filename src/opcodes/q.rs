@@ -7,7 +7,7 @@
 //! "Q" extension: quad-precision floating point.
 
 use super::Constraint::*;
-use super::{fmt, pseudo, Codec, Opcode, Pseudo};
+use super::{Codec, Opcode, Pseudo, fmt, pseudo};
 
 pub(crate) static FLQ: Opcode = Opcode::new("flq", Codec::I, fmt::FRD_OFFSET_RS1);
 pub(crate) static FSQ: Opcode = Opcode::new("fsq", Codec::S, fmt::FRS2_OFFSET_RS1);

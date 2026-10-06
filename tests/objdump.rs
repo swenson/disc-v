@@ -20,8 +20,8 @@ use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
 
-use common::{riscv_opcodes_samples, Failures, Rng};
-use disc_v::{decode, Isa};
+use common::{Failures, Rng, riscv_opcodes_samples};
+use disc_v::{Isa, decode};
 
 const MARCH_EXTENSIONS: &str = "imafdqc_zicsr_zifencei_zba_zbb_zbc_zbs";
 

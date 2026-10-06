@@ -7,7 +7,7 @@
 //! Bit-manipulation extensions: Zba, Zbb, Zbc and Zbs.
 
 use super::Constraint::*;
-use super::{fmt, Codec, Opcode, Pseudo};
+use super::{Codec, Opcode, Pseudo, fmt};
 use crate::reg;
 
 pub(crate) static ANDN: Opcode = Opcode::new("andn", Codec::R, fmt::RD_RS1_RS2);

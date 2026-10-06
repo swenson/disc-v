@@ -6,7 +6,7 @@
 
 //! "M" extension: integer multiplication and division.
 
-use super::{fmt, Codec, Opcode};
+use super::{Codec, Opcode, fmt};
 
 pub(crate) static MUL: Opcode = Opcode::new("mul", Codec::R, fmt::RD_RS1_RS2);
 pub(crate) static MULH: Opcode = Opcode::new("mulh", Codec::R, fmt::RD_RS1_RS2);

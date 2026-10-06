@@ -7,7 +7,7 @@
 //! Environment calls, trap returns, fences for virtual memory, and Zicsr.
 
 use super::Constraint::*;
-use super::{fmt, pseudo, Codec, Opcode, Pseudo};
+use super::{Codec, Opcode, Pseudo, fmt, pseudo};
 use crate::reg;
 
 pub(crate) static ECALL: Opcode = Opcode::new("ecall", Codec::None, fmt::NONE);

@@ -19,6 +19,9 @@ an integer with `decode`. An `Instruction` has the mnemonic, operands,
 address, length and raw encoding, and `without_aliases()` shows it as
 encoded (`c.li a0,1` rather than `li a0,1`), like `objdump -M no-aliases`.
 
+The minimum supported Rust version is 1.85.1, so disc-v builds with the
+toolchains Tock uses: the nightly the kernel pins, and libtock-rs's 1.88.
+
 ## Output format
 
 The text is what `objdump -D -b binary` prints for the same bytes: the same

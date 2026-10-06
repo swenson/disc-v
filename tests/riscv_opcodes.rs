@@ -10,8 +10,8 @@
 
 pub mod common;
 
-use common::{entries, Entry, Failures, Rng};
-use disc_v::{decode, Isa};
+use common::{Entry, Failures, Rng, entries};
+use disc_v::{Isa, decode};
 
 /// The mnemonic of `inst` without aliases, or `None` if it is illegal.
 fn decoded_name(isa: Isa, inst: u32) -> Option<&'static str> {

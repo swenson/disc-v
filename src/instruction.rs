@@ -6,9 +6,9 @@
 
 //! The decoded instruction type.
 
-use crate::opcodes::c::C_UNIMP;
-use crate::opcodes::{Opcode, ILLEGAL};
 use crate::Isa;
+use crate::opcodes::c::C_UNIMP;
+use crate::opcodes::{ILLEGAL, Opcode};
 
 /// A decoded instruction.
 ///

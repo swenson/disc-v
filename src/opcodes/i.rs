@@ -7,7 +7,7 @@
 //! RV32I, RV64I and RV128I base integer instructions, including Zifencei.
 
 use super::Constraint::*;
-use super::{fmt, pseudo, Codec, Opcode, Pseudo};
+use super::{Codec, Opcode, Pseudo, fmt, pseudo};
 use crate::reg;
 
 pub(crate) static LUI: Opcode = Opcode::new("lui", Codec::U, fmt::RD_UIMM);

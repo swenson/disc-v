@@ -7,7 +7,7 @@
 //! "C" extension: compressed instructions.
 
 use super::Constraint::*;
-use super::{d, f, fmt, i, pseudo, system, Codec, Opcode, Pseudo};
+use super::{Codec, Opcode, Pseudo, d, f, fmt, i, pseudo, system};
 use crate::reg;
 
 pub(crate) static C_ADDI4SPN: Opcode = Opcode {

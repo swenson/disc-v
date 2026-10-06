@@ -6,7 +6,7 @@
 
 //! "A" extension: atomic instructions.
 
-use super::{fmt, Codec, Opcode};
+use super::{Codec, Opcode, fmt};
 
 pub(crate) static LR_W: Opcode = Opcode::new("lr.w", Codec::RL, fmt::RD_ADDR_RS1);
 pub(crate) static SC_W: Opcode = Opcode::new("sc.w", Codec::RA, fmt::RD_RS2_ADDR_RS1);

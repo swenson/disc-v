@@ -3,7 +3,7 @@
 
 //! Decoding and formatting of specific instructions, and the public API.
 
-use disc_v::{decode, decode_bytes, disassemble, Isa};
+use disc_v::{Isa, decode, decode_bytes, disassemble};
 
 #[track_caller]
 fn check(isa: Isa, inst: u32, expected: &str) {

@@ -7,7 +7,7 @@
 //! "F" extension: single-precision floating point.
 
 use super::Constraint::*;
-use super::{fmt, pseudo, Codec, Opcode, Pseudo};
+use super::{Codec, Opcode, Pseudo, fmt, pseudo};
 
 pub(crate) static FLW: Opcode = Opcode::new("flw", Codec::I, fmt::FRD_OFFSET_RS1);
 pub(crate) static FSW: Opcode = Opcode::new("fsw", Codec::S, fmt::FRS2_OFFSET_RS1);

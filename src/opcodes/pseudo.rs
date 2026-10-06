@@ -7,7 +7,7 @@
 //! Pseudoinstructions and aliases that real instructions are shown as
 //! when their operands match. See [`Opcode::pseudo`](super::Opcode::pseudo).
 
-use super::{fmt, Codec, Opcode};
+use super::{Codec, Opcode, fmt};
 
 pub(crate) static NOP: Opcode = Opcode::new("nop", Codec::I, fmt::NONE);
 pub(crate) static MV: Opcode = Opcode::new("mv", Codec::I, fmt::RD_RS1);
