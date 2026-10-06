@@ -26,6 +26,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   riscv-opcodes by `scripts/gen-vector-opcodes.py`.
 - Vector bit manipulation (Zvbb, Zvbc) and cryptography (Zvkg, Zvkned,
   Zvknha, Zvknhb, Zvksed, Zvksh).
+- H (`hlv.*`, `hlvx.*`, `hsv.*`, `hfence.vvma`, `hfence.gvma`), Svinval
+  (`sinval.vma`, `sfence.w.inval`, `sfence.inval.ir`, `hinval.*`), Smrnmi
+  (`mnret`) and Ssctr (`sctrclr`).
 
 ### Changed
 

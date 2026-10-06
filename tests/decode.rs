@@ -251,6 +251,21 @@ fn may_be_operations() {
 }
 
 #[test]
+fn hypervisor_and_privileged() {
+    check(Isa::Rv64, 0x22b50073, "hfence.vvma a0,a1");
+    check(Isa::Rv64, 0x22050073, "hfence.vvma a0");
+    check(Isa::Rv64, 0x62000073, "hfence.gvma");
+    check(Isa::Rv64, 0x6005c573, "hlv.b a0,(a1)");
+    check(Isa::Rv64, 0x6435c573, "hlvx.hu a0,(a1)");
+    check(Isa::Rv64, 0x6eb54073, "hsv.d a1,(a0)");
+    check(Isa::Rv32, 0x6eb54073, ".insn 4, 0x6eb54073"); // hsv.d is RV64-only
+    check(Isa::Rv64, 0x16000073, "sinval.vma zero,zero");
+    check(Isa::Rv64, 0x18100073, "sfence.inval.ir");
+    check(Isa::Rv64, 0x70200073, "mnret");
+    check(Isa::Rv64, 0x10400073, "sctrclr");
+}
+
+#[test]
 fn rv128() {
     check(Isa::Rv128, 0x0005200f, "lq zero,0(a0)");
     check(Isa::Rv128, 0x00053503, "ld a0,0(a0)");

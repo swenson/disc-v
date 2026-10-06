@@ -30,7 +30,8 @@ rv_zihintntl rv_c_zihintntl rv_zimop rv_zcmop rv_zicfiss rv_c_zicfiss
 rv_zicfilp rv_zcb rv64_zcb
 rv_zfh rv64_zfh rv_zfhmin rv_d_zfhmin rv_q_zfhmin rv_f_zfa rv_d_zfa rv32_d_zfa
 rv_q_zfa rv64_q_zfa rv_zfh_zfa rv_v rv_zvbb rv_zvbc rv_zvkg rv_zvkned
-rv_zvknha rv_zvksed rv_zvksh""".split()
+rv_zvknha rv_zvksed rv_zvksh rv_h rv64_h rv_svinval rv_svinval_h rv_smrnmi
+rv_ssctr""".split()
 
 root = sys.argv[1]
 ext_dir = os.path.join(root, 'extensions')

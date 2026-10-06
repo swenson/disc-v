@@ -26,6 +26,14 @@ pub(crate) static SFENCE_VMA: Opcode = Opcode {
     ..Opcode::new("sfence.vma", Codec::R, fmt::RS1_RS2)
 };
 pub(crate) static WFI: Opcode = Opcode::new("wfi", Codec::None, fmt::NONE);
+// Svinval.
+pub(crate) static SINVAL_VMA: Opcode = Opcode::new("sinval.vma", Codec::R, fmt::RS1_RS2);
+pub(crate) static SFENCE_W_INVAL: Opcode = Opcode::new("sfence.w.inval", Codec::None, fmt::NONE);
+pub(crate) static SFENCE_INVAL_IR: Opcode = Opcode::new("sfence.inval.ir", Codec::None, fmt::NONE);
+// Smrnmi.
+pub(crate) static MNRET: Opcode = Opcode::new("mnret", Codec::None, fmt::NONE);
+// Ssctr.
+pub(crate) static SCTRCLR: Opcode = Opcode::new("sctrclr", Codec::None, fmt::NONE);
 pub(crate) static CSRRW: Opcode = Opcode {
     pseudo: &[
         Pseudo::new(

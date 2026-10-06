@@ -8,8 +8,8 @@
 
 use crate::Isa;
 use crate::opcodes::{
-    Opcode, a, b, c, d, f, i, lookup_masked, m, q, system, v, zawrs, zcb, zfa, zfh, zicbo, zicond,
-    zimop,
+    Opcode, a, b, c, d, f, h, i, lookup_masked, m, q, system, v, zawrs, zcb, zfa, zfh, zicbo,
+    zicond, zimop,
 };
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
@@ -704,10 +704,41 @@ fn system_inst(inst: u64) -> Option<&'static Opcode> {
             0x1050_0073 => Some(&system::WFI),
             0x3020_0073 => Some(&system::MRET),
             0x7b20_0073 => Some(&system::DRET),
-            _ if inst & 0xfe00_7fff == 0x1200_0073 => Some(&system::SFENCE_VMA),
+            0x1040_0073 => Some(&system::SCTRCLR),
+            0x1800_0073 => Some(&system::SFENCE_W_INVAL),
+            0x1810_0073 => Some(&system::SFENCE_INVAL_IR),
+            0x7020_0073 => Some(&system::MNRET),
+            // R-type fences with rd=zero, selected by funct7.
+            _ if inst & 0x7fff == 0x0073 => match inst >> 25 {
+                0x09 => Some(&system::SFENCE_VMA),
+                0x0b => Some(&system::SINVAL_VMA),
+                0x11 => Some(&h::HFENCE_VVMA),
+                0x13 => Some(&h::HINVAL_VVMA),
+                0x31 => Some(&h::HFENCE_GVMA),
+                0x33 => Some(&h::HINVAL_GVMA),
+                _ => None,
+            },
             _ => None,
         },
         1 => Some(&system::CSRRW),
+        // Hypervisor loads (any rd) and stores (rd=zero), selected by funct7
+        // and the rs2 field.
+        4 if inst >> 31 == 0 => match (inst >> 25, (inst >> 20) & 0x1f, (inst >> 7) & 0x1f) {
+            (0x30, 0, _) => Some(&h::HLV_B),
+            (0x30, 1, _) => Some(&h::HLV_BU),
+            (0x32, 0, _) => Some(&h::HLV_H),
+            (0x32, 1, _) => Some(&h::HLV_HU),
+            (0x32, 3, _) => Some(&h::HLVX_HU),
+            (0x34, 0, _) => Some(&h::HLV_W),
+            (0x34, 1, _) => Some(&h::HLV_WU),
+            (0x34, 3, _) => Some(&h::HLVX_WU),
+            (0x36, 0, _) => Some(&h::HLV_D),
+            (0x31, _, 0) => Some(&h::HSV_B),
+            (0x33, _, 0) => Some(&h::HSV_H),
+            (0x35, _, 0) => Some(&h::HSV_W),
+            (0x37, _, 0) => Some(&h::HSV_D),
+            _ => None,
+        },
         // May-be-operations: bit 31 set and bits 29:28 clear, with the number
         // in bits 30, 27:26 and (for mop.r) 21:20.
         4 if inst & 0xb000_0000 == 0x8000_0000 => {

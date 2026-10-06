@@ -11,6 +11,7 @@ pub(crate) mod b;
 pub(crate) mod c;
 pub(crate) mod d;
 pub(crate) mod f;
+pub(crate) mod h;
 pub(crate) mod i;
 pub(crate) mod m;
 pub(crate) mod pseudo;
@@ -183,6 +184,7 @@ pub(crate) mod fmt {
     pub(crate) const RAW: &str = "x";
     pub(crate) const ADDR_RS1: &str = "(1)";
     pub(crate) const RS2: &str = "2";
+    pub(crate) const RS2_ADDR_RS1: &str = "2,(1)";
     pub(crate) const UIMM: &str = "u";
     pub(crate) const FRD_FLI: &str = "3,F";
     pub(crate) const FRD_RS1_RS2: &str = "3,1,2";

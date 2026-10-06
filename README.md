@@ -56,7 +56,9 @@ ISA specification disagree; see [Testing](#testing).
 - Zfa
 - V (vectors)
 - Zvbb and Zvbc; Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed and Zvksh
-- `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`
+- H (hypervisor)
+- `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`; Svinval,
+  Smrnmi (`mnret`) and Ssctr (`sctrclr`)
 
 48- and 64-bit encodings are recognized (so disassembly stays in sync) but
 shown as `.insn`, as objdump does.
