@@ -131,7 +131,7 @@ fn reserved_encodings_are_illegal() {
     let cases = [
         (Isa::Rv64, 0x0004),     // c.addi4spn with a zero immediate
         (Isa::Rv64, 0x6101),     // c.addi16sp with a zero immediate
-        (Isa::Rv64, 0x6081),     // c.lui with a zero immediate
+        (Isa::Rv64, 0x6201),     // c.lui with a zero immediate (and an even rd)
         (Isa::Rv64, 0x4002),     // c.lwsp with rd=zero
         (Isa::Rv64, 0x6002),     // c.ldsp with rd=zero
         (Isa::Rv64, 0x8002),     // c.jr with rs1=zero
@@ -169,6 +169,24 @@ fn cache_management_and_hints() {
     check(Isa::Rv64, 0x0100000f, "pause");
     // On RV128, this encoding is lq rather than cbo.inval.
     check(Isa::Rv128, 0x0005200f, "lq zero,0(a0)");
+}
+
+#[test]
+fn may_be_operations() {
+    check(Isa::Rv64, 0x81c5c573, "mop.r.0 a0,a1");
+    check(Isa::Rv64, 0x82c5c573, "mop.rr.0 a0,a1,a2");
+    check(Isa::Rv64, 0xcdc0c073, "sspopchk ra");
+    check(Isa::Rv64, 0xcdc04573, "ssrdp a0");
+    check(Isa::Rv64, 0xce104073, "sspush ra");
+    check(Isa::Rv64, 0xcdc5c073, "mop.r.28 zero,a1");
+    check(Isa::Rv64, 0x6081, "sspush ra");
+    check(Isa::Rv64, 0x6181, "c.mop.3");
+    check(Isa::Rv64, 0x00012017, "lpad 0x12");
+    check(Isa::Rv64, 0x4cb5352f, "ssamoswap.d.aq a0,a1,(a0)");
+    assert_eq!(
+        decode(Isa::Rv64, 0, 0x6081).without_aliases().to_string(),
+        "c.mop.1"
+    );
 }
 
 #[test]

@@ -50,6 +50,7 @@ ISA specification disagree; see [Testing](#testing).
 - Zicond
 - Zawrs
 - Zicbom, Zicboz and Zicbop; Zihintntl and Zihintpause
+- Zimop and Zcmop, with the Zicfiss and Zicfilp instructions
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`
 
 48- and 64-bit encodings are recognized (so disassembly stays in sync) but
@@ -75,7 +76,9 @@ Besides unit tests, the decoder is checked against two references:
 Where binutils and the ISA specification disagree on whether an encoding is
 valid, disc-v follows the specification. The differences, such as RV32 shift
 amounts of 32 or more (reserved, but decoded by objdump), are listed in
-`known_difference` in `tests/objdump.rs`.
+`known_difference` in `tests/objdump.rs`. Where riscv-opcodes disagrees with
+the specification, disc-v follows the specification, and the differences are
+listed in `NOT_IN_SPEC` in `tests/riscv_opcodes.rs`.
 
 CSR names come from riscv-opcodes, via `scripts/gen-csr-names.py`.
 

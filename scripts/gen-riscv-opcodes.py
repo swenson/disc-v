@@ -26,7 +26,8 @@ FILES = """rv_i rv32_i rv64_i rv_m rv64_m rv_a rv64_a rv_f rv64_f rv_d rv64_d
 rv_q rv64_q rv_c rv32_c rv64_c rv_c_d rv32_c_f rv_zicsr rv_zifencei rv_system
 rv_s rv_sdext rv_zicntr rv_zba rv64_zba rv_zbb rv32_zbb rv64_zbb rv_zbc rv_zbs
 rv32_zbs rv64_zbs rv_zicond rv_zawrs rv_zicbo
-rv_zihintntl rv_c_zihintntl""".split()
+rv_zihintntl rv_c_zihintntl rv_zimop rv_zcmop rv_zicfiss rv_c_zicfiss
+rv_zicfilp""".split()
 
 root = sys.argv[1]
 ext_dir = os.path.join(root, 'extensions')

@@ -7,7 +7,7 @@
 //! Maps instruction encodings to opcode table entries.
 
 use crate::Isa;
-use crate::opcodes::{Opcode, a, b, c, d, f, i, m, q, system, zawrs, zicbo, zicond};
+use crate::opcodes::{Opcode, a, b, c, d, f, i, m, q, system, zawrs, zicbo, zicond, zimop};
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 13) & 7 {
@@ -55,6 +55,8 @@ fn compressed_1(isa: Isa, inst: u64) -> Option<&'static Opcode> {
         2 => Some(&c::C_LI),
         3 => Some(match (inst >> 7) & 0x1f {
             2 => &c::C_ADDI16SP,
+            // c.lui with an odd rd below 16 and a zero immediate.
+            rd if rd & 1 == 1 && rd < 16 && inst & 0x107c == 0 => &zimop::C_MOP[rd as usize / 2],
             _ => &c::C_LUI,
         }),
         4 => match (inst >> 10) & 3 {
@@ -320,6 +322,8 @@ fn amo(inst: u64) -> Option<&'static Opcode> {
         27 => Some(&a::SC_D),
         28 => Some(&a::SC_Q),
         34 => Some(&a::AMOXOR_W),
+        74 => Some(&zimop::SSAMOSWAP_W),
+        75 => Some(&zimop::SSAMOSWAP_D),
         35 => Some(&a::AMOXOR_D),
         36 => Some(&a::AMOXOR_Q),
         66 => Some(&a::AMOOR_W),
@@ -614,6 +618,16 @@ fn system_inst(inst: u64) -> Option<&'static Opcode> {
             _ => None,
         },
         1 => Some(&system::CSRRW),
+        // May-be-operations: bit 31 set and bits 29:28 clear, with the number
+        // in bits 30, 27:26 and (for mop.r) 21:20.
+        4 if inst & 0xb000_0000 == 0x8000_0000 => {
+            let n = (inst >> 30 & 1) << 2 | (inst >> 26 & 3);
+            match (inst >> 22) & 0xf {
+                0b0111 => Some(&zimop::MOP_R[(n << 2 | (inst >> 20 & 3)) as usize]),
+                0b1000..=0b1111 => Some(&zimop::MOP_RR[n as usize]),
+                _ => None,
+            }
+        }
         2 => Some(&system::CSRRS),
         3 => Some(&system::CSRRC),
         5 => Some(&system::CSRRWI),

@@ -13,11 +13,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Zicbom, Zicboz and Zicbop (`cbo.*`, and `prefetch.*` for the `ori` hints).
 - Zihintntl (`ntl.*`, for the `add` and `c.add` hints) and Zihintpause
   (`pause`).
+- Zimop and Zcmop (`mop.r.N`, `mop.rr.N`, `c.mop.N`), with the Zicfiss
+  (`sspush`, `sspopchk`, `ssrdp`, `ssamoswap.w`/`.d`) and Zicfilp (`lpad`)
+  instructions.
 
 ### Changed
 
 - On RV32 and RV64, the MISC-MEM encodings that were RV128's `lq` are now
   decoded as `cbo.*` where valid.
+- `c.lui` with an odd destination below `x16` and a zero immediate, previously
+  reserved, is decoded as `c.mop.N`.
 
 ## [0.1.0]
 

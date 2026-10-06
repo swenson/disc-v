@@ -7,11 +7,14 @@
 //! RV32I, RV64I and RV128I base integer instructions, including Zifencei.
 
 use super::Constraint::*;
-use super::{Codec, Opcode, Pseudo, fmt, pseudo, zicbo};
+use super::{Codec, Opcode, Pseudo, fmt, pseudo, zicbo, zimop};
 use crate::reg;
 
 pub(crate) static LUI: Opcode = Opcode::new("lui", Codec::U, fmt::RD_UIMM);
-pub(crate) static AUIPC: Opcode = Opcode::new("auipc", Codec::U, fmt::RD_UIMM);
+pub(crate) static AUIPC: Opcode = Opcode {
+    pseudo: &[Pseudo::new(&zimop::LPAD, &[RdEq(reg::ZERO)])],
+    ..Opcode::new("auipc", Codec::U, fmt::RD_UIMM)
+};
 pub(crate) static JAL: Opcode = Opcode {
     pseudo: &[
         Pseudo::new(&pseudo::J, &[RdEq(reg::ZERO)]),

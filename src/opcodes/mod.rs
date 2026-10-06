@@ -19,6 +19,7 @@ pub(crate) mod system;
 pub(crate) mod zawrs;
 pub(crate) mod zicbo;
 pub(crate) mod zicond;
+pub(crate) mod zimop;
 
 use crate::Isa;
 
@@ -147,6 +148,8 @@ pub(crate) mod fmt {
     pub(crate) const INSN: &str = "l, x";
     pub(crate) const RAW: &str = "x";
     pub(crate) const ADDR_RS1: &str = "(1)";
+    pub(crate) const RS2: &str = "2";
+    pub(crate) const UIMM: &str = "u";
     pub(crate) const PREFETCH: &str = "P(1)";
 }
 

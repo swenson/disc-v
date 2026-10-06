@@ -9,6 +9,7 @@
 pub(crate) const ZERO: u8 = 0;
 pub(crate) const RA: u8 = 1;
 pub(crate) const SP: u8 = 2;
+pub(crate) const T0: u8 = 5;
 
 /// ABI names of the integer registers `x0`-`x31`.
 pub(crate) static INT_NAMES: [&str; 32] = [

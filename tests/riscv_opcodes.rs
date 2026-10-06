@@ -13,6 +13,14 @@ pub mod common;
 use common::{Entry, Failures, Rng, entries};
 use disc_v::{Isa, decode};
 
+/// Encodings riscv-opcodes lists for an ISA where the specification says they
+/// do not exist, so disc-v decodes them as illegal.
+const NOT_IN_SPEC: &[(Isa, &str)] = &[
+    // The Zicfiss chapter of the ISA manual says ssamoswap.d is RV64-only, but
+    // riscv-opcodes defines it in rv_zicfiss rather than rv64_zicfiss.
+    (Isa::Rv32, "ssamoswap.d"),
+];
+
 /// The mnemonic of `inst` without aliases, or `None` if it is illegal.
 fn decoded_name(isa: Isa, inst: u32) -> Option<&'static str> {
     let ins = decode(isa, 0, inst as u64).without_aliases();
@@ -25,7 +33,10 @@ fn every_riscv_opcodes_encoding_decodes_to_its_name() {
     let mut rng = Rng::new(1);
     let mut failures = Failures::default();
     for isa in [Isa::Rv32, Isa::Rv64] {
-        for e in entries.iter().filter(|e| e.applies_to(isa)) {
+        for e in entries
+            .iter()
+            .filter(|e| e.applies_to(isa) && !NOT_IN_SPEC.contains(&(isa, e.name)))
+        {
             for inst in e.samples(&mut rng, 64) {
                 match decoded_name(isa, inst) {
                     Some(name) if e.is_named(name) => {}
