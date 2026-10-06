@@ -266,12 +266,13 @@ pub(super) fn extract(ins: &mut Instruction, codec: Codec) {
             ins.rl = operand_rl(inst) != 0;
         }
         Codec::RF => {
-            ins.rd = reg::ZERO;
+            // rd and rs1 are reserved, but pause requires them to be zero.
+            ins.rd = operand_rd(inst) as u8;
+            ins.rs1 = operand_rs1(inst) as u8;
             ins.rs2 = reg::ZERO;
-            ins.rs1 = reg::ZERO;
             ins.pred = operand_pred(inst) as u8;
             ins.succ = operand_succ(inst) as u8;
-            ins.imm = 0;
+            ins.imm = operand_imm12(inst);
         }
         Codec::Cb => {
             ins.rd = reg::ZERO;

@@ -10,6 +10,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Zicond (`czero.eqz`, `czero.nez`).
 - Zawrs (`wrs.nto`, `wrs.sto`).
+- Zicbom, Zicboz and Zicbop (`cbo.*`, and `prefetch.*` for the `ori` hints).
+- Zihintntl (`ntl.*`, for the `add` and `c.add` hints) and Zihintpause
+  (`pause`).
+
+### Changed
+
+- On RV32 and RV64, the MISC-MEM encodings that were RV128's `lq` are now
+  decoded as `cbo.*` where valid.
 
 ## [0.1.0]
 

@@ -140,7 +140,7 @@ fn reserved_encodings_are_illegal() {
         (Isa::Rv64, 0x101525af), // lr.w with rs2 nonzero
         (Isa::Rv32, 0x02051513), // slli with a shift amount of 32
         (Isa::Rv32, 0x00053503), // ld, which is RV64-only
-        (Isa::Rv64, 0x0005200f), // lq, which is RV128-only
+        (Isa::Rv64, 0x00a54023), // sq, which is RV128-only
         (Isa::Rv64, 0x0000007b), // custom-3, which RV128 uses
     ];
     for (isa, inst) in cases {
@@ -156,6 +156,19 @@ fn illegal_encodings_are_shown_as_insn() {
     check(Isa::Rv32, 0x0000007b, ".insn 4, 0x007b");
     check(Isa::Rv32, 0x0911003b, ".insn 4, 0x0911003b");
     check(Isa::Rv64, 0x6101, ".insn 2, 0x6101");
+}
+
+#[test]
+fn cache_management_and_hints() {
+    check(Isa::Rv64, 0x0015200f, "cbo.clean (a0)");
+    check(Isa::Rv64, 0x0045200f, "cbo.zero (a0)");
+    check(Isa::Rv64, 0x02156013, "prefetch.r 32(a0)");
+    check(Isa::Rv64, 0x00256013, "ori zero,a0,2");
+    check(Isa::Rv64, 0x00200033, "ntl.p1");
+    check(Isa::Rv64, 0x900a, "ntl.p1");
+    check(Isa::Rv64, 0x0100000f, "pause");
+    // On RV128, this encoding is lq rather than cbo.inval.
+    check(Isa::Rv128, 0x0005200f, "lq zero,0(a0)");
 }
 
 #[test]

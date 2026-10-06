@@ -26,8 +26,10 @@ pub(crate) fn decode(isa: Isa, pc: u64, inst: u64) -> Instruction {
     if is_reserved(&ins) {
         return Instruction::new(isa, pc, inst, &ILLEGAL);
     }
-    // HINTs are shown as encoded, as objdump does.
+    // HINTs are shown as encoded, as objdump does, unless they have an alias
+    // (such as c.ntl.p1 for a c.add HINT).
     if op.hint_if.iter().any(|&c| holds(&ins, c)) {
+        lift_pseudo(&mut ins);
         return ins;
     }
     if let Some(expanded) = op.decompress[isa as usize] {
@@ -68,5 +70,6 @@ fn holds(ins: &Instruction, c: Constraint) -> bool {
         Constraint::Rs2Eq(r) => ins.rs2 == r,
         Constraint::Rs2EqRs1 => ins.rs2 == ins.rs1,
         Constraint::ImmEq(imm) | Constraint::CsrEq(imm) => ins.imm == imm,
+        Constraint::ImmMaskEq(mask, value) => ins.imm & mask == value,
     }
 }

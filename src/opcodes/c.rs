@@ -7,7 +7,7 @@
 //! "C" extension: compressed instructions.
 
 use super::Constraint::*;
-use super::{Codec, Opcode, Pseudo, d, f, fmt, i, pseudo, system};
+use super::{Codec, Opcode, Pseudo, d, f, fmt, i, pseudo, system, zicbo};
 use crate::reg;
 
 pub(crate) static C_ADDI4SPN: Opcode = Opcode {
@@ -166,6 +166,13 @@ pub(crate) static C_JALR: Opcode = Opcode {
 pub(crate) static C_ADD: Opcode = Opcode {
     decompress: [Some(&i::ADD), Some(&i::ADD), Some(&i::ADD)],
     hint_if: &[RdEq(reg::ZERO)],
+    // Aliases of the HINT, which has rd=zero.
+    pseudo: &[
+        Pseudo::new(&zicbo::NTL_P1, &[Rs2Eq(2)]),
+        Pseudo::new(&zicbo::NTL_PALL, &[Rs2Eq(3)]),
+        Pseudo::new(&zicbo::NTL_S1, &[Rs2Eq(4)]),
+        Pseudo::new(&zicbo::NTL_ALL, &[Rs2Eq(5)]),
+    ],
     ..Opcode::new("c.add", Codec::Cr, fmt::RD_RS2)
 };
 pub(crate) static C_FSDSP: Opcode = Opcode {

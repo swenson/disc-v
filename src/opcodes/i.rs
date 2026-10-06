@@ -7,7 +7,7 @@
 //! RV32I, RV64I and RV128I base integer instructions, including Zifencei.
 
 use super::Constraint::*;
-use super::{Codec, Opcode, Pseudo, fmt, pseudo};
+use super::{Codec, Opcode, Pseudo, fmt, pseudo, zicbo};
 use crate::reg;
 
 pub(crate) static LUI: Opcode = Opcode::new("lui", Codec::U, fmt::RD_UIMM);
@@ -79,7 +79,14 @@ pub(crate) static XORI: Opcode = Opcode {
     pseudo: &[Pseudo::new(&pseudo::NOT, &[ImmEq(-1)])],
     ..Opcode::new("xori", Codec::I, fmt::RD_RS1_IMM)
 };
-pub(crate) static ORI: Opcode = Opcode::new("ori", Codec::I, fmt::RD_RS1_IMM);
+pub(crate) static ORI: Opcode = Opcode {
+    pseudo: &[
+        Pseudo::new(&zicbo::PREFETCH_I, &[RdEq(reg::ZERO), ImmMaskEq(0x1f, 0)]),
+        Pseudo::new(&zicbo::PREFETCH_R, &[RdEq(reg::ZERO), ImmMaskEq(0x1f, 1)]),
+        Pseudo::new(&zicbo::PREFETCH_W, &[RdEq(reg::ZERO), ImmMaskEq(0x1f, 3)]),
+    ],
+    ..Opcode::new("ori", Codec::I, fmt::RD_RS1_IMM)
+};
 pub(crate) static ANDI: Opcode = Opcode {
     pseudo: &[Pseudo::new(&pseudo::ZEXT_B, &[ImmEq(255)])],
     ..Opcode::new("andi", Codec::I, fmt::RD_RS1_IMM)
@@ -87,7 +94,27 @@ pub(crate) static ANDI: Opcode = Opcode {
 pub(crate) static SLLI: Opcode = Opcode::new("slli", Codec::ISh7, fmt::RD_RS1_SHAMT);
 pub(crate) static SRLI: Opcode = Opcode::new("srli", Codec::ISh7, fmt::RD_RS1_SHAMT);
 pub(crate) static SRAI: Opcode = Opcode::new("srai", Codec::ISh7, fmt::RD_RS1_SHAMT);
-pub(crate) static ADD: Opcode = Opcode::new("add", Codec::R, fmt::RD_RS1_RS2);
+pub(crate) static ADD: Opcode = Opcode {
+    pseudo: &[
+        Pseudo::new(
+            &zicbo::NTL_P1,
+            &[RdEq(reg::ZERO), Rs1Eq(reg::ZERO), Rs2Eq(2)],
+        ),
+        Pseudo::new(
+            &zicbo::NTL_PALL,
+            &[RdEq(reg::ZERO), Rs1Eq(reg::ZERO), Rs2Eq(3)],
+        ),
+        Pseudo::new(
+            &zicbo::NTL_S1,
+            &[RdEq(reg::ZERO), Rs1Eq(reg::ZERO), Rs2Eq(4)],
+        ),
+        Pseudo::new(
+            &zicbo::NTL_ALL,
+            &[RdEq(reg::ZERO), Rs1Eq(reg::ZERO), Rs2Eq(5)],
+        ),
+    ],
+    ..Opcode::new("add", Codec::R, fmt::RD_RS1_RS2)
+};
 pub(crate) static SUB: Opcode = Opcode {
     pseudo: &[Pseudo::new(&pseudo::NEG, &[Rs1Eq(reg::ZERO)])],
     ..Opcode::new("sub", Codec::R, fmt::RD_RS1_RS2)
@@ -110,7 +137,14 @@ pub(crate) static SRA: Opcode = Opcode::new("sra", Codec::R, fmt::RD_RS1_RS2);
 pub(crate) static OR: Opcode = Opcode::new("or", Codec::R, fmt::RD_RS1_RS2);
 pub(crate) static AND: Opcode = Opcode::new("and", Codec::R, fmt::RD_RS1_RS2);
 pub(crate) static FENCE_TSO: Opcode = Opcode::new("fence.tso", Codec::None, fmt::NONE);
-pub(crate) static FENCE: Opcode = Opcode::new("fence", Codec::RF, fmt::PRED_SUCC);
+pub(crate) static FENCE: Opcode = Opcode {
+    // pause is fence w,0 with fm, rd and rs1 zero.
+    pseudo: &[Pseudo::new(
+        &zicbo::PAUSE,
+        &[ImmEq(0x010), RdEq(reg::ZERO), Rs1Eq(reg::ZERO)],
+    )],
+    ..Opcode::new("fence", Codec::RF, fmt::PRED_SUCC)
+};
 pub(crate) static FENCE_I: Opcode = Opcode::new("fence.i", Codec::None, fmt::NONE);
 pub(crate) static LWU: Opcode = Opcode::new("lwu", Codec::I, fmt::RD_OFFSET_RS1).rv64();
 pub(crate) static LD: Opcode = Opcode::new("ld", Codec::I, fmt::RD_OFFSET_RS1).rv64();

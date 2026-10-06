@@ -75,6 +75,7 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
             ];
             write!(out, ",{}", names[ins.rm as usize])
         }
+        'P' => write!(out, "{}", ins.imm & !0x1f),
         'l' => write!(out, "{}", ins.len),
         'x' => {
             // As objdump does, padded to a whole number of 16-bit parcels.

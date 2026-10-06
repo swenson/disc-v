@@ -17,6 +17,7 @@ pub(crate) mod pseudo;
 pub(crate) mod q;
 pub(crate) mod system;
 pub(crate) mod zawrs;
+pub(crate) mod zicbo;
 pub(crate) mod zicond;
 
 use crate::Isa;
@@ -94,6 +95,7 @@ pub(crate) enum Codec {
 /// | `r` | `,` and the rounding mode, unless it is dynamic |
 /// | `R` | `,` and the rounding mode, unless it is RNE (for exact conversions) |
 /// | `p` `s` | fence predecessor and successor sets |
+/// | `P` | prefetch offset: the immediate with its low five bits cleared |
 /// | `l` | length of the encoding in bytes |
 /// | `x` | the encoding, in hex, padded to a whole number of 16-bit parcels |
 /// | `,` ` ` `(` `)` | themselves |
@@ -144,6 +146,8 @@ pub(crate) mod fmt {
     pub(crate) const WIDEN_FRD_RS1: &str = "3,1R";
     pub(crate) const INSN: &str = "l, x";
     pub(crate) const RAW: &str = "x";
+    pub(crate) const ADDR_RS1: &str = "(1)";
+    pub(crate) const PREFETCH: &str = "P(1)";
 }
 
 /// A condition on decoded operands, used to pick a pseudoinstruction.
@@ -154,6 +158,8 @@ pub(crate) enum Constraint {
     Rs2Eq(u8),
     Rs2EqRs1,
     ImmEq(i32),
+    /// The immediate's bits in the mask (first) equal the value (second).
+    ImmMaskEq(i32, i32),
     /// The CSR number, which is held in the immediate.
     CsrEq(i32),
 }

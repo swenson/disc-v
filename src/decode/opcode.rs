@@ -7,7 +7,7 @@
 //! Maps instruction encodings to opcode table entries.
 
 use crate::Isa;
-use crate::opcodes::{Opcode, a, b, c, d, f, i, m, q, system, zawrs, zicond};
+use crate::opcodes::{Opcode, a, b, c, d, f, i, m, q, system, zawrs, zicbo, zicond};
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 13) & 7 {
@@ -153,13 +153,21 @@ fn load_fp(inst: u64) -> Option<&'static Opcode> {
     }
 }
 
-fn misc_mem(inst: u64) -> Option<&'static Opcode> {
+fn misc_mem(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 12) & 7 {
         // fence.tso is fm=1000 with pred=succ=rw.
         0 if inst >> 20 == 0x833 => Some(&i::FENCE_TSO),
         0 => Some(&i::FENCE),
         1 => Some(&i::FENCE_I),
-        2 => Some(&i::LQ),
+        // RV128 uses this space for lq.
+        2 if isa == Isa::Rv128 => Some(&i::LQ),
+        2 if (inst >> 7) & 0x1f == 0 => match inst >> 20 {
+            0 => Some(&zicbo::CBO_INVAL),
+            1 => Some(&zicbo::CBO_CLEAN),
+            2 => Some(&zicbo::CBO_FLUSH),
+            4 => Some(&zicbo::CBO_ZERO),
+            _ => None,
+        },
         _ => None,
     }
 }
@@ -635,7 +643,7 @@ fn uncompressed(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 2) & 0x1f {
         0 => load(inst),
         1 => load_fp(inst),
-        3 => misc_mem(inst),
+        3 => misc_mem(isa, inst),
         4 => op_imm(isa, inst),
         5 => Some(&i::AUIPC),
         6 => {
