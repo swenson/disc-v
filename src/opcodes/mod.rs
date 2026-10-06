@@ -98,6 +98,9 @@ pub(crate) enum Codec {
     V,
     /// As [`Codec::V`], with an unsigned 5-bit immediate.
     Vu,
+    /// As [`Codec::V`], with an unsigned 6-bit immediate in bit 26 and the
+    /// vs1 field (`vror.vi`).
+    Vu6,
     /// `vsetvli`: rd, rs1 and an 11-bit `vtype` immediate.
     VsetVli,
     /// `vsetivli`: rd, a 5-bit AVL immediate in the rs1 field, and a 10-bit

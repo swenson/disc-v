@@ -55,6 +55,7 @@ ISA specification disagree; see [Testing](#testing).
 - Zfh and Zfhmin
 - Zfa
 - V (vectors)
+- Zvbb and Zvbc; Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed and Zvksh
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`
 
 48- and 64-bit encodings are recognized (so disassembly stays in sync) but

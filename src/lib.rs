@@ -19,6 +19,7 @@
 //! - Zfh and Zfhmin
 //! - Zfa
 //! - V (vectors)
+//! - Zvbb and Zvbc; Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed and Zvksh
 //!
 //! The text follows GNU objdump's for a raw binary (`objdump -D -b binary`),
 //! so branch targets are written as `0x1008`.

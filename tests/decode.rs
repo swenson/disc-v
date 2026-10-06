@@ -185,6 +185,19 @@ fn vector() {
 }
 
 #[test]
+fn vector_bit_manipulation_and_crypto() {
+    check(Isa::Rv64, 0x062180d7, "vandn.vv v1,v2,v3");
+    check(Isa::Rv64, 0x562fb0d7, "vror.vi v1,v2,63"); // 6-bit immediate
+    check(Isa::Rv64, 0x4a2620d7, "vclz.v v1,v2");
+    check(Isa::Rv64, 0x322560d7, "vclmul.vx v1,v2,a0");
+    check(Isa::Rv64, 0xa220a0f7, "vaesdf.vv v1,v2");
+    check(Isa::Rv64, 0xb221a0f7, "vghsh.vv v1,v2,v3");
+    check(Isa::Rv64, 0x8a22a0f7, "vaeskf1.vi v1,v2,5");
+    check(Isa::Rv64, 0xba21a0f7, "vsha2ch.vv v1,v2,v3");
+    check(Isa::Rv64, 0xae23a0f7, "vsm3c.vi v1,v2,7");
+}
+
+#[test]
 fn half_precision() {
     check(Isa::Rv64, 0x00051507, "flh fa0,0(a0)");
     check(Isa::Rv64, 0x04b57553, "fadd.h fa0,fa0,fa1");

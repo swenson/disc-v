@@ -775,6 +775,7 @@ fn uncompressed(isa: Isa, inst: u64) -> Option<&'static Opcode> {
         19 => nmadd(inst),
         20 => op_fp(inst),
         21 => lookup_masked(&v::OP_V, inst),
+        29 => lookup_masked(&v::OP_VE, inst),
         22 => custom2_rv128(inst),
         24 => branch(inst),
         25 => jalr(inst),

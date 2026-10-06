@@ -24,6 +24,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - V (vectors), including segment loads and stores and objdump's aliases
   (`vnot.v`, `vneg.v`, `vmmv.m`, ...). The tables are generated from
   riscv-opcodes by `scripts/gen-vector-opcodes.py`.
+- Vector bit manipulation (Zvbb, Zvbc) and cryptography (Zvkg, Zvkned,
+  Zvknha, Zvknhb, Zvksed, Zvksh).
 
 ### Changed
 

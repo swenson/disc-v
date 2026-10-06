@@ -483,14 +483,14 @@ pub(super) fn extract(ins: &mut Instruction, codec: Codec) {
             ins.rs2 = reg::ZERO;
             ins.imm = operand_imm12(inst);
         }
-        Codec::V | Codec::Vu => {
+        Codec::V | Codec::Vu | Codec::Vu6 => {
             ins.rd = operand_rd(inst) as u8;
             ins.rs1 = operand_rs1(inst) as u8;
             ins.rs2 = operand_rs2(inst) as u8;
-            ins.imm = if codec == Codec::V {
-                operand_simm5(inst)
-            } else {
-                operand_rs1(inst) as i32
+            ins.imm = match codec {
+                Codec::V => operand_simm5(inst),
+                Codec::Vu => operand_rs1(inst) as i32,
+                _ => ((inst >> 26 & 1) << 5 | inst >> 15 & 0x1f) as i32,
             };
             ins.masked = (inst >> 25) & 1 == 0;
         }
