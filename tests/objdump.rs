@@ -107,13 +107,9 @@ fn objdump(prefix: &str, isa: Isa, insts: &[u32]) -> Vec<String> {
 }
 
 /// Puts objdump's text in disc-v's format: a space after the mnemonic, no
-/// comments, `0x`-prefixed branch targets without symbols, and `illegal` for
-/// undecodable encodings.
+/// comments, and `0x`-prefixed branch targets without symbols.
 fn normalize(text: &str) -> String {
     let text = text.split(" # ").next().unwrap().trim_end();
-    if text.starts_with(".insn") {
-        return "illegal".into();
-    }
     let mut text = text.replacen('\t', " ", 1);
     // Older binutils (such as 2.42) name the shift-by-zero HINTs c.slli64,
     // c.srli64 and c.srai64.
@@ -151,7 +147,7 @@ fn csr_operand(text: &str) -> Option<(&str, &str)> {
 /// no name for.
 fn known_difference(isa: Isa, inst: u32, objdump: &str, disc_v: &str) -> Option<&'static str> {
     let mnemonic = |s: &str| s.split([' ', '.']).next().unwrap().to_string();
-    if disc_v == "illegal" {
+    if disc_v.starts_with(".insn ") {
         // A shift amount of 32 or more is reserved on RV32.
         let shift = [
             "slli", "srli", "srai", "bclri", "bseti", "binvi", "bexti", "rori", "c.slli", "c.srli",
@@ -165,7 +161,7 @@ fn known_difference(isa: Isa, inst: u32, objdump: &str, disc_v: &str) -> Option<
             return Some("c.addi16sp 0");
         }
     }
-    if objdump == "illegal" {
+    if objdump.starts_with(".insn ") {
         // Base implementations must ignore the reserved fields of fence and
         // fence.i (and treat reserved fence modes as normal fences).
         if mnemonic(disc_v) == "fence" {
@@ -195,7 +191,7 @@ fn test_encodings(rng: &mut Rng) -> Vec<u32> {
     insts.extend(
         (0..200_000)
             .map(|_| rng.next_u32() | 3)
-            .filter(|&x| disc_v::inst_length(x as u64) == 4),
+            .filter(|&x| disc_v::inst_length(x as u16) == Some(4)),
     );
     insts.extend(riscv_opcodes_samples(rng, 64));
     insts

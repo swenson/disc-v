@@ -92,7 +92,9 @@ pub(crate) enum Codec {
 /// | `r` | `,` and the rounding mode, unless it is dynamic |
 /// | `R` | `,` and the rounding mode, unless it is RNE (for exact conversions) |
 /// | `p` `s` | fence predecessor and successor sets |
-/// | `,` `(` `)` | themselves |
+/// | `l` | length of the encoding in bytes |
+/// | `x` | the encoding, in hex, padded to a whole number of 16-bit parcels |
+/// | `,` ` ` `(` `)` | themselves |
 pub(crate) mod fmt {
     pub(crate) const NONE: &str = "";
     pub(crate) const RS1: &str = "1";
@@ -138,6 +140,8 @@ pub(crate) mod fmt {
     pub(crate) const IMM: &str = "i";
     pub(crate) const WIDEN_FRD_FRS1: &str = "3,4R";
     pub(crate) const WIDEN_FRD_RS1: &str = "3,1R";
+    pub(crate) const INSN: &str = "l, x";
+    pub(crate) const RAW: &str = "x";
 }
 
 /// A condition on decoded operands, used to pick a pseudoinstruction.
@@ -240,4 +244,8 @@ impl core::fmt::Debug for Opcode {
     }
 }
 
-pub(crate) static ILLEGAL: Opcode = Opcode::new("illegal", Codec::Illegal, fmt::NONE);
+/// An encoding that is not a valid instruction, shown as objdump does.
+pub(crate) static ILLEGAL: Opcode = Opcode::new(".insn", Codec::Illegal, fmt::INSN);
+/// A 16-bit parcel of an encoding with a reserved length (10 bytes or more),
+/// which `.insn` cannot express.
+pub(crate) static RESERVED_PARCEL: Opcode = Opcode::new(".2byte", Codec::Illegal, fmt::RAW);

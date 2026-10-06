@@ -50,7 +50,7 @@ impl Display for Operands<'_> {
 /// [`fmt`](crate::opcodes::fmt).
 fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::Result {
     match c {
-        '(' | ',' | ')' => out.write_char(c),
+        '(' | ',' | ' ' | ')' => out.write_char(c),
         '0' => out.write_str(INT_NAMES[ins.rd as usize]),
         '1' => out.write_str(INT_NAMES[ins.rs1 as usize]),
         '2' => out.write_str(INT_NAMES[ins.rs2 as usize]),
@@ -74,6 +74,12 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
                 "rne", "rtz", "rdn", "rup", "rmm", "unknown", "unknown", "dyn",
             ];
             write!(out, ",{}", names[ins.rm as usize])
+        }
+        'l' => write!(out, "{}", ins.len),
+        'x' => {
+            // As objdump does, padded to a whole number of 16-bit parcels.
+            let parcels = (64 - ins.inst.leading_zeros()).div_ceil(16).max(1) as usize;
+            write!(out, "0x{:01$x}", ins.inst, parcels * 4)
         }
         'p' => write_fence_set(out, ins.pred),
         's' => write_fence_set(out, ins.succ),

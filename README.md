@@ -49,7 +49,7 @@ ISA specification disagree; see [Testing](#testing).
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`
 
 48- and 64-bit encodings are recognized (so disassembly stays in sync) but
-shown as `illegal`.
+shown as `.insn`, as objdump does.
 
 ## Testing
 

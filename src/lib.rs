@@ -59,8 +59,7 @@ impl Isa {
 
 /// Decodes the instruction `inst`, located at address `pc`.
 ///
-/// Only the low [`inst_length(inst)`](inst_length) bytes of `inst` are part
-/// of the instruction; RISC-V encodings are little-endian, so this is the
+/// Only the low [`inst_length`] bytes of `inst` are part of the instruction; RISC-V encodings are little-endian, so this is the
 /// value of those bytes read as a little-endian integer.
 ///
 /// ```
@@ -85,8 +84,8 @@ pub fn decode(isa: Isa, pc: u64, inst: u64) -> Instruction {
 /// assert_eq!(ins.length(), 4);
 /// ```
 pub fn decode_bytes(isa: Isa, pc: u64, bytes: &[u8]) -> Option<Instruction> {
-    let first = u16::from_le_bytes([*bytes.first()?, *bytes.get(1)?]) as u64;
-    let len = inst_length(first).max(2);
+    let first = u16::from_le_bytes([*bytes.first()?, *bytes.get(1)?]);
+    let len = inst_length(first).unwrap_or(2);
     let mut word = [0; 8];
     word[..len].copy_from_slice(bytes.get(..len)?);
     Some(decode(isa, pc, u64::from_le_bytes(word)))
@@ -135,20 +134,26 @@ impl Iterator for Disassembler<'_> {
 
 impl core::iter::FusedIterator for Disassembler<'_> {}
 
-/// Returns the length in bytes of the instruction whose encoding starts with
-/// `inst`, or 0 for reserved lengths of 10 bytes or more.
+/// Returns the length in bytes of the instruction whose first 16-bit parcel
+/// is `parcel`, or `None` for the reserved lengths of 10 bytes or more.
 ///
-/// Only the low 16 bits of `inst` are examined.
-pub fn inst_length(inst: u64) -> usize {
-    if inst & 3 != 3 {
-        2
-    } else if inst & 0x1c != 0x1c {
-        4
-    } else if inst & 0x3f == 0x1f {
-        6
-    } else if inst & 0x7f == 0x3f {
-        8
+/// ```
+/// use disc_v::inst_length;
+///
+/// assert_eq!(inst_length(0x4505), Some(2)); // li a0,1
+/// assert_eq!(inst_length(0x0513), Some(4)); // the low half of li a0,10
+/// assert_eq!(inst_length(0x007f), None);
+/// ```
+pub fn inst_length(parcel: u16) -> Option<usize> {
+    if parcel & 3 != 3 {
+        Some(2)
+    } else if parcel & 0x1c != 0x1c {
+        Some(4)
+    } else if parcel & 0x3f == 0x1f {
+        Some(6)
+    } else if parcel & 0x7f == 0x3f {
+        Some(8)
     } else {
-        0
+        None
     }
 }

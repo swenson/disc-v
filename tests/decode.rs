@@ -20,7 +20,7 @@ fn check(isa: Isa, inst: u32, expected: &str) {
 fn caliptra_cases() {
     let cases = [
         (Isa::Rv32, 0x10018193, "addi gp,gp,256"),
-        (Isa::Rv32, 0x0911003b, "illegal"),
+        (Isa::Rv32, 0x0911003b, ".insn 4, 0x0911003b"),
         (Isa::Rv64, 0x0911003b, "add.uw zero,sp,a7"),
         (Isa::Rv64, 0x0800003b, "zext.w zero,zero"),
         (Isa::Rv32, 0x40007033, "andn zero,zero,zero"),
@@ -104,8 +104,9 @@ fn compressed() {
     check(Isa::Rv64, 0xe406, "sd ra,8(sp)");
     check(Isa::Rv32, 0x2001, "jal 0x4");
     // On RV64 this is c.addiw with rd=zero, which is reserved.
-    check(Isa::Rv64, 0x2001, "illegal");
+    check(Isa::Rv64, 0x2001, ".insn 2, 0x2001");
     check(Isa::Rv64, 0x0000, "unimp");
+    check(Isa::Rv64, 0x0004, ".insn 2, 0x0004");
     // HINTs are shown as encoded.
     check(Isa::Rv64, 0x4005, "c.li zero,1");
     check(Isa::Rv64, 0x0005, "c.nop 1");
@@ -145,8 +146,16 @@ fn reserved_encodings_are_illegal() {
     for (isa, inst) in cases {
         let ins = decode(isa, 0, inst);
         assert!(ins.is_illegal(), "{isa:?} {inst:#x} decoded as {ins}");
-        assert_eq!(ins.to_string(), "illegal");
+        assert!(ins.to_string().starts_with(".insn "), "{ins}");
     }
+}
+
+#[test]
+fn illegal_encodings_are_shown_as_insn() {
+    // The value is padded to a whole number of 16-bit parcels, as objdump does.
+    check(Isa::Rv32, 0x0000007b, ".insn 4, 0x007b");
+    check(Isa::Rv32, 0x0911003b, ".insn 4, 0x0911003b");
+    check(Isa::Rv64, 0x6101, ".insn 2, 0x6101");
 }
 
 #[test]
@@ -207,11 +216,14 @@ fn long_encodings() {
     // 48-bit and 64-bit encodings are recognized but not decoded.
     let ins = decode_bytes(Isa::Rv64, 0, &[0x1f, 0, 0, 0, 0, 0]).unwrap();
     assert_eq!((ins.length(), ins.is_illegal()), (6, true));
+    assert_eq!(ins.to_string(), ".insn 6, 0x001f");
     let ins = decode_bytes(Isa::Rv64, 0, &[0x3f, 0, 0, 0, 0, 0, 0, 0]).unwrap();
     assert_eq!((ins.length(), ins.is_illegal()), (8, true));
-    // Reserved lengths are skipped two bytes at a time.
+    assert_eq!(ins.to_string(), ".insn 8, 0x003f");
+    // Reserved lengths are shown two bytes at a time.
     let ins = decode_bytes(Isa::Rv64, 0, &[0x7f, 0, 0, 0]).unwrap();
     assert_eq!((ins.length(), ins.is_illegal()), (2, true));
+    assert_eq!(ins.to_string(), ".2byte 0x007f");
 }
 
 #[test]
@@ -242,7 +254,7 @@ fn disassemble_iterates_over_mixed_lengths() {
         [
             (0x100, "li a0,1".to_string()),
             (0x104, "ret".to_string()),
-            (0x106, "illegal".to_string())
+            (0x106, ".insn 6, 0x001f".to_string())
         ]
     );
     assert_eq!(iter.remainder(), [0x13, 0x05]);

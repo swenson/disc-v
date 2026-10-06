@@ -9,7 +9,7 @@
 use crate::Isa;
 use crate::format::Operands;
 use crate::opcodes::c::C_UNIMP;
-use crate::opcodes::{ILLEGAL, Opcode};
+use crate::opcodes::{Codec, Opcode};
 
 /// A decoded instruction.
 ///
@@ -43,12 +43,9 @@ pub struct Instruction {
 
 impl Instruction {
     pub(crate) fn new(isa: Isa, pc: u64, inst: u64, op: &'static Opcode) -> Self {
-        // Reserved lengths are treated as a 2-byte illegal instruction so
-        // that disassembly can continue.
-        let len = match crate::inst_length(inst) {
-            0 => 2,
-            len => len as u8,
-        };
+        // Reserved lengths are shown one 16-bit parcel at a time so that
+        // disassembly can continue.
+        let len = crate::inst_length(inst as u16).unwrap_or(2) as u8;
         Instruction {
             isa,
             pc,
@@ -92,7 +89,12 @@ impl Instruction {
         self.len as usize
     }
 
-    /// The mnemonic, such as `"addi"`, `"li"` or `"amoadd.w"`, or `"illegal"`.
+    /// The mnemonic, such as `"addi"`, `"li"` or `"amoadd.w"`.
+    ///
+    /// An encoding that is not a valid instruction is shown as objdump shows
+    /// it, as an `.insn` directive (`.insn 4, 0x0911003b`), or as a `.2byte`
+    /// directive for a parcel of a reserved-length encoding. Use
+    /// [`is_illegal`](Self::is_illegal) to check for these.
     ///
     /// Compressed instructions are shown as the instruction they expand to,
     /// and aliases (pseudoinstructions) are used where objdump uses them.
@@ -113,7 +115,7 @@ impl Instruction {
     /// all-zeros 16-bit encoding, which the ISA defines to be illegal and
     /// which is shown as `unimp`.
     pub fn is_illegal(&self) -> bool {
-        *self.op == ILLEGAL || *self.decoded == C_UNIMP
+        self.op.codec == Codec::Illegal || *self.decoded == C_UNIMP
     }
 
     /// The same instruction, shown as encoded: compressed instructions keep

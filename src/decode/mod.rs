@@ -11,13 +11,14 @@ mod operands;
 
 use crate::Isa;
 use crate::instruction::Instruction;
-use crate::opcodes::{Codec, Constraint, ILLEGAL};
+use crate::opcodes::{Codec, Constraint, ILLEGAL, RESERVED_PARCEL};
 
 /// Decodes the instruction `inst` located at address `pc`.
 pub(crate) fn decode(isa: Isa, pc: u64, inst: u64) -> Instruction {
-    let inst = match crate::inst_length(inst) {
-        0 | 2 => inst & 0xffff,
-        len => inst & (u64::MAX >> (64 - 8 * len)),
+    let inst = match crate::inst_length(inst as u16) {
+        Some(2) => inst & 0xffff,
+        Some(len) => inst & (u64::MAX >> (64 - 8 * len)),
+        None => return Instruction::new(isa, pc, inst & 0xffff, &RESERVED_PARCEL),
     };
     let op = opcode::lookup(isa, inst).unwrap_or(&ILLEGAL);
     let mut ins = Instruction::new(isa, pc, inst, op);
