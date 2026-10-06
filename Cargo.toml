@@ -10,5 +10,5 @@ repository = "https://github.com/swenson/disc-v"
 readme = "README.md"
 keywords = ["riscv", "risc-v", "disassembler", "decoder", "objdump"]
 categories = ["development-tools", "no-std"]
-include = ["/src", "/tests", "/scripts", "/README.md", "/LICENSE", "/NOTICE"]
+include = ["/src", "/tests", "/scripts", "/README.md", "/CHANGELOG.md", "/LICENSE", "/NOTICE"]
 
