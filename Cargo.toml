@@ -2,6 +2,7 @@
 name = "disc-v"
 version = "0.1.0"
 edition = "2021"
+authors = ["Christopher Swenson <swenson@swenson.io>"]
 description = "A RISC-V disassembler"
 license = "Apache-2.0"
 readme = "README.md"

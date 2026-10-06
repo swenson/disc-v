@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Christopher Swenson
 // Licensed under the Apache-2.0 license.
 
 //! Checks the decoder against the official encodings in

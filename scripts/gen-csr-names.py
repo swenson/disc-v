@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Christopher Swenson
 # Licensed under the Apache-2.0 license.
 """Generates src/csr.rs from the CSR lists in a checkout of
 https://github.com/riscv/riscv-opcodes (csrs.csv and csrs32.csv).
@@ -15,7 +16,8 @@ for f in ('csrs.csv', 'csrs32.csv'):
         assert names.setdefault(num, name) == name, (hex(num), name)
 rev = subprocess.run(['git', '-C', root, 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
 
-print(f'''// Licensed under the Apache-2.0 license.
+print(f'''// Copyright (c) 2026 Christopher Swenson
+// Licensed under the Apache-2.0 license.
 
 //! Control and status register names.
 //!

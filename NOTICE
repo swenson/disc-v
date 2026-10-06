@@ -1,4 +1,5 @@
 disc-v
+Copyright (c) 2026 Christopher Swenson
 Licensed under the Apache License, Version 2.0; see LICENSE.
 
 disc-v is based on the RISC-V disassembler in the Caliptra MCU emulator

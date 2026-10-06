@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Christopher Swenson
 // Licensed under the Apache-2.0 license.
 //
 // Derived from riscv-disassembler, Copyright (c) 2016-2017 Michael Clark

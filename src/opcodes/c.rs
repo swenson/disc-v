@@ -1,12 +1,10 @@
+// Copyright (c) 2026 Christopher Swenson
 // Licensed under the Apache-2.0 license.
 //
 // Derived from riscv-disassembler, Copyright (c) 2016-2017 Michael Clark
 // and Copyright (c) 2017-2018 SiFive, Inc., under the MIT license; see NOTICE.
 
 //! "C" extension: compressed instructions.
-//!
-//! Each compressed instruction lists the instruction it expands to for each
-//! base ISA; `None` means the encoding is not valid for that ISA.
 
 use super::Constraint::*;
 use super::{d, f, fmt, i, pseudo, system, Codec, Opcode, Pseudo};

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Christopher Swenson
 // Licensed under the Apache-2.0 license.
 
 //! Decoding and formatting of specific instructions, and the public API.
@@ -102,11 +103,12 @@ fn compressed() {
     check(Isa::Rv64, 0x1141, "addi sp,sp,-16");
     check(Isa::Rv64, 0xe406, "sd ra,8(sp)");
     check(Isa::Rv32, 0x2001, "jal 0x4");
-    check(Isa::Rv64, 0x2001, "illegal"); // c.addiw with rd=zero is reserved
-                                         // HINTs are shown as encoded.
+    // On RV64 this is c.addiw with rd=zero, which is reserved.
+    check(Isa::Rv64, 0x2001, "illegal");
+    check(Isa::Rv64, 0x0000, "unimp");
+    // HINTs are shown as encoded.
     check(Isa::Rv64, 0x4005, "c.li zero,1");
     check(Isa::Rv64, 0x0005, "c.nop 1");
-    check(Isa::Rv64, 0x0000, "unimp");
 }
 
 #[test]

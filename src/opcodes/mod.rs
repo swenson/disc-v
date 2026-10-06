@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Christopher Swenson
 // Licensed under the Apache-2.0 license.
 //
 // Derived from riscv-disassembler, Copyright (c) 2016-2017 Michael Clark
@@ -223,8 +224,8 @@ impl Opcode {
     }
 }
 
-// Opcodes refer to each other (an instruction can be its own pseudo), so
-// identity is by address and `Debug` shows only the mnemonic.
+// Opcodes are compared by address, and `Debug` shows only the mnemonic
+// rather than the alias and expansion tables.
 impl PartialEq for Opcode {
     fn eq(&self, other: &Self) -> bool {
         core::ptr::eq(self, other)

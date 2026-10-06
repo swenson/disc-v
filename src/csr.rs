@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Christopher Swenson
 // Licensed under the Apache-2.0 license.
 
 //! Control and status register names.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Christopher Swenson
 // Licensed under the Apache-2.0 license.
 
 //! Compares disc-v's output with GNU objdump.
@@ -5,8 +6,8 @@
 //! The encodings tested are every compressed encoding, random 32-bit
 //! encodings, and random encodings of every instruction in riscv-opcodes.
 //! They are assembled with `.insn` directives (so the assembler does no
-//! checking), disassembled with `objdump -d`, and compared after normalizing
-//! whitespace and dropping objdump's comments.
+//! checking), disassembled with `objdump -d`, and compared after putting
+//! objdump's text in disc-v's format (see `normalize`).
 //!
 //! The test is skipped if no RISC-V binutils are found. It looks for
 //! `riscv64-elf-`, `riscv64-unknown-elf-` and `riscv64-linux-gnu-` prefixed
@@ -123,10 +124,6 @@ fn normalize(text: &str) -> String {
     text
 }
 
-/// Why disc-v's output may differ from objdump's for `inst`, or `None` if
-/// it should not. These are encodings where binutils disagrees with the ISA
-/// specification about what is valid; disc-v follows the specification (as
-/// encoded in riscv-opcodes).
 /// The mnemonic and CSR operand of a CSR instruction.
 fn csr_operand(text: &str) -> Option<(&str, &str)> {
     let (mnemonic, operands) = text.split_once(' ')?;
@@ -140,6 +137,11 @@ fn csr_operand(text: &str) -> Option<(&str, &str)> {
     }
 }
 
+/// Why disc-v's output may differ from objdump's for `inst`, or `None` if
+/// it should not. These are encodings where binutils disagrees with the ISA
+/// specification about what is valid, where disc-v follows the
+/// specification (as encoded in riscv-opcodes), and CSRs that binutils has
+/// no name for.
 fn known_difference(isa: Isa, inst: u32, objdump: &str, disc_v: &str) -> Option<&'static str> {
     let mnemonic = |s: &str| s.split([' ', '.']).next().unwrap().to_string();
     if disc_v == "illegal" {

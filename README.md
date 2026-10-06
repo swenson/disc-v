@@ -30,8 +30,7 @@ Branch and jump targets are absolute addresses, always written with `0x`:
 `beq a0,a1,0x1008`. When objdump disassembles an ELF file it instead writes
 the target as bare hex followed by a symbol, as in `beq a0,a1,1008 <foo+0x8>`.
 disc-v has no symbol information, so it uses objdump's raw-binary form,
-which is unambiguous. (The Caliptra code disc-v started from printed the
-offset in decimal with the target as a comment, as in `beq a0,a1,8 # 0x1008`.)
+which is unambiguous.
 
 A few encodings are decoded differently from objdump where binutils and the
 ISA specification disagree; see [Testing](#testing).
@@ -88,6 +87,8 @@ the same C disassembler by Wladimir J. van der Laan and Adam H. Leventhal.
 That repository has no license, so this crate does not use any of its code.
 
 ## License
+
+Copyright (c) 2026 Christopher Swenson.
 
 disc-v is licensed under the Apache License, Version 2.0 ([LICENSE](LICENSE)).
 

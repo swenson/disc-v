@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Christopher Swenson
 // Licensed under the Apache-2.0 license.
 //
 // Derived from riscv-disassembler, Copyright (c) 2016-2017 Michael Clark
@@ -20,8 +21,6 @@
 //! # let text: Vec<_> = disassemble(Isa::Rv64, 0x1000, &code).map(|i| i.to_string()).collect();
 //! # assert_eq!(text, ["li a0,1", "ret"]);
 //! ```
-//!
-//! The crate is `no_std` and does not allocate.
 #![no_std]
 
 mod csr;
