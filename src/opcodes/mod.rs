@@ -16,6 +16,7 @@ pub(crate) mod m;
 pub(crate) mod pseudo;
 pub(crate) mod q;
 pub(crate) mod system;
+pub(crate) mod zicond;
 
 use crate::Isa;
 

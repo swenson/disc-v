@@ -6,6 +6,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Zicond (`czero.eqz`, `czero.nez`).
+
 ## [0.1.0]
 
 Initial release.

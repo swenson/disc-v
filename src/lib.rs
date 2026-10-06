@@ -6,10 +6,15 @@
 
 //! A RISC-V disassembler.
 //!
-//! Supports RV32, RV64 and RV128 with the I, M, A, F, D, Q and C extensions,
-//! Zicsr, Zifencei, and the bit-manipulation extensions Zba, Zbb, Zbc and
-//! Zbs. The text follows GNU objdump's for a raw binary
-//! (`objdump -D -b binary`), so branch targets are written as `0x1008`.
+//! Supports RV32, RV64 and RV128 with these extensions:
+//!
+//! - M, A, F, D, Q and C
+//! - Zicsr and Zifencei
+//! - Zba, Zbb, Zbc and Zbs
+//! - Zicond
+//!
+//! The text follows GNU objdump's for a raw binary (`objdump -D -b binary`),
+//! so branch targets are written as `0x1008`.
 //!
 //! ```
 //! use disc_v::{disassemble, Isa};
