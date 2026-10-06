@@ -1,5 +1,7 @@
 # disc-v
 
+[![CI](https://github.com/swenson/disc-v/actions/workflows/ci.yml/badge.svg)](https://github.com/swenson/disc-v/actions/workflows/ci.yml)
+
 A RISC-V disassembler in Rust. It is `no_std`, does not allocate, and its
 output follows GNU objdump's (see [Output format](#output-format)).
 
@@ -64,7 +66,7 @@ Besides unit tests, the decoder is checked against two references:
   instruction in riscv-opcodes. It needs a RISC-V binutils
   (`riscv64-elf-objdump`, `riscv64-unknown-elf-objdump` or
   `riscv64-linux-gnu-objdump`) and is skipped if none is found; set
-  `DISC_V_REQUIRE_BINUTILS=1` to make that an error.
+  `DISC_V_REQUIRE_BINUTILS=1` to make that an error, as CI does.
 
 Where binutils and the ISA specification disagree on whether an encoding is
 valid, disc-v follows the specification. The differences, such as RV32 shift

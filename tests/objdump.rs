@@ -115,6 +115,13 @@ fn normalize(text: &str) -> String {
         return "illegal".into();
     }
     let mut text = text.replacen('\t', " ", 1);
+    // Older binutils (such as 2.42) name the shift-by-zero HINTs c.slli64,
+    // c.srli64 and c.srai64.
+    for name in ["c.slli", "c.srli", "c.srai"] {
+        if let Some(reg) = text.strip_prefix(&format!("{name}64 ")) {
+            text = format!("{name} {reg},0x0");
+        }
+    }
     // "beq a0,a1,1c <.text+0x1c>" -> "beq a0,a1,0x1c"
     if let Some(i) = text.find(" <") {
         text.truncate(i);

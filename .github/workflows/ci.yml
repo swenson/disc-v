@@ -1,0 +1,94 @@
+# Copyright (c) 2026 Christopher Swenson
+# Licensed under the Apache-2.0 license.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+  RUSTDOCFLAGS: -D warnings
+
+jobs:
+  fmt:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --check
+
+  clippy:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all-targets
+
+  test:
+    name: test (${{ matrix.rust }})
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # stable and the minimum supported version in Cargo.toml.
+        rust: [stable, 1.85.1]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Install RISC-V binutils
+        run: sudo apt-get update && sudo apt-get install -y binutils-riscv64-unknown-elf
+      - run: cargo test
+        env:
+          DISC_V_REQUIRE_BINUTILS: 1
+
+  docs:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc --no-deps
+      - run: cargo doc --no-deps --document-private-items
+
+  no-std:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.85.1
+          targets: thumbv7em-none-eabi, riscv32imc-unknown-none-elf
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --target thumbv7em-none-eabi
+      - run: cargo build --release --target riscv32imc-unknown-none-elf
+
+  generated:
+    name: generated files are up to date
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check out the riscv-opcodes commit the data was generated from
+        run: |
+          rev=$(sed -n '1s/.* riscv-opcodes \([0-9a-f]\{40\}\)\..*/\1/p' tests/data/riscv-opcodes.txt)
+          test -n "$rev"
+          git clone --quiet https://github.com/riscv/riscv-opcodes "$RUNNER_TEMP/riscv-opcodes"
+          git -C "$RUNNER_TEMP/riscv-opcodes" checkout --quiet "$rev"
+      - run: python3 -I scripts/gen-riscv-opcodes.py "$RUNNER_TEMP/riscv-opcodes" > tests/data/riscv-opcodes.txt
+      - run: python3 -I scripts/gen-csr-names.py "$RUNNER_TEMP/riscv-opcodes" > src/csr.rs
+      - run: git diff --exit-code

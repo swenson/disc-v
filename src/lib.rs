@@ -22,6 +22,7 @@
 //! # assert_eq!(text, ["li a0,1", "ret"]);
 //! ```
 #![no_std]
+#![warn(missing_docs)]
 
 mod csr;
 mod decode;

@@ -6,6 +6,7 @@ rust-version = "1.85.1"
 authors = ["Christopher Swenson <swenson@swenson.io>"]
 description = "A RISC-V disassembler"
 license = "Apache-2.0"
+repository = "https://github.com/swenson/disc-v"
 readme = "README.md"
 keywords = ["riscv", "disassembler", "risc-v"]
 categories = ["development-tools", "no-std"]
