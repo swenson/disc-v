@@ -5,6 +5,8 @@
 A RISC-V disassembler in Rust. It is `no_std`, does not allocate, and its
 output follows GNU objdump's (see [Output format](#output-format)).
 
+It is meant to be embedded in various Rust tools: debuggers, emulators, etc.
+
 ```rust
 use disc_v::{disassemble, Isa};
 
@@ -21,8 +23,7 @@ an integer with `decode`. An `Instruction` has the mnemonic, operands,
 address, length and raw encoding, and `without_aliases()` shows it as
 encoded (`c.li a0,1` rather than `li a0,1`), like `objdump -M no-aliases`.
 
-The minimum supported Rust version is 1.85.1, so disc-v builds with the
-toolchains Tock uses: the nightly the kernel pins, and libtock-rs's 1.88.
+The minimum supported Rust version is 1.85.1.
 
 ## Output format
 
