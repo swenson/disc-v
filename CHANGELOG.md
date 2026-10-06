@@ -9,6 +9,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Zicond (`czero.eqz`, `czero.nez`).
+- Zawrs (`wrs.nto`, `wrs.sto`).
 
 ## [0.1.0]
 

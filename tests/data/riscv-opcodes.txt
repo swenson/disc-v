@@ -358,3 +358,5 @@
 64 bseti - 28001013 fc00707f - -
 32,64 czero.eqz - e005033 fe00707f - -
 32,64 czero.nez - e007033 fe00707f - -
+32,64 wrs.nto - d00073 ffffffff - -
+32,64 wrs.sto - 1d00073 ffffffff - -
