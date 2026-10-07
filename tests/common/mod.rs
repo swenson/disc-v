@@ -143,6 +143,15 @@ pub fn embedded() -> Extensions {
     ])
 }
 
+/// An RV32E/RV64E configuration with the embedded extensions, including
+/// Zilsd and Zclsd, which conflict with the defaults' Zcf.
+pub fn rve() -> Extensions {
+    use Extension::*;
+    Extensions::from([
+        E, M, A, Zca, Zcb, Zcmp, Zcmt, Zicsr, Zifencei, Zilsd, Zclsd, Zba, Zbb, Zbs,
+    ])
+}
+
 /// `dec` with `ext` enabled, after disabling whatever conflicts with it.
 pub fn with_resolving_conflicts(mut dec: Decoder, ext: Extension) -> Decoder {
     loop {

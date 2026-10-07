@@ -28,6 +28,7 @@ pub(crate) mod zfbfmin;
 pub(crate) mod zfh;
 pub(crate) mod zicbo;
 pub(crate) mod zicond;
+pub(crate) mod zilsd;
 pub(crate) mod zimop;
 pub(crate) mod zk;
 

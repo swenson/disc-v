@@ -25,7 +25,7 @@ use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
 
-use common::{Failures, Rng, embedded, riscv_opcodes_samples};
+use common::{Failures, Rng, embedded, riscv_opcodes_samples, rve};
 use disc_v::{Decoder, Extension, Extensions, Isa};
 
 /// Extensions whose instructions binutils decodes even when they are not in
@@ -64,9 +64,15 @@ fn supported(prefix: &str, isa: Isa, config: Extensions) -> Extensions {
 /// The `-march` string for `isa` with `exts`.
 fn march(isa: Isa, exts: Extensions) -> String {
     let xlen = if isa == Isa::Rv32 { 32 } else { 64 };
-    let mut march = format!("rv{xlen}i");
+    let base = if exts.contains(Extension::E) {
+        "e"
+    } else {
+        "i"
+    };
+    let mut march = format!("rv{xlen}{base}");
     // Single-letter extensions come first, in canonical order.
     for letter in ["m", "a", "f", "d", "q", "c", "v", "h"] {
+        // (E is the base.)
         if exts.iter().any(|e| e.name() == letter) {
             march += letter;
         }
@@ -200,7 +206,26 @@ fn csr_operand(text: &str) -> Option<(&str, &str)> {
 /// specification about what is valid, where disc-v follows the
 /// specification (as encoded in riscv-opcodes), and CSRs that binutils has
 /// no name for.
-fn known_difference(isa: Isa, inst: u32, objdump: &str, disc_v: &str) -> Option<&'static str> {
+fn known_difference(
+    isa: Isa,
+    exts: Extensions,
+    inst: u32,
+    objdump: &str,
+    disc_v: &str,
+) -> Option<&'static str> {
+    // RV32E and RV64E reserve x16-x31, which objdump decodes regardless.
+    const UPPER: [&str; 16] = [
+        "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5",
+        "t6",
+    ];
+    if exts.contains(Extension::E)
+        && disc_v.starts_with(".insn ")
+        && objdump
+            .split(|c: char| !c.is_ascii_alphanumeric())
+            .any(|token| UPPER.contains(&token))
+    {
+        return Some("RV32E/RV64E register x16-x31");
+    }
     let mnemonic = |s: &str| s.split([' ', '.']).next().unwrap().to_string();
     if disc_v.starts_with(".insn ") {
         // A shift amount of 32 or more is reserved on RV32.
@@ -266,7 +291,11 @@ fn matches_objdump() {
     let mut failures = Failures::default();
     // The defaults, and a configuration with Zcmp and Zcmt, which conflict
     // with the defaults.
-    let configs = [("default", Extensions::DEFAULT), ("embedded", embedded())];
+    let configs = [
+        ("default", Extensions::DEFAULT),
+        ("embedded", embedded()),
+        ("rve", rve()),
+    ];
     for (isa, (config, exts)) in [Isa::Rv32, Isa::Rv64]
         .into_iter()
         .flat_map(|i| configs.map(|c| (i, c)))
@@ -277,7 +306,7 @@ fn matches_objdump() {
         let mut pc = 0;
         for (&inst, want) in insts.iter().zip(&expected) {
             let got = dec.decode(pc, inst as u64).to_string();
-            if got != *want && known_difference(isa, inst, want, &got).is_none() {
+            if got != *want && known_difference(isa, exts, inst, want, &got).is_none() {
                 let mnemonic = |s: &str| s.split(' ').next().unwrap().to_string();
                 failures.add(
                     format_args!(

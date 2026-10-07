@@ -25,6 +25,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `cm.mva01s`) and Zcmt (`cm.jt`, `cm.jalt`). They conflict with Zcd, so
   they are not in the defaults; enable them with a `Decoder`, for example
   `Decoder::from_march("rv32imac_zcmp_zcmt")`.
+- RV32E and RV64E, as the E extension: instructions that use x16-x31 are
+  illegal. `Decoder::from_march` accepts `rv32e` and `rv64e`.
+- Zilsd (`ld` and `sd` on RV32, with even-odd register pairs), in the
+  defaults, and Zclsd (`c.ld`, `c.sd`, `c.ldsp`, `c.sdsp` on RV32), which
+  conflicts with Zcf and so is not.
 - The parts of C as extensions: Zca, Zcf and Zcd. C is a bundle of Zca, and
   Zcf and Zcd when F and D are enabled.
 - `Extension` and `Extensions`, a set of extensions with presets (`DEFAULT`,

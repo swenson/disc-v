@@ -6,7 +6,8 @@
 
 //! A RISC-V disassembler.
 //!
-//! Supports RV32, RV64 and RV128 with these extensions:
+//! Supports RV32, RV64 and RV128 (and RV32E and RV64E, as the E extension)
+//! with these extensions:
 //!
 //! - M, A, F, D, Q and C
 //! - Zicsr and Zifencei
@@ -26,6 +27,8 @@
 //! - Zbkb, Zbkc and Zbkx; Zknd, Zkne, Zknh, Zksed and Zksh (scalar cryptography)
 //! - Zca, Zcf and Zcd (the parts of C); Zcmp and Zcmt, which conflict with
 //!   Zcd and so are only decoded by a [`Decoder`] that enables them
+//! - Zilsd; Zclsd, which conflicts with Zcf and so is only decoded by a
+//!   [`Decoder`] that enables it
 //!
 //! The text follows GNU objdump's for a raw binary (`objdump -D -b binary`),
 //! so branch targets are written as `0x1008`.

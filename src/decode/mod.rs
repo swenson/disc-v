@@ -11,7 +11,7 @@ mod operands;
 
 use crate::instruction::Instruction;
 use crate::opcodes::{Codec, Constraint, ILLEGAL, RESERVED_PARCEL};
-use crate::{Extensions, Isa};
+use crate::{Extension, Extensions, Isa};
 
 /// Decodes the instruction `inst` located at address `pc`, for `isa` with
 /// the extensions in `exts`.
@@ -48,7 +48,24 @@ fn is_reserved(ins: &Instruction, exts: Extensions) -> bool {
         op.codec,
         Codec::ISh5 | Codec::ISh6 | Codec::ISh7 | Codec::CiSh6 | Codec::CbSh6
     ) && ins.imm >= ins.isa.xlen() as i32;
-    !op.exists_in(ins.isa, exts) || shift_too_big || op.illegal_if.iter().any(|&c| holds(ins, c))
+    !op.exists_in(ins.isa, exts)
+        || shift_too_big
+        || op.illegal_if.iter().any(|&c| holds(ins, c))
+        || (exts.contains(Extension::E) && uses_upper_registers(ins))
+}
+
+/// Whether `ins` uses one of the integer registers x16-x31, which RV32E and
+/// RV64E do not have: as an operand, or (for cm.push and cm.pop) by saving
+/// s2-s11.
+fn uses_upper_registers(ins: &Instruction) -> bool {
+    let operand = ins.op.format.chars().any(|c| match c {
+        '0' => ins.rd >= 16,
+        '1' => ins.rs1 >= 16,
+        '2' => ins.rs2 >= 16,
+        _ => false,
+    });
+    // The register list (in rs1) saves s2 and up from 7.
+    operand || (ins.op.codec == Codec::CmPushPop && ins.rs1 > 6)
 }
 
 /// Replaces an instruction with the first of its pseudoinstructions whose

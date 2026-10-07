@@ -38,7 +38,7 @@ rv_q_zfa rv64_q_zfa rv_zfh_zfa rv_v rv_zvbb rv_zvbc rv_zvkg rv_zvkned
 rv_zvknha rv_zvksed rv_zvksh rv_h rv64_h rv_svinval rv_svinval_h rv_smrnmi
 rv_ssctr rv_zalasr rv_zacas rv64_zacas rv_zabha rv_zabha_zacas rv_zfbfmin
 rv_zvfbfmin rv_zvfbfwma rv_zbkb rv32_zbkb rv64_zbkb rv_zbkc rv_zbkx rv32_zknd rv64_zknd
-rv32_zkne rv64_zkne rv_zknh rv32_zknh rv64_zknh rv_zksed rv_zksh rv_zcmp rv_zcmt""".split()
+rv32_zkne rv64_zkne rv_zknh rv32_zknh rv64_zknh rv_zksed rv_zksh rv_zcmp rv_zcmt rv32_zilsd rv32_zclsd""".split()
 
 root = sys.argv[1]
 ext_dir = os.path.join(root, 'extensions')
@@ -99,7 +99,9 @@ def extensions(f, name):
     the extensions that also provide it by importing it."""
     parts = file_extensions(f, name)
     alts = sorted(ALTERNATIVES.get((f, name), set()) - set(parts))
-    if alts:
+    # Base instructions need no extension (Zilsd's RV32 ld is a pseudo-op of
+    # RV64's ld).
+    if alts and parts:
         assert len(parts) == 1, (f, name)
         return '|'.join(parts + alts)
     return '+'.join(parts) or '-'

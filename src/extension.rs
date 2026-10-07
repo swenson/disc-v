@@ -13,6 +13,11 @@ use core::fmt;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum Extension {
+    /// The RV32E and RV64E bases: only registers x0-x15 exist, so
+    /// instructions that use x16-x31 are reserved. This restricts the base
+    /// ISA rather than adding instructions, so it is not in
+    /// [`Extensions::DEFAULT`].
+    E,
     /// Integer multiplication and division.
     M,
     /// Atomic instructions.
@@ -39,6 +44,11 @@ pub enum Extension {
     /// Compressed table jumps (`cm.jt`, `cm.jalt`). Implies Zca and Zicsr,
     /// and conflicts with Zcd.
     Zcmt,
+    /// Load and store register pairs on RV32 (`ld`, `sd`).
+    Zilsd,
+    /// Compressed load and store register pairs on RV32 (`c.ld`, `c.sd`,
+    /// ...). Implies Zilsd and Zca, and conflicts with Zcf.
+    Zclsd,
     /// Vectors.
     V,
     /// The hypervisor extension.
@@ -148,9 +158,10 @@ pub enum Extension {
 
 impl Extension {
     /// Every extension, in declaration order.
-    const ALL: [Extension; 60] = {
+    const ALL: [Extension; 63] = {
         use Extension::*;
         [
+            E,
             M,
             A,
             F,
@@ -162,6 +173,8 @@ impl Extension {
             Zcd,
             Zcmp,
             Zcmt,
+            Zilsd,
+            Zclsd,
             V,
             H,
             Zicsr,
@@ -218,6 +231,7 @@ impl Extension {
     pub const fn name(self) -> &'static str {
         use Extension::*;
         match self {
+            E => "e",
             M => "m",
             A => "a",
             F => "f",
@@ -229,6 +243,8 @@ impl Extension {
             Zcd => "zcd",
             Zcmp => "zcmp",
             Zcmt => "zcmt",
+            Zilsd => "zilsd",
+            Zclsd => "zclsd",
             V => "v",
             H => "h",
             Zicsr => "zicsr",
@@ -297,6 +313,7 @@ impl Extension {
             Zcf => &[Zca, F],
             Zcd => &[Zca, D],
             Zcmt => &[Zca, Zicsr],
+            Zclsd => &[Zilsd, Zca],
             Q => &[D],
             Zfh => &[Zfhmin],
             Zacas | Zabha => &[A],
@@ -342,8 +359,10 @@ impl Extensions {
     /// Every supported extension that does not conflict with another. This
     /// is what [`decode`](fn@crate::decode) and the other free functions use.
     pub const DEFAULT: Extensions = Extensions::of(&Extension::ALL)
+        .without(Extension::E)
         .without(Extension::Zcmp)
-        .without(Extension::Zcmt);
+        .without(Extension::Zcmt)
+        .without(Extension::Zclsd);
 
     /// G and C: IMAFD, Zicsr, Zifencei and C, as in RV32GC and RV64GC.
     pub const GC: Extensions = {

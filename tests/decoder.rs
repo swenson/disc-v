@@ -163,6 +163,47 @@ fn push_pop_and_table_jumps() {
 }
 
 #[test]
+fn rv32e() {
+    let i = Decoder::from_march("rv32imc_zcmp").unwrap();
+    let e = Decoder::from_march("rv32emc_zcmp").unwrap();
+    // x16-x31 do not exist.
+    check(e, 0x00508793, "addi a5,ra,5");
+    check(i, 0x00580093, "addi ra,a6,5");
+    check(e, 0x00580093, ".insn 4, 0x00580093");
+    check(e, 0x4841, ".insn 2, 0x4841"); // c.li a6,16
+    // cm.push can only save ra, s0 and s1.
+    check(e, 0xb862, "cm.push {ra,s0-s1},-16");
+    check(i, 0xb872, "cm.push {ra,s0-s2},-16");
+    check(e, 0xb872, ".insn 2, 0xb872");
+}
+
+#[test]
+fn load_and_store_pairs() {
+    use Extension::*;
+    // Zilsd is in the defaults: ld and sd on RV32 use even-odd pairs.
+    let rv32 = Decoder::new(Isa::Rv32);
+    check(rv32, 0x0085b503, "ld a0,8(a1)");
+    check(rv32, 0x0085b583, ".insn 4, 0x0085b583"); // odd pair
+    check(rv32, 0x00c5b423, "sd a2,8(a1)");
+    check(rv32, 0x0005b423, "sd zero,8(a1)");
+    check(Decoder::RV32GC, 0x0085b503, ".insn 4, 0x0085b503"); // no Zilsd
+    check(Decoder::new(Isa::Rv64), 0x0085b583, "ld a1,8(a1)");
+
+    // Zclsd uses the encodings of Zcf's c.flw family, so it conflicts.
+    let conflict = Decoder::RV32GC.with(Zclsd).unwrap_err();
+    assert_eq!(conflict.conflicts_with(), Zcf);
+    let dec = Decoder::RV32GC.without(Zcf).with(Zclsd).unwrap();
+    check(Decoder::RV32GC, 0x6188, "flw fa0,0(a1)");
+    check(dec, 0x6188, "ld a0,0(a1)");
+    check(dec, 0xe188, "sd a0,0(a1)");
+    check(dec, 0x6522, "ld a0,8(sp)");
+    check(dec, 0x6002, ".insn 2, 0x6002"); // c.ldsp with rd=zero
+    check(dec, 0xe42a, "sd a0,8(sp)");
+    check(dec, 0xe436, ".insn 2, 0xe436"); // odd pair
+    assert_eq!(dec.decode(0, 0x6188).without_aliases().mnemonic(), "c.ld");
+}
+
+#[test]
 fn compressed_bundle() {
     use Extension::*;
     let exts = Extensions::from([C, F, D]);
@@ -228,12 +269,12 @@ fn from_march() {
     assert_eq!(Decoder::from_march("x86"), Err(MarchError::InvalidBase));
     assert_eq!(Decoder::from_march("rv64m"), Err(MarchError::InvalidBase));
     assert_eq!(
-        Decoder::from_march("rv32e"),
-        Err(MarchError::UnsupportedExtension("e"))
+        Decoder::from_march("rv32emc").map(|d| d.extensions()),
+        Ok(Extensions::from([Extension::E, Extension::M, Extension::C])),
     );
     assert_eq!(
-        Decoder::from_march("rv64gc_zilsd"),
-        Err(MarchError::UnsupportedExtension("zilsd"))
+        Decoder::from_march("rv64gc_xtheadba"),
+        Err(MarchError::UnsupportedExtension("xtheadba"))
     );
     // Zcmp conflicts with Zcd, which C brings in with D.
     assert_eq!(
@@ -330,14 +371,26 @@ fn instructions_need_their_extensions() {
 #[test]
 fn riscv_opcodes_covers_every_extension() {
     use Extension::*;
-    // C is a bundle of Zca and Zcd.
-    let aliases_only = [C, Zicbop, Zihintntl, Zihintpause, Zicfilp, Zvknhb];
+    // C is a bundle of Zca, Zcf and Zcd; E adds no instructions; and
+    // riscv-opcodes defines Zilsd and Zclsd only as pseudo-ops of ld, sd and
+    // Zcf's instructions (decoder tests cover them).
+    let aliases_only = [
+        C,
+        E,
+        Zilsd,
+        Zclsd,
+        Zicbop,
+        Zihintntl,
+        Zihintpause,
+        Zicfilp,
+        Zvknhb,
+    ];
     let named: Vec<&str> = entries()
         .iter()
         .filter(|e| e.base.is_none())
         .flat_map(|e| e.extensions.concat())
         .collect();
-    for ext in Extensions::DEFAULT.iter().chain([Zcmp, Zcmt]) {
+    for ext in Extensions::DEFAULT.iter().chain([Zcmp, Zcmt, Zclsd, E]) {
         assert_eq!(
             named.contains(&ext.name()),
             !aliases_only.contains(&ext),

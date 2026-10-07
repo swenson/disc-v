@@ -10,7 +10,7 @@
 
 pub mod common;
 
-use common::{Entry, Failures, Rng, embedded, entries, with_resolving_conflicts};
+use common::{Entry, Failures, Rng, embedded, entries, rve, with_resolving_conflicts};
 use disc_v::{Decoder, Extension, Extensions, Isa};
 
 /// Encodings riscv-opcodes lists for an ISA where the specification says they
@@ -55,9 +55,22 @@ fn decoded_name(dec: Decoder, inst: u32) -> Option<&'static str> {
     (!ins.is_illegal()).then(|| riscv_opcodes_name(ins.mnemonic()))
 }
 
+/// The riscv-opcodes entries, with its errors corrected: rv32_zilsd names
+/// its store pseudo-op `ld`.
+fn entries_fixed() -> Vec<Entry> {
+    let mut entries = entries();
+    for e in &mut entries {
+        if e.name == "ld" && e.bits & 0x7f == 0x23 {
+            e.name = "sd";
+            e.base = Some("sd");
+        }
+    }
+    entries
+}
+
 #[test]
 fn every_riscv_opcodes_encoding_decodes_to_its_name() {
-    let entries = entries();
+    let entries = entries_fixed();
     let mut rng = Rng::new(1);
     let mut failures = Failures::default();
     for isa in [Isa::Rv32, Isa::Rv64] {
@@ -103,10 +116,10 @@ fn every_riscv_opcodes_encoding_decodes_to_its_name() {
 
 #[test]
 fn every_decoded_encoding_is_in_riscv_opcodes() {
-    let entries = entries();
+    let entries = entries_fixed();
     let mut rng = Rng::new(2);
     let mut failures = Failures::default();
-    let configs = [Extensions::DEFAULT, embedded()];
+    let configs = [Extensions::DEFAULT, embedded(), rve()];
     for (isa, exts) in [Isa::Rv32, Isa::Rv64]
         .into_iter()
         .flat_map(|i| configs.map(|c| (i, c)))

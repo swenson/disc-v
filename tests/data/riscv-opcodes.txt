@@ -1308,3 +1308,9 @@
 32,64 cm.mvsa01 - ac22 fc63 - - zcmp
 32,64 cm.mva01s - ac62 fc63 - - zcmp
 32,64 cm.jalt - a002 fc03 - - zcmt
+32 ld ld 3003 70ff - - zilsd
+32 ld ld 3023 10707f - - zilsd
+32 c.ld c.flw 6000 e007 - - zclsd
+32 c.sd c.fsw e000 e007 - - zclsd
+32 c.ldsp c.flwsp 6002 e083 f00 - zclsd
+32 c.sdsp c.fswsp e002 e007 - - zclsd

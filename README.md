@@ -73,6 +73,10 @@ assert_eq!(dec.decode(0, 0xb862).to_string(), "cm.push {ra,s0-s1},-16");
 let dec = Decoder::from_march("rv32imac_zcmp_zcmt").unwrap();
 ```
 
+RV32E and RV64E, which have only registers x0-x15, are the E extension:
+`Decoder::from_march("rv32emc")`, or `with(Extension::E)`. Instructions that
+use x16-x31 are then shown as `.insn`.
+
 ## Output format
 
 The text is what `objdump -D -b binary` prints for the same bytes: the same
@@ -92,7 +96,7 @@ ISA specification disagree; see
 
 ## Supported instructions
 
-- RV32I, RV64I and RV128I
+- RV32I, RV64I and RV128I; RV32E and RV64E (as the E extension)
 - M, A, F, D, Q and C
 - Zicsr and Zifencei
 - Zba, Zbb, Zbc and Zbs
@@ -111,6 +115,8 @@ ISA specification disagree; see
 - Zbkb, Zbkc and Zbkx; Zknd, Zkne, Zknh, Zksed and Zksh (scalar cryptography)
 - Zca, Zcf and Zcd (the parts of C); Zcmp and Zcmt, which conflict with Zcd and
   so are not decoded by default
+- Zilsd (RV32 load and store pairs); Zclsd, which conflicts with Zcf and so is
+  not decoded by default
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`; Svinval,
   Smrnmi (`mnret`) and Ssctr (`sctrclr`)
 

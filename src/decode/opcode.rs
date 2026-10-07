@@ -8,11 +8,13 @@
 
 use crate::opcodes::{
     Opcode, a, b, c, d, f, h, i, lookup_masked, m, q, system, v, zabha, zalasr, zawrs, zcb, zcmp,
-    zfa, zfbfmin, zfh, zicbo, zicond, zimop, zk,
+    zfa, zfbfmin, zfh, zicbo, zicond, zilsd, zimop, zk,
 };
 use crate::{Extension, Extensions, Isa};
 
-fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
+fn compressed_0(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode> {
+    // Zclsd replaces Zcf's c.flw and c.fsw on RV32.
+    let pairs = isa == Isa::Rv32 && exts.contains(Extension::Zclsd);
     match (inst >> 13) & 7 {
         0 if inst == 0 => Some(&c::C_UNIMP),
         0 => Some(&c::C_ADDI4SPN),
@@ -22,6 +24,7 @@ fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
             &c::C_FLD
         }),
         2 => Some(&c::C_LW),
+        3 if pairs => Some(&zilsd::C_LD),
         3 => Some(if isa == Isa::Rv32 {
             &c::C_FLW
         } else {
@@ -41,6 +44,7 @@ fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
             &c::C_FSD
         }),
         6 => Some(&c::C_SW),
+        7 if pairs => Some(&zilsd::C_SD),
         7 => Some(if isa == Isa::Rv32 {
             &c::C_FSW
         } else {
@@ -102,6 +106,8 @@ fn compressed_1(isa: Isa, inst: u64) -> Option<&'static Opcode> {
 }
 
 fn compressed_2(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode> {
+    // Zclsd replaces Zcf's c.flwsp and c.fswsp on RV32.
+    let pairs = isa == Isa::Rv32 && exts.contains(Extension::Zclsd);
     Some(match (inst >> 13) & 7 {
         0 => &c::C_SLLI,
         1 => {
@@ -112,6 +118,7 @@ fn compressed_2(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode
             }
         }
         2 => &c::C_LWSP,
+        3 if pairs => &zilsd::C_LDSP,
         3 => {
             if isa == Isa::Rv32 {
                 &c::C_FLWSP
@@ -145,6 +152,7 @@ fn compressed_2(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode
             }
         }
         6 => &c::C_SWSP,
+        7 if pairs => &zilsd::C_SDSP,
         7 => {
             if isa == Isa::Rv32 {
                 &c::C_FSWSP
@@ -156,11 +164,12 @@ fn compressed_2(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode
     })
 }
 
-fn load(inst: u64) -> Option<&'static Opcode> {
+fn load(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     Some(match (inst >> 12) & 7 {
         0 => &i::LB,
         1 => &i::LH,
         2 => &i::LW,
+        3 if isa == Isa::Rv32 => &zilsd::LD,
         3 => &i::LD,
         4 => &i::LBU,
         5 => &i::LHU,
@@ -348,11 +357,12 @@ fn op_imm_32(inst: u64) -> Option<&'static Opcode> {
     }
 }
 
-fn store(inst: u64) -> Option<&'static Opcode> {
+fn store(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 12) & 7 {
         0 => Some(&i::SB),
         1 => Some(&i::SH),
         2 => Some(&i::SW),
+        3 if isa == Isa::Rv32 => Some(&zilsd::SD),
         3 => Some(&i::SD),
         4 => Some(&i::SQ),
         _ => None,
@@ -886,7 +896,7 @@ fn custom3_rv128(inst: u64) -> Option<&'static Opcode> {
 
 fn uncompressed(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 2) & 0x1f {
-        0 => load(inst),
+        0 => load(isa, inst),
         1 => load_fp(inst),
         3 => misc_mem(isa, inst),
         4 => op_imm(isa, inst),
@@ -898,7 +908,7 @@ fn uncompressed(isa: Isa, inst: u64) -> Option<&'static Opcode> {
                 None
             }
         }
-        8 => store(inst),
+        8 => store(isa, inst),
         9 => store_fp(inst),
         11 => amo(isa, inst),
         12 => op(isa, inst),
@@ -956,7 +966,7 @@ fn push_pop_and_table_jumps(exts: Extensions, inst: u64) -> Option<&'static Opco
 /// chooses between them.
 pub(super) fn lookup(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode> {
     match inst & 3 {
-        0 => compressed_0(isa, inst),
+        0 => compressed_0(isa, exts, inst),
         1 => compressed_1(isa, inst),
         2 => compressed_2(isa, exts, inst),
         _ => uncompressed(isa, inst),

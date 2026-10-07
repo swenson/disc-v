@@ -13,6 +13,8 @@ const CONFLICTS: &[(Extension, Extension)] = &[
     // Zcmp and Zcmt use the encodings of c.fsdsp.
     (Extension::Zcmp, Extension::Zcd),
     (Extension::Zcmt, Extension::Zcd),
+    // Zclsd uses the encodings of c.flw, c.fsw, c.flwsp and c.fswsp.
+    (Extension::Zclsd, Extension::Zcf),
 ];
 
 /// Decodes instructions for a base ISA with a chosen set of extensions.
@@ -183,11 +185,8 @@ impl Decoder {
                     extensions = extensions.union(multi_letter(token)?);
                 }
                 _ => {
-                    if i == 0 && !matches!(first, Some('i' | 'g')) {
-                        return Err(match first {
-                            Some('e') => MarchError::UnsupportedExtension(&token[..1]),
-                            _ => MarchError::InvalidBase,
-                        });
+                    if i == 0 && !matches!(first, Some('i' | 'g' | 'e')) {
+                        return Err(MarchError::InvalidBase);
                     }
                     extensions = extensions.union(single_letters(token)?);
                 }
@@ -207,6 +206,8 @@ fn single_letters(token: &str) -> Result<Extensions, MarchError<'_>> {
         rest = strip_version(&rest[1..]);
         extensions = extensions.union(match c.to_ascii_lowercase() {
             'i' => Extensions::EMPTY,
+            // The RV32E and RV64E bases.
+            'e' => E.into(),
             'g' => Extensions::of(&[M, A, F, D, Zicsr, Zifencei]),
             'b' => Extensions::of(&[Zba, Zbb, Zbs]),
             c => match Extension::from_name(name) {
@@ -352,11 +353,10 @@ impl core::error::Error for Conflict {}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum MarchError<'a> {
-    /// The string does not start with `rv32i`, `rv64i`, `rv128i` or the
-    /// same with `g`.
+    /// The string does not start with `rv32`, `rv64` or `rv128` followed by
+    /// `i`, `e` or `g`.
     InvalidBase,
-    /// The string names an extension, or a base such as RV32E, that disc-v
-    /// does not support.
+    /// The string names an extension that disc-v does not support.
     UnsupportedExtension(&'a str),
     /// The string names two extensions that conflict.
     Conflict(Conflict),
@@ -366,7 +366,7 @@ impl fmt::Display for MarchError<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             MarchError::InvalidBase => {
-                f.write_str("ISA string does not start with rv32, rv64 or rv128 and i or g")
+                f.write_str("ISA string does not start with rv32, rv64 or rv128 and i, e or g")
             }
             MarchError::UnsupportedExtension(name) => write!(f, "unsupported extension {name}"),
             MarchError::Conflict(conflict) => conflict.fmt(f),

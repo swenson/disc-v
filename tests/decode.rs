@@ -139,7 +139,7 @@ fn reserved_encodings_are_illegal() {
         (Isa::Rv32, 0x1082),     // c.slli with a shift amount of 32
         (Isa::Rv64, 0x101525af), // lr.w with rs2 nonzero
         (Isa::Rv32, 0x02051513), // slli with a shift amount of 32
-        (Isa::Rv32, 0x00053503), // ld, which is RV64-only
+        (Isa::Rv32, 0x0005b583), // ld with an odd register pair on RV32
         (Isa::Rv64, 0x00a54023), // sq, which is RV128-only
         (Isa::Rv64, 0x0000007b), // custom-3, which RV128 uses
     ];
