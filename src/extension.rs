@@ -80,6 +80,12 @@ pub enum Extension {
     /// Additional floating-point instructions (`fli`, `fround`, ...).
     /// Implies F.
     Zfa,
+    /// Conversions between BFloat16 and single precision. Implies F.
+    Zfbfmin,
+    /// Vector BFloat16 conversions. Implies V.
+    Zvfbfmin,
+    /// Vector BFloat16 widening multiply-add. Implies Zvfbfmin.
+    Zvfbfwma,
     /// Vector bit manipulation. Implies V.
     Zvbb,
     /// Vector carry-less multiplication. Implies V.
@@ -110,7 +116,7 @@ pub enum Extension {
 
 impl Extension {
     /// Every extension, in declaration order.
-    const ALL: [Extension; 44] = {
+    const ALL: [Extension; 47] = {
         use Extension::*;
         [
             M,
@@ -145,6 +151,9 @@ impl Extension {
             Zfh,
             Zfhmin,
             Zfa,
+            Zfbfmin,
+            Zvfbfmin,
+            Zvfbfwma,
             Zvbb,
             Zvbc,
             Zvkg,
@@ -196,6 +205,9 @@ impl Extension {
             Zfh => "zfh",
             Zfhmin => "zfhmin",
             Zfa => "zfa",
+            Zfbfmin => "zfbfmin",
+            Zvfbfmin => "zvfbfmin",
+            Zvfbfwma => "zvfbfwma",
             Zvbb => "zvbb",
             Zvbc => "zvbc",
             Zvkg => "zvkg",
@@ -222,13 +234,14 @@ impl Extension {
     const fn implies(self) -> &'static [Extension] {
         use Extension::*;
         match self {
-            D | Zfhmin | Zfa => &[F],
+            D | Zfhmin | Zfa | Zfbfmin => &[F],
             Q => &[D],
             Zfh => &[Zfhmin],
             Zcb | Zcmop => &[C],
             Zacas | Zabha => &[A],
             Zicfiss => &[Zimop],
-            Zvbb | Zvbc | Zvkg | Zvkned | Zvknha | Zvksed | Zvksh => &[V],
+            Zvbb | Zvbc | Zvkg | Zvkned | Zvknha | Zvksed | Zvksh | Zvfbfmin => &[V],
+            Zvfbfwma => &[Zvfbfmin],
             Zvknhb => &[Zvknha],
             _ => &[],
         }

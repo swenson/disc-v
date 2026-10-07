@@ -285,6 +285,14 @@ fn atomics_extensions() {
 }
 
 #[test]
+fn bfloat16() {
+    check(Isa::Rv64, 0x4485f553, "fcvt.bf16.s fa0,fa1");
+    check(Isa::Rv64, 0x40658553, "fcvt.s.bf16 fa0,fa1");
+    check(Isa::Rv64, 0xee2550d7, "vfwmaccbf16.vf v1,fa0,v2");
+    check(Isa::Rv64, 0x4a2e90d7, "vfncvtbf16.f.f.w v1,v2");
+}
+
+#[test]
 fn rv128() {
     check(Isa::Rv128, 0x0005200f, "lq zero,0(a0)");
     check(Isa::Rv128, 0x00053503, "ld a0,0(a0)");

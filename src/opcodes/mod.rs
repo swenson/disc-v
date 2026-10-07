@@ -23,6 +23,7 @@ pub(crate) mod zalasr;
 pub(crate) mod zawrs;
 pub(crate) mod zcb;
 pub(crate) mod zfa;
+pub(crate) mod zfbfmin;
 pub(crate) mod zfh;
 pub(crate) mod zicbo;
 pub(crate) mod zicond;

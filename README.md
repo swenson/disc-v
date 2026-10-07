@@ -88,6 +88,7 @@ ISA specification disagree; see [Testing](#testing).
 - Zvbb and Zvbc; Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed and Zvksh
 - H (hypervisor)
 - Zalasr, Zacas and Zabha
+- Zfbfmin, Zvfbfmin and Zvfbfwma (BFloat16)
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`; Svinval,
   Smrnmi (`mnret`) and Ssctr (`sctrclr`)
 

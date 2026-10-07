@@ -1242,3 +1242,9 @@
 32,64 amomaxu.h - e000102f f800707f - - zabha
 32,64 amocas.b - 2800002f f800707f - - zabha+zacas
 32,64 amocas.h - 2800102f f800707f - - zabha+zacas
+32,64 fcvt.bf16.s - 44800053 fff0007f - - zfbfmin
+32,64 fcvt.s.bf16 - 40600053 fff0007f - - zfbfmin
+32,64 vfncvtbf16.f.f.w - 480e9057 fc0ff07f - - zvfbfmin
+32,64 vfwcvtbf16.f.f.v - 48069057 fc0ff07f - - zvfbfmin
+32,64 vfwmaccbf16.vv - ec001057 fc00707f - - zvfbfwma
+32,64 vfwmaccbf16.vf - ec005057 fc00707f - - zvfbfwma

@@ -9,7 +9,7 @@
 use crate::Isa;
 use crate::opcodes::{
     Opcode, a, b, c, d, f, h, i, lookup_masked, m, q, system, v, zabha, zalasr, zawrs, zcb, zfa,
-    zfh, zicbo, zicond, zimop,
+    zfbfmin, zfh, zicbo, zicond, zimop,
 };
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
@@ -571,6 +571,8 @@ fn op_fp(inst: u64) -> Option<&'static Opcode> {
         (33, 2, _) => Some(&zfh::FCVT_D_H),
         (35, 2, _) => Some(&zfh::FCVT_Q_H),
         (34, 0, _) => Some(&zfh::FCVT_H_S),
+        (34, 8, _) => Some(&zfbfmin::FCVT_BF16_S),
+        (32, 6, _) => Some(&zfbfmin::FCVT_S_BF16),
         (34, 1, _) => Some(&zfh::FCVT_H_D),
         (34, 3, _) => Some(&zfh::FCVT_H_Q),
         (46, 0, _) => Some(&zfh::FSQRT_H),
