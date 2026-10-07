@@ -17,7 +17,16 @@ impl Display for Instruction {
     /// Formats the instruction as objdump does, with a single space between
     /// the mnemonic and the operands: `lw a0,8(sp)`.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.op.name)?;
+        // Some names include an ordering (lw.aq); it is shown with the other
+        // ordering bit (lw.aqrl) from the encoding.
+        let name = self.op.name;
+        let name = match (self.aq || self.rl)
+            .then(|| name.strip_suffix(".aq").or(name.strip_suffix(".rl")))
+        {
+            Some(Some(base)) => base,
+            _ => name,
+        };
+        f.write_str(name)?;
         match (self.aq, self.rl) {
             (true, true) => f.write_str(".aqrl")?,
             (true, false) => f.write_str(".aq")?,

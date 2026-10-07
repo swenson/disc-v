@@ -8,8 +8,8 @@
 
 use crate::Isa;
 use crate::opcodes::{
-    Opcode, a, b, c, d, f, h, i, lookup_masked, m, q, system, v, zawrs, zcb, zfa, zfh, zicbo,
-    zicond, zimop,
+    Opcode, a, b, c, d, f, h, i, lookup_masked, m, q, system, v, zabha, zalasr, zawrs, zcb, zfa,
+    zfh, zicbo, zicond, zimop,
 };
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
@@ -311,7 +311,7 @@ fn store_fp(inst: u64) -> Option<&'static Opcode> {
     }
 }
 
-fn amo(inst: u64) -> Option<&'static Opcode> {
+fn amo(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 24) & 0xf8 | (inst >> 12) & 7 {
         2 => Some(&a::AMOADD_W),
         3 => Some(&a::AMOADD_D),
@@ -344,6 +344,48 @@ fn amo(inst: u64) -> Option<&'static Opcode> {
         27 => Some(&a::SC_D),
         28 => Some(&a::SC_Q),
         34 => Some(&a::AMOXOR_W),
+        // Zabha (byte and halfword widths) and Zacas.
+        8 => Some(&zabha::AMOSWAP_B),
+        9 => Some(&zabha::AMOSWAP_H),
+        0 => Some(&zabha::AMOADD_B),
+        1 => Some(&zabha::AMOADD_H),
+        32 => Some(&zabha::AMOXOR_B),
+        33 => Some(&zabha::AMOXOR_H),
+        96 => Some(&zabha::AMOAND_B),
+        97 => Some(&zabha::AMOAND_H),
+        64 => Some(&zabha::AMOOR_B),
+        65 => Some(&zabha::AMOOR_H),
+        128 => Some(&zabha::AMOMIN_B),
+        129 => Some(&zabha::AMOMIN_H),
+        160 => Some(&zabha::AMOMAX_B),
+        161 => Some(&zabha::AMOMAX_H),
+        192 => Some(&zabha::AMOMINU_B),
+        193 => Some(&zabha::AMOMINU_H),
+        224 => Some(&zabha::AMOMAXU_B),
+        225 => Some(&zabha::AMOMAXU_H),
+        40 => Some(&zabha::AMOCAS_B),
+        41 => Some(&zabha::AMOCAS_H),
+        42 => Some(&zabha::AMOCAS_W),
+        43 if isa == Isa::Rv32 => Some(&zabha::AMOCAS_D_RV32),
+        43 => Some(&zabha::AMOCAS_D),
+        44 => Some(&zabha::AMOCAS_Q),
+        // Zalasr loads (aq set, rs2 zero) and stores (rl set, rd zero).
+        48..=51 if (inst >> 26) & 1 == 1 && (inst >> 20) & 0x1f == 0 => Some(
+            [
+                &zalasr::LB_AQ,
+                &zalasr::LH_AQ,
+                &zalasr::LW_AQ,
+                &zalasr::LD_AQ,
+            ][(inst >> 12 & 3) as usize],
+        ),
+        56..=59 if (inst >> 25) & 1 == 1 && (inst >> 7) & 0x1f == 0 => Some(
+            [
+                &zalasr::SB_RL,
+                &zalasr::SH_RL,
+                &zalasr::SW_RL,
+                &zalasr::SD_RL,
+            ][(inst >> 12 & 3) as usize],
+        ),
         74 => Some(&zimop::SSAMOSWAP_W),
         75 => Some(&zimop::SSAMOSWAP_D),
         35 => Some(&a::AMOXOR_D),
@@ -790,7 +832,7 @@ fn uncompressed(isa: Isa, inst: u64) -> Option<&'static Opcode> {
         }
         8 => store(inst),
         9 => store_fp(inst),
-        11 => amo(inst),
+        11 => amo(isa, inst),
         12 => op(isa, inst),
         13 => Some(&i::LUI),
         14 => {

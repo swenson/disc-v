@@ -18,6 +18,8 @@ pub(crate) mod pseudo;
 pub(crate) mod q;
 pub(crate) mod system;
 pub(crate) mod v;
+pub(crate) mod zabha;
+pub(crate) mod zalasr;
 pub(crate) mod zawrs;
 pub(crate) mod zcb;
 pub(crate) mod zfa;
@@ -197,6 +199,10 @@ pub(crate) enum Constraint {
     Rs2Eq(u8),
     Rs2EqRs1,
     RdEqRs1,
+    /// rd is odd: not the first register of an even-odd pair.
+    RdOdd,
+    /// rs2 is odd: not the first register of an even-odd pair.
+    Rs2Odd,
     ImmEq(i32),
     /// The immediate's bits in the mask (first) equal the value (second).
     ImmMaskEq(i32, i32),

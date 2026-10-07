@@ -266,6 +266,25 @@ fn hypervisor_and_privileged() {
 }
 
 #[test]
+fn atomics_extensions() {
+    // Zalasr: the name's ordering is shown with the other ordering bit.
+    check(Isa::Rv64, 0x3405852f, "lb.aq a0,(a1)");
+    check(Isa::Rv64, 0x3605a52f, "lw.aqrl a0,(a1)");
+    check(Isa::Rv64, 0x3aa5802f, "sb.rl a0,(a1)");
+    check(Isa::Rv64, 0x3ea5b02f, "sd.aqrl a0,(a1)");
+    check(Isa::Rv32, 0x3ea5b02f, ".insn 4, 0x3ea5b02f"); // sd.rl is RV64-only
+    // Zabha and Zacas.
+    check(Isa::Rv64, 0x00c5852f, "amoadd.b a0,a2,(a1)");
+    check(Isa::Rv64, 0x0ec5952f, "amoswap.h.aqrl a0,a2,(a1)");
+    check(Isa::Rv64, 0x28c5a52f, "amocas.w a0,a2,(a1)");
+    check(Isa::Rv64, 0x28c5852f, "amocas.b a0,a2,(a1)");
+    // On RV32, amocas.d works on register pairs, so odd registers are reserved.
+    check(Isa::Rv32, 0x2cc5b52f, "amocas.d.aq a0,a2,(a1)");
+    check(Isa::Rv32, 0x28d5b52f, ".insn 4, 0x28d5b52f");
+    check(Isa::Rv64, 0x28d5b52f, "amocas.d a0,a3,(a1)");
+}
+
+#[test]
 fn rv128() {
     check(Isa::Rv128, 0x0005200f, "lq zero,0(a0)");
     check(Isa::Rv128, 0x00053503, "ld a0,0(a0)");

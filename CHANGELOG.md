@@ -14,6 +14,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `try_with` and `without`, and `from_march` for ISA strings such as
   `rv64gc_zba`. The free functions are unchanged and decode every supported
   extension, as before.
+- Zalasr (`lb.aq`, ..., `sd.rl`), Zacas (`amocas.w`, `.d`, `.q`) and Zabha
+  (byte and halfword atomics, and `amocas.b`/`.h`).
 - `Extension` and `Extensions`, a set of extensions with presets (`DEFAULT`,
   `GC`, `RVA23U64`, `RVA23S64`) that follows implications between extensions.
 

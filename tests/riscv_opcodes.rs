@@ -19,7 +19,22 @@ const NOT_IN_SPEC: &[(Isa, &str)] = &[
     // The Zicfiss chapter of the ISA manual says ssamoswap.d is RV64-only, but
     // riscv-opcodes defines it in rv_zicfiss rather than rv64_zicfiss.
     (Isa::Rv32, "ssamoswap.d"),
+    // The Zalasr chapter says ld.aq and sd.rl are RV64-only, but riscv-opcodes
+    // defines them in rv_zalasr.
+    (Isa::Rv32, "ld.aq"),
+    (Isa::Rv32, "sd.rl"),
 ];
+
+/// Whether the specification reserves `inst`, an encoding of `name`, in a
+/// way riscv-opcodes does not express.
+fn reserved_by_spec(isa: Isa, name: &str, inst: u32) -> bool {
+    let (rd, rs2) = ((inst >> 7) & 0x1f, (inst >> 20) & 0x1f);
+    match (isa, name) {
+        // The register-pair forms of amocas reserve odd rd and rs2.
+        (Isa::Rv32, "amocas.d") | (Isa::Rv64, "amocas.q") => rd & 1 == 1 || rs2 & 1 == 1,
+        _ => false,
+    }
+}
 
 /// The mnemonic of `inst` without aliases, or `None` if it is illegal.
 fn decoded_name(isa: Isa, inst: u32) -> Option<&'static str> {
@@ -38,6 +53,9 @@ fn every_riscv_opcodes_encoding_decodes_to_its_name() {
             .filter(|e| e.applies_to(isa) && !NOT_IN_SPEC.contains(&(isa, e.name)))
         {
             for inst in e.samples(&mut rng, 64) {
+                if reserved_by_spec(isa, e.name, inst) {
+                    continue;
+                }
                 match decoded_name(isa, inst) {
                     Some(name) if e.is_named(name) => {}
                     // Another entry for the same encoding, such as a more

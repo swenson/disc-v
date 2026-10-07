@@ -35,6 +35,12 @@ pub enum Extension {
     Zifencei,
     /// Integer conditional operations (`czero.*`).
     Zicond,
+    /// Load-acquire and store-release (`lw.aq`, `sw.rl`, ...).
+    Zalasr,
+    /// Atomic compare-and-swap (`amocas.*`). Implies A.
+    Zacas,
+    /// Byte and halfword atomics (`amoadd.b`, ...). Implies A.
+    Zabha,
     /// Wait-on-reservation-set (`wrs.*`).
     Zawrs,
     /// Cache-block management (`cbo.clean`, `cbo.flush`, `cbo.inval`).
@@ -104,7 +110,7 @@ pub enum Extension {
 
 impl Extension {
     /// Every extension, in declaration order.
-    const ALL: [Extension; 41] = {
+    const ALL: [Extension; 44] = {
         use Extension::*;
         [
             M,
@@ -118,6 +124,9 @@ impl Extension {
             Zicsr,
             Zifencei,
             Zicond,
+            Zalasr,
+            Zacas,
+            Zabha,
             Zawrs,
             Zicbom,
             Zicboz,
@@ -166,6 +175,9 @@ impl Extension {
             Zicsr => "zicsr",
             Zifencei => "zifencei",
             Zicond => "zicond",
+            Zalasr => "zalasr",
+            Zacas => "zacas",
+            Zabha => "zabha",
             Zawrs => "zawrs",
             Zicbom => "zicbom",
             Zicboz => "zicboz",
@@ -214,6 +226,7 @@ impl Extension {
             Q => &[D],
             Zfh => &[Zfhmin],
             Zcb | Zcmop => &[C],
+            Zacas | Zabha => &[A],
             Zicfiss => &[Zimop],
             Zvbb | Zvbc | Zvkg | Zvkned | Zvknha | Zvksed | Zvksh => &[V],
             Zvknhb => &[Zvknha],

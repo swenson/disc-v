@@ -87,6 +87,7 @@ ISA specification disagree; see [Testing](#testing).
 - V (vectors)
 - Zvbb and Zvbc; Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed and Zvksh
 - H (hypervisor)
+- Zalasr, Zacas and Zabha
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`; Svinval,
   Smrnmi (`mnret`) and Ssctr (`sctrclr`)
 

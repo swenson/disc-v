@@ -21,6 +21,7 @@
 //! - V (vectors)
 //! - Zvbb and Zvbc; Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed and Zvksh
 //! - H (hypervisor), Svinval, Smrnmi and Ssctr
+//! - Zalasr, Zacas and Zabha
 //!
 //! The text follows GNU objdump's for a raw binary (`objdump -D -b binary`),
 //! so branch targets are written as `0x1008`.
