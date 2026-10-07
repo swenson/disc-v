@@ -9,6 +9,11 @@
 //! checking), disassembled with `objdump -d`, and compared after putting
 //! objdump's text in disc-v's format (see `normalize`).
 //!
+//! The `-march` comes from disc-v's default extensions, less any the
+//! assembler does not accept, and disc-v decodes with the same extensions,
+//! so the test also runs with older binutils (it prints the extensions it
+//! skips).
+//!
 //! The test is skipped if no RISC-V binutils are found. It looks for
 //! `riscv64-elf-`, `riscv64-unknown-elf-` and `riscv64-linux-gnu-` prefixed
 //! tools, or the prefix in `DISC_V_BINUTILS_PREFIX`. Set
@@ -21,9 +26,65 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use common::{Failures, Rng, riscv_opcodes_samples};
-use disc_v::{Isa, decode};
+use disc_v::{Decoder, Extension, Extensions, Isa};
 
-const MARCH_EXTENSIONS: &str = "imafdqcvh_zicsr_zifencei_zba_zbb_zbc_zbs_zicond_zawrs_zicbom_zicboz_zicbop_zihintntl_zihintpause_zimop_zcmop_zicfiss_zicfilp_zcb_zfh_zfa_zvbb_zvbc_zvkg_zvkned_zvknhb_zvksed_zvksh_svinval_smrnmi_ssctr";
+/// Extensions whose instructions binutils decodes even when they are not in
+/// `-march` (and which it may not accept there).
+const ALWAYS_DECODED_BY_BINUTILS: &[Extension] = &[Extension::Sdext];
+
+/// The extensions to test: every default extension the assembler accepts in
+/// `-march`. disc-v is compared with the same set, so the test works with
+/// older binutils.
+fn extensions(prefix: &str) -> Extensions {
+    let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("objdump-probe");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("probe.s"), "nop\n").unwrap();
+    let accepts = |ext: Extension| {
+        let name = ext.name();
+        let march = if name.len() == 1 {
+            format!("rv64i{name}")
+        } else {
+            format!("rv64gcvh_{name}")
+        };
+        Command::new(format!("{prefix}as"))
+            .current_dir(&dir)
+            .args([
+                format!("-march={march}").as_str(),
+                "probe.s",
+                "-o",
+                "probe.o",
+            ])
+            .output()
+            .is_ok_and(|o| o.status.success())
+    };
+    let mut exts = Extensions::DEFAULT;
+    for ext in Extensions::DEFAULT.iter() {
+        if !ALWAYS_DECODED_BY_BINUTILS.contains(&ext) && !accepts(ext) {
+            eprintln!("binutils does not support {ext}; not testing it");
+            exts = exts.without(ext);
+        }
+    }
+    exts
+}
+
+/// The `-march` string for `isa` with `exts`.
+fn march(isa: Isa, exts: Extensions) -> String {
+    let xlen = if isa == Isa::Rv32 { 32 } else { 64 };
+    let mut march = format!("rv{xlen}i");
+    // Single-letter extensions come first, in canonical order.
+    for letter in ["m", "a", "f", "d", "q", "c", "v", "h"] {
+        if exts.iter().any(|e| e.name() == letter) {
+            march += letter;
+        }
+    }
+    for ext in exts.iter().filter(|e| e.name().len() > 1) {
+        if !ALWAYS_DECODED_BY_BINUTILS.contains(&ext) {
+            march += "_";
+            march += ext.name();
+        }
+    }
+    march
+}
 
 fn binutils_prefix() -> Option<String> {
     let candidates = match std::env::var("DISC_V_BINUTILS_PREFIX") {
@@ -50,7 +111,7 @@ fn binutils_prefix() -> Option<String> {
 
 /// Assembles `insts` at consecutive addresses from 0 and returns objdump's
 /// text for each one.
-fn objdump(prefix: &str, isa: Isa, insts: &[u32]) -> Vec<String> {
+fn objdump(prefix: &str, isa: Isa, exts: Extensions, insts: &[u32]) -> Vec<String> {
     let xlen = match isa {
         Isa::Rv32 => 32,
         _ => 64,
@@ -73,7 +134,7 @@ fn objdump(prefix: &str, isa: Isa, insts: &[u32]) -> Vec<String> {
         String::from_utf8(out.stdout).unwrap()
     };
     run(Command::new(format!("{prefix}as"))
-        .arg(format!("-march=rv{xlen}{MARCH_EXTENSIONS}"))
+        .arg(format!("-march={}", march(isa, exts)))
         .args(["t.s", "-o", "t.o"]));
     let dump = run(Command::new(format!("{prefix}objdump")).args(["-d", "t.o"]));
 
@@ -204,12 +265,14 @@ fn matches_objdump() {
     };
     let mut rng = Rng::new(3);
     let insts = test_encodings(&mut rng);
+    let exts = extensions(&prefix);
     let mut failures = Failures::default();
     for isa in [Isa::Rv32, Isa::Rv64] {
-        let expected = objdump(&prefix, isa, &insts);
+        let dec = Decoder::with_only(isa, exts).unwrap();
+        let expected = objdump(&prefix, isa, exts, &insts);
         let mut pc = 0;
         for (&inst, want) in insts.iter().zip(&expected) {
-            let got = decode(isa, pc, inst as u64).to_string();
+            let got = dec.decode(pc, inst as u64).to_string();
             if got != *want && known_difference(isa, inst, want, &got).is_none() {
                 let mnemonic = |s: &str| s.split(' ').next().unwrap().to_string();
                 failures.add(
