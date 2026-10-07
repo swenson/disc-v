@@ -10,7 +10,7 @@
 
 pub mod common;
 
-use common::{Entry, Failures, Rng, embedded, entries, rve, with_resolving_conflicts};
+use common::{Entry, Failures, Rng, embedded, entries, inx, rve, with_resolving_conflicts};
 use disc_v::{Decoder, Extension, Extensions, Isa};
 
 /// Encodings riscv-opcodes lists for an ISA where the specification says they
@@ -119,7 +119,7 @@ fn every_decoded_encoding_is_in_riscv_opcodes() {
     let entries = entries_fixed();
     let mut rng = Rng::new(2);
     let mut failures = Failures::default();
-    let configs = [Extensions::DEFAULT, embedded(), rve()];
+    let configs = [Extensions::DEFAULT, embedded(), rve(), inx()];
     for (isa, exts) in [Isa::Rv32, Isa::Rv64]
         .into_iter()
         .flat_map(|i| configs.map(|c| (i, c)))

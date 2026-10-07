@@ -124,6 +124,20 @@ pub enum Extension {
     Zfa,
     /// Conversions between BFloat16 and single precision. Implies F.
     Zfbfmin,
+    /// Single-precision floating point in the integer registers: F's
+    /// instructions except its loads, stores and moves, with integer
+    /// register operands. Conflicts with F (and so with the extensions that
+    /// imply it, such as D, Zfa and C's Zcf).
+    Zfinx,
+    /// Double-precision floating point in the integer registers (register
+    /// pairs on RV32). Implies Zfinx.
+    Zdinx,
+    /// Half-precision floating point in the integer registers. Implies
+    /// Zhinxmin.
+    Zhinx,
+    /// Minimal half-precision floating point in the integer registers: the
+    /// conversions. Implies Zfinx.
+    Zhinxmin,
     /// Vector BFloat16 conversions. Implies V.
     Zvfbfmin,
     /// Vector BFloat16 widening multiply-add. Implies Zvfbfmin.
@@ -158,7 +172,7 @@ pub enum Extension {
 
 impl Extension {
     /// Every extension, in declaration order.
-    const ALL: [Extension; 63] = {
+    const ALL: [Extension; 67] = {
         use Extension::*;
         [
             E,
@@ -210,6 +224,10 @@ impl Extension {
             Zfhmin,
             Zfa,
             Zfbfmin,
+            Zfinx,
+            Zdinx,
+            Zhinx,
+            Zhinxmin,
             Zvfbfmin,
             Zvfbfwma,
             Zvbb,
@@ -280,6 +298,10 @@ impl Extension {
             Zfhmin => "zfhmin",
             Zfa => "zfa",
             Zfbfmin => "zfbfmin",
+            Zfinx => "zfinx",
+            Zdinx => "zdinx",
+            Zhinx => "zhinx",
+            Zhinxmin => "zhinxmin",
             Zvfbfmin => "zvfbfmin",
             Zvfbfwma => "zvfbfwma",
             Zvbb => "zvbb",
@@ -316,12 +338,28 @@ impl Extension {
             Zclsd => &[Zilsd, Zca],
             Q => &[D],
             Zfh => &[Zfhmin],
+            Zdinx | Zhinxmin => &[Zfinx],
+            Zhinx => &[Zhinxmin],
             Zacas | Zabha => &[A],
             Zicfiss => &[Zimop],
             Zvbb | Zvbc | Zvkg | Zvkned | Zvknha | Zvksed | Zvksh | Zvfbfmin => &[V],
             Zvfbfwma => &[Zvfbfmin],
             Zvknhb => &[Zvknha],
             _ => &[],
+        }
+    }
+
+    /// The extension that provides this one's instructions with their
+    /// floating-point operands in the integer registers, such as Zfinx for
+    /// F, or the extension itself if there is none.
+    pub(crate) const fn in_x_registers(self) -> Extension {
+        use Extension::*;
+        match self {
+            F => Zfinx,
+            D => Zdinx,
+            Zfh => Zhinx,
+            Zfhmin => Zhinxmin,
+            ext => ext,
         }
     }
 
@@ -362,7 +400,8 @@ impl Extensions {
         .without(Extension::E)
         .without(Extension::Zcmp)
         .without(Extension::Zcmt)
-        .without(Extension::Zclsd);
+        .without(Extension::Zclsd)
+        .without(Extension::Zfinx);
 
     /// G and C: IMAFD, Zicsr, Zifencei and C, as in RV32GC and RV64GC.
     pub const GC: Extensions = {
@@ -491,11 +530,6 @@ impl Extensions {
             i += 1;
         }
         set
-    }
-
-    /// Whether the set contains every extension in `exts`.
-    pub(crate) fn contains_all(self, exts: &[Extension]) -> bool {
-        exts.iter().all(|&e| self.contains(e))
     }
 
     /// The extensions in the set, in declaration order.

@@ -9,10 +9,12 @@ use super::Constraint::*;
 use super::{Codec, Opcode, Pseudo, fmt, pseudo};
 use crate::Extension;
 
-pub(crate) static FLH: Opcode =
-    Opcode::new("flh", Codec::I, fmt::FRD_OFFSET_RS1).requires(&[Extension::Zfhmin]);
-pub(crate) static FSH: Opcode =
-    Opcode::new("fsh", Codec::S, fmt::FRS2_OFFSET_RS1).requires(&[Extension::Zfhmin]);
+pub(crate) static FLH: Opcode = Opcode::new("flh", Codec::I, fmt::FRD_OFFSET_RS1)
+    .requires(&[Extension::Zfhmin])
+    .f_registers();
+pub(crate) static FSH: Opcode = Opcode::new("fsh", Codec::S, fmt::FRS2_OFFSET_RS1)
+    .requires(&[Extension::Zfhmin])
+    .f_registers();
 pub(crate) static FMADD_H: Opcode =
     Opcode::new("fmadd.h", Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3).requires(&[Extension::Zfh]);
 pub(crate) static FMSUB_H: Opcode =
@@ -61,12 +63,14 @@ pub(crate) static FCVT_H_W: Opcode =
     Opcode::new("fcvt.h.w", Codec::RM, fmt::RM_FRD_RS1).requires(&[Extension::Zfh]);
 pub(crate) static FCVT_H_WU: Opcode =
     Opcode::new("fcvt.h.wu", Codec::RM, fmt::RM_FRD_RS1).requires(&[Extension::Zfh]);
-pub(crate) static FMV_X_H: Opcode =
-    Opcode::new("fmv.x.h", Codec::R, fmt::RD_FRS1).requires(&[Extension::Zfhmin]);
+pub(crate) static FMV_X_H: Opcode = Opcode::new("fmv.x.h", Codec::R, fmt::RD_FRS1)
+    .requires(&[Extension::Zfhmin])
+    .f_registers();
 pub(crate) static FCLASS_H: Opcode =
     Opcode::new("fclass.h", Codec::R, fmt::RD_FRS1).requires(&[Extension::Zfh]);
-pub(crate) static FMV_H_X: Opcode =
-    Opcode::new("fmv.h.x", Codec::R, fmt::FRD_RS1).requires(&[Extension::Zfhmin]);
+pub(crate) static FMV_H_X: Opcode = Opcode::new("fmv.h.x", Codec::R, fmt::FRD_RS1)
+    .requires(&[Extension::Zfhmin])
+    .f_registers();
 pub(crate) static FCVT_L_H: Opcode = Opcode::new("fcvt.l.h", Codec::RM, fmt::RM_RD_FRS1)
     .requires(&[Extension::Zfh])
     .rv64();

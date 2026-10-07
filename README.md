@@ -77,6 +77,11 @@ RV32E and RV64E, which have only registers x0-x15, are the E extension:
 `Decoder::from_march("rv32emc")`, or `with(Extension::E)`. Instructions that
 use x16-x31 are then shown as `.insn`.
 
+Zfinx, Zdinx, Zhinx and Zhinxmin keep floating-point values in the integer
+registers. They use F's encodings, so they conflict with F:
+`Decoder::from_march("rv32imc_zicsr_zdinx")` decodes `fadd.d a0,a0,a2`
+rather than `fadd.d fa0,fa0,fa2`.
+
 ## Output format
 
 The text is what `objdump -D -b binary` prints for the same bytes: the same
@@ -106,6 +111,8 @@ ISA specification disagree; see
 - Zimop and Zcmop, with the Zicfiss and Zicfilp instructions
 - Zcb
 - Zfh and Zfhmin
+- Zfinx, Zdinx, Zhinx and Zhinxmin, which conflict with F and so are not
+  decoded by default
 - Zfa
 - V (vectors)
 - Zvbb and Zvbc; Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed and Zvksh

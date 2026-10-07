@@ -204,6 +204,64 @@ fn load_and_store_pairs() {
 }
 
 #[test]
+fn floating_point_in_integer_registers() {
+    use Extension::*;
+    // Zfinx and the extensions that imply it use F's encodings with integer
+    // registers, so they conflict with F.
+    let conflict = Decoder::RV64GC.with(Zfinx).unwrap_err();
+    assert_eq!(conflict.conflicts_with(), F);
+    let rv64 = Decoder::from_march("rv64imac_zicsr_zifencei_zdinx_zhinx").unwrap();
+    assert_eq!(
+        rv64,
+        Decoder::RV64GC
+            .without(F)
+            .with(Zdinx)
+            .unwrap()
+            .with(Zhinx)
+            .unwrap()
+    );
+    check(rv64, 0x00b57553, "fadd.s a0,a0,a1");
+    check(rv64, 0x02b57553, "fadd.d a0,a0,a1");
+    check(rv64, 0x04b57553, "fadd.h a0,a0,a1");
+    check(rv64, 0xa2b52553, "feq.d a0,a0,a1");
+    check(rv64, 0x20b58553, "fmv.s a0,a1");
+    assert_eq!(
+        rv64.decode(0, 0x20b58553).without_aliases().to_string(),
+        "fsgnj.s a0,a1,a1"
+    );
+    check(rv64, 0x00302573, "frcsr a0");
+    // There are no loads, stores or moves to and from f registers.
+    check(rv64, 0x00052007, ".insn 4, 0x00052007"); // flw
+    check(rv64, 0xe0050553, ".insn 4, 0xe0050553"); // fmv.x.w
+    check(rv64, 0x6188, "ld a0,0(a1)");
+
+    // On RV32, Zdinx's double-precision operands are even-odd pairs.
+    let rv32 = Decoder::from_march("rv32imac_zicsr_zdinx_zhinx").unwrap();
+    check(rv32, 0x02c50553, "fadd.d a0,a0,a2,rne");
+    check(rv32, 0x02b57553, ".insn 4, 0x02b57553"); // fadd.d a0,a0,a1
+    check(rv32, 0xd2058553, "fcvt.d.w a0,a1");
+    check(rv32, 0xd20585d3, ".insn 4, 0xd20585d3"); // fcvt.d.w a1,a1
+    check(rv32, 0x42258653, "fcvt.d.h a2,a1");
+    check(rv32, 0x00b57553, "fadd.s a0,a0,a1");
+    check(rv32, 0x6188, ".insn 2, 0x6188"); // c.flw
+
+    // With Zhinxmin, only the conversions.
+    let min = Decoder::from_march("rv32i_zhinxmin").unwrap();
+    check(min, 0x4405f553, "fcvt.h.s a0,a1");
+    check(min, 0x04b57553, ".insn 4, 0x04b57553"); // fadd.h
+
+    // RV32E has only x0-x15 for floating point too.
+    let e = Decoder::from_march("rv32ec_zfinx").unwrap();
+    check(e, 0x00b57553, "fadd.s a0,a0,a1");
+    check(e, 0x00b57853, ".insn 4, 0x00b57853"); // fadd.s a6,a0,a1
+
+    // Vector instructions with a scalar floating-point operand need F.
+    let v = Decoder::with_only(Isa::Rv64, [V]).unwrap();
+    check(v, 0x42101557, "vfmv.f.s fa0,v1");
+    check(v.with(Zfinx).unwrap(), 0x42101557, ".insn 4, 0x42101557");
+}
+
+#[test]
 fn compressed_bundle() {
     use Extension::*;
     let exts = Extensions::from([C, F, D]);
@@ -371,14 +429,19 @@ fn instructions_need_their_extensions() {
 #[test]
 fn riscv_opcodes_covers_every_extension() {
     use Extension::*;
-    // C is a bundle of Zca, Zcf and Zcd; E adds no instructions; and
+    // C is a bundle of Zca, Zcf and Zcd; E adds no instructions;
     // riscv-opcodes defines Zilsd and Zclsd only as pseudo-ops of ld, sd and
-    // Zcf's instructions (decoder tests cover them).
+    // Zcf's instructions; and Zfinx, Zdinx, Zhinx and Zhinxmin reuse F, D
+    // and Zfh's instructions (decoder tests cover them).
     let aliases_only = [
         C,
         E,
         Zilsd,
         Zclsd,
+        Zfinx,
+        Zdinx,
+        Zhinx,
+        Zhinxmin,
         Zicbop,
         Zihintntl,
         Zihintpause,
@@ -390,7 +453,10 @@ fn riscv_opcodes_covers_every_extension() {
         .filter(|e| e.base.is_none())
         .flat_map(|e| e.extensions.concat())
         .collect();
-    for ext in Extensions::DEFAULT.iter().chain([Zcmp, Zcmt, Zclsd, E]) {
+    for ext in Extensions::DEFAULT
+        .iter()
+        .chain([Zcmp, Zcmt, Zclsd, E, Zfinx, Zdinx, Zhinx, Zhinxmin])
+    {
         assert_eq!(
             named.contains(&ext.name()),
             !aliases_only.contains(&ext),

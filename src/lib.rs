@@ -18,6 +18,8 @@
 //! - Zimop and Zcmop, with the Zicfiss and Zicfilp instructions
 //! - Zcb
 //! - Zfh and Zfhmin
+//! - Zfinx, Zdinx, Zhinx and Zhinxmin, which conflict with F and so are only
+//!   decoded by a [`Decoder`] that enables them
 //! - Zfa
 //! - V (vectors)
 //! - Zvbb and Zvbc; Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed and Zvksh

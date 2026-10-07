@@ -291,6 +291,10 @@ pub(crate) struct Opcode {
     /// provide `rol`), at least one of which must be enabled. Empty if
     /// [`requires`](Self::requires) alone decides.
     pub(crate) requires_any: &'static [Extension],
+    /// Whether the instruction loads, stores or moves to or from the
+    /// floating-point registers, and so does not exist with Zfinx, where
+    /// there are none.
+    pub(crate) f_registers: bool,
 }
 
 impl Opcode {
@@ -306,6 +310,15 @@ impl Opcode {
             isas: 0b111,
             requires: &[],
             requires_any: &[],
+            f_registers: false,
+        }
+    }
+
+    /// Marks an instruction as needing the floating-point registers.
+    pub(crate) const fn f_registers(self) -> Self {
+        Opcode {
+            f_registers: true,
+            ..self
         }
     }
 
@@ -357,15 +370,33 @@ impl Opcode {
         }
     }
 
+    /// Whether `exts` has the extensions the instruction (or alias) needs.
+    /// With Zfinx, those of F, D, Zfh and Zfhmin are provided by Zfinx,
+    /// Zdinx, Zhinx and Zhinxmin.
+    pub(crate) fn provided_by(&self, exts: Extensions) -> bool {
+        let has = |e: Extension| exts.contains(e) || exts.contains(e.in_x_registers());
+        self.requires.iter().all(|&e| has(e))
+            && (self.requires_any.is_empty() || self.requires_any.iter().any(|&e| has(e)))
+    }
+
     /// Whether the instruction exists in `isa` with `exts`. A compressed
     /// instruction also needs the instruction it expands to.
     pub(crate) fn exists_in(&self, isa: Isa, exts: Extensions) -> bool {
-        exts.contains_all(self.requires)
-            && (self.requires_any.is_empty() || self.requires_any.iter().any(|&e| exts.contains(e)))
+        self.provided_by(exts)
+            && (!exts.contains(Extension::Zfinx) || self.in_x_registers())
             && match self.decompress {
                 [None, None, None] => self.isas & (1 << isa as u8) != 0,
                 expansions => expansions[isa as usize].is_some_and(|e| e.exists_in(isa, exts)),
             }
+    }
+
+    /// Whether the instruction can have its floating-point operands in the
+    /// integer registers: it has none, or it is from F, D, Zfh or Zfhmin
+    /// (rather than, say, a vector instruction with a scalar operand).
+    fn in_x_registers(&self) -> bool {
+        let fp_operands = self.format.contains(['3', '4', '5', '6']);
+        !fp_operands
+            || (!self.f_registers && self.requires.iter().any(|&e| e.in_x_registers() != e))
     }
 }
 

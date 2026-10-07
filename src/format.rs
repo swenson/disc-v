@@ -59,6 +59,8 @@ impl Display for Operands<'_> {
 /// Writes the output for format character `c`; see
 /// [`fmt`](crate::opcodes::fmt).
 fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::Result {
+    // With Zfinx, floating-point operands are in the integer registers.
+    let fp_names = if ins.fp_in_x { &INT_NAMES } else { &FP_NAMES };
     match c {
         '(' | ',' | ' ' | ')' | '-' => out.write_char(c),
         'L' => match ins.rs1 {
@@ -70,10 +72,10 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
         '0' => out.write_str(INT_NAMES[ins.rd as usize]),
         '1' => out.write_str(INT_NAMES[ins.rs1 as usize]),
         '2' => out.write_str(INT_NAMES[ins.rs2 as usize]),
-        '3' => out.write_str(FP_NAMES[ins.rd as usize]),
-        '4' => out.write_str(FP_NAMES[ins.rs1 as usize]),
-        '5' => out.write_str(FP_NAMES[ins.rs2 as usize]),
-        '6' => out.write_str(FP_NAMES[ins.rs3 as usize]),
+        '3' => out.write_str(fp_names[ins.rd as usize]),
+        '4' => out.write_str(fp_names[ins.rs1 as usize]),
+        '5' => out.write_str(fp_names[ins.rs2 as usize]),
+        '6' => out.write_str(fp_names[ins.rs3 as usize]),
         '7' => write!(out, "{}", ins.rs1),
         'i' => write!(out, "{}", ins.imm),
         '>' => write!(out, "{:#x}", ins.imm),

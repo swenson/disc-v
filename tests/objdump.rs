@@ -25,7 +25,7 @@ use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
 
-use common::{Failures, Rng, embedded, riscv_opcodes_samples, rve};
+use common::{Failures, Rng, embedded, inx, riscv_opcodes_samples, rve};
 use disc_v::{Decoder, Extension, Extensions, Isa};
 
 /// Extensions whose instructions binutils decodes even when they are not in
@@ -227,6 +227,15 @@ fn known_difference(
         return Some("RV32E/RV64E register x16-x31");
     }
     let mnemonic = |s: &str| s.split([' ', '.']).next().unwrap().to_string();
+    // RV32 Zdinx reserves odd registers for double-precision operands, which
+    // are even-odd pairs; objdump decodes them.
+    if isa == Isa::Rv32
+        && exts.contains(Extension::Zdinx)
+        && disc_v.starts_with(".insn ")
+        && objdump.contains(".d")
+    {
+        return Some("RV32 Zdinx odd register pair");
+    }
     if disc_v.starts_with(".insn ") {
         // A shift amount of 32 or more is reserved on RV32.
         let shift = [
@@ -289,12 +298,13 @@ fn matches_objdump() {
     let mut rng = Rng::new(3);
     let insts = test_encodings(&mut rng);
     let mut failures = Failures::default();
-    // The defaults, and a configuration with Zcmp and Zcmt, which conflict
-    // with the defaults.
+    // The defaults, and configurations with extensions that conflict with
+    // them.
     let configs = [
         ("default", Extensions::DEFAULT),
         ("embedded", embedded()),
         ("rve", rve()),
+        ("inx", inx()),
     ];
     for (isa, (config, exts)) in [Isa::Rv32, Isa::Rv64]
         .into_iter()

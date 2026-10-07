@@ -23,6 +23,7 @@ pub(crate) fn decode(isa: Isa, exts: Extensions, pc: u64, inst: u64) -> Instruct
     };
     let op = opcode::lookup(isa, exts, inst).unwrap_or(&ILLEGAL);
     let mut ins = Instruction::new(isa, pc, inst, op);
+    ins.fp_in_x = exts.contains(Extension::Zfinx);
     operands::extract(&mut ins, op.codec);
     if is_reserved(&ins, exts) {
         return Instruction::new(isa, pc, inst, &ILLEGAL);
@@ -52,6 +53,7 @@ fn is_reserved(ins: &Instruction, exts: Extensions) -> bool {
         || shift_too_big
         || op.illegal_if.iter().any(|&c| holds(ins, c))
         || (exts.contains(Extension::E) && uses_upper_registers(ins))
+        || (ins.isa == Isa::Rv32 && exts.contains(Extension::Zdinx) && odd_register_pair(ins))
 }
 
 /// Whether `ins` uses one of the integer registers x16-x31, which RV32E and
@@ -62,10 +64,34 @@ fn uses_upper_registers(ins: &Instruction) -> bool {
         '0' => ins.rd >= 16,
         '1' => ins.rs1 >= 16,
         '2' => ins.rs2 >= 16,
+        '3' if ins.fp_in_x => ins.rd >= 16,
+        '4' if ins.fp_in_x => ins.rs1 >= 16,
+        '5' if ins.fp_in_x => ins.rs2 >= 16,
+        '6' if ins.fp_in_x => ins.rs3 >= 16,
         _ => false,
     });
     // The register list (in rs1) saves s2 and up from 7.
     operand || (ins.op.codec == Codec::CmPushPop && ins.rs1 > 6)
+}
+
+/// Whether `ins` has a double-precision operand in an odd register. With
+/// Zdinx on RV32, these are even-odd register pairs, so odd registers are
+/// reserved.
+fn odd_register_pair(ins: &Instruction) -> bool {
+    // The operands' formats are in the mnemonic: fcvt.<rd>.<rs1>, or a
+    // single suffix for all of them (fadd.d).
+    let name = ins.op.name;
+    let (rd, rs) = match name.strip_prefix("fcvt.").and_then(|t| t.split_once('.')) {
+        Some((to, from)) => (to == "d", from == "d"),
+        None => (name.ends_with(".d"), name.ends_with(".d")),
+    };
+    ins.op.format.chars().any(|c| match c {
+        '3' => rd && ins.rd & 1 == 1,
+        '4' => rs && ins.rs1 & 1 == 1,
+        '5' => rs && ins.rs2 & 1 == 1,
+        '6' => rs && ins.rs3 & 1 == 1,
+        _ => false,
+    })
 }
 
 /// Replaces an instruction with the first of its pseudoinstructions whose
@@ -75,7 +101,7 @@ fn lift_pseudo(ins: &mut Instruction, exts: Extensions) {
         .op
         .pseudo
         .iter()
-        .find(|p| exts.contains_all(p.op.requires) && p.when.iter().all(|&c| holds(ins, c)))
+        .find(|p| p.op.provided_by(exts) && p.when.iter().all(|&c| holds(ins, c)))
     {
         ins.op = p.op;
     }

@@ -10,10 +10,12 @@ use super::Constraint::*;
 use super::{Codec, Opcode, Pseudo, fmt, pseudo};
 use crate::Extension;
 
-pub(crate) static FLD: Opcode =
-    Opcode::new("fld", Codec::I, fmt::FRD_OFFSET_RS1).requires(&[Extension::D]);
-pub(crate) static FSD: Opcode =
-    Opcode::new("fsd", Codec::S, fmt::FRS2_OFFSET_RS1).requires(&[Extension::D]);
+pub(crate) static FLD: Opcode = Opcode::new("fld", Codec::I, fmt::FRD_OFFSET_RS1)
+    .requires(&[Extension::D])
+    .f_registers();
+pub(crate) static FSD: Opcode = Opcode::new("fsd", Codec::S, fmt::FRS2_OFFSET_RS1)
+    .requires(&[Extension::D])
+    .f_registers();
 pub(crate) static FMADD_D: Opcode =
     Opcode::new("fmadd.d", Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3).requires(&[Extension::D]);
 pub(crate) static FMSUB_D: Opcode =
@@ -76,7 +78,8 @@ pub(crate) static FCVT_LU_D: Opcode = Opcode::new("fcvt.lu.d", Codec::RM, fmt::R
     .rv64();
 pub(crate) static FMV_X_D: Opcode = Opcode::new("fmv.x.d", Codec::R, fmt::RD_FRS1)
     .requires(&[Extension::D])
-    .rv64();
+    .rv64()
+    .f_registers();
 pub(crate) static FCVT_D_L: Opcode = Opcode::new("fcvt.d.l", Codec::RM, fmt::RM_FRD_RS1)
     .requires(&[Extension::D])
     .rv64();
@@ -85,4 +88,5 @@ pub(crate) static FCVT_D_LU: Opcode = Opcode::new("fcvt.d.lu", Codec::RM, fmt::R
     .rv64();
 pub(crate) static FMV_D_X: Opcode = Opcode::new("fmv.d.x", Codec::R, fmt::FRD_RS1)
     .requires(&[Extension::D])
-    .rv64();
+    .rv64()
+    .f_registers();

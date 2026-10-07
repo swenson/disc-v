@@ -15,6 +15,9 @@ const CONFLICTS: &[(Extension, Extension)] = &[
     (Extension::Zcmt, Extension::Zcd),
     // Zclsd uses the encodings of c.flw, c.fsw, c.flwsp and c.fswsp.
     (Extension::Zclsd, Extension::Zcf),
+    // Zfinx (and so Zdinx, Zhinx and Zhinxmin) uses F's encodings with
+    // integer registers.
+    (Extension::Zfinx, Extension::F),
 ];
 
 /// Decodes instructions for a base ISA with a chosen set of extensions.

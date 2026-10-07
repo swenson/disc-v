@@ -144,12 +144,25 @@ pub fn embedded() -> Extensions {
 }
 
 /// An RV32E/RV64E configuration with the embedded extensions, including
-/// Zilsd and Zclsd, which conflict with the defaults' Zcf.
+/// Zilsd and Zclsd, which conflict with the defaults' Zcf, and floating
+/// point in the integer registers (Zdinx and Zhinx), which conflicts with F.
 pub fn rve() -> Extensions {
     use Extension::*;
     Extensions::from([
-        E, M, A, Zca, Zcb, Zcmp, Zcmt, Zicsr, Zifencei, Zilsd, Zclsd, Zba, Zbb, Zbs,
+        E, M, A, Zca, Zcb, Zcmp, Zcmt, Zicsr, Zifencei, Zilsd, Zclsd, Zdinx, Zhinx, Zba, Zbb, Zbs,
     ])
+}
+
+/// The defaults with floating point in the integer registers: Zdinx and
+/// Zhinx replace F, D, Q, Zfh and the extensions that need them, including
+/// V (whose floating-point instructions need F).
+pub fn inx() -> Extensions {
+    use Extension::*;
+    Extensions::DEFAULT
+        .without(F)
+        .without(V)
+        .with(Zdinx)
+        .with(Zhinx)
 }
 
 /// `dec` with `ext` enabled, after disabling whatever conflicts with it.

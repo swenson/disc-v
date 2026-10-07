@@ -41,6 +41,8 @@ pub struct Instruction {
     pub(crate) imm: i32,
     /// For vector instructions, whether the operation is masked by `v0`.
     pub(crate) masked: bool,
+    /// Whether floating-point operands are in the integer registers (Zfinx).
+    pub(crate) fp_in_x: bool,
 }
 
 impl Instruction {
@@ -66,6 +68,7 @@ impl Instruction {
             rl: false,
             imm: 0,
             masked: false,
+            fp_in_x: false,
         }
     }
 

@@ -30,6 +30,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Zilsd (`ld` and `sd` on RV32, with even-odd register pairs), in the
   defaults, and Zclsd (`c.ld`, `c.sd`, `c.ldsp`, `c.sdsp` on RV32), which
   conflicts with Zcf and so is not.
+- Zfinx, Zdinx, Zhinx and Zhinxmin: floating point in the integer registers
+  (`fadd.s a0,a0,a1`), with even-odd register pairs for double precision on
+  RV32. They conflict with F, so they are not in the defaults.
 - The parts of C as extensions: Zca, Zcf and Zcd. C is a bundle of Zca, and
   Zcf and Zcd when F and D are enabled.
 - `Extension` and `Extensions`, a set of extensions with presets (`DEFAULT`,
