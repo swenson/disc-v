@@ -98,6 +98,20 @@ fn with_without_and_implications() {
 }
 
 #[test]
+fn shared_instructions() {
+    // Zbkb provides rol and zext.h (as pack with rs2=zero) but not clz,
+    // which only Zbb has.
+    let zbkb = Decoder::with_only(Isa::Rv32, [Extension::Zbkb]).unwrap();
+    check(zbkb, 0x60c59533, "rol a0,a1,a2");
+    check(zbkb, 0x0805c533, "zext.h a0,a1");
+    check(zbkb, 0x60059513, ".insn 4, 0x60059513"); // clz
+    // Zbb provides zext.h but not pack.
+    let zbb = Decoder::with_only(Isa::Rv32, [Extension::Zbb]).unwrap();
+    check(zbb, 0x0805c533, "zext.h a0,a1");
+    check(zbb, 0x08c5c533, ".insn 4, 0x08c5c533"); // pack
+}
+
+#[test]
 fn with_only() {
     let dec = Decoder::with_only(Isa::Rv32, [Extension::M, Extension::C]).unwrap();
     assert_eq!(dec.isa(), Isa::Rv32);
@@ -153,8 +167,21 @@ fn from_march() {
         Err(MarchError::UnsupportedExtension("e"))
     );
     assert_eq!(
-        Decoder::from_march("rv64gc_zbkb"),
-        Err(MarchError::UnsupportedExtension("zbkb"))
+        Decoder::from_march("rv64gc_zcmp"),
+        Err(MarchError::UnsupportedExtension("zcmp"))
+    );
+    // Scalar cryptography bundles are expanded.
+    assert_eq!(
+        Decoder::from_march("rv64gc_zkn").map(|d| d.extensions()),
+        Ok(Extensions::GC
+            | Extensions::from([
+                Extension::Zbkb,
+                Extension::Zbkc,
+                Extension::Zbkx,
+                Extension::Zkne,
+                Extension::Zknd,
+                Extension::Zknh,
+            ])),
     );
     assert_eq!(
         Decoder::from_march("rv64gcp"),
@@ -173,7 +200,8 @@ fn disassemble_uses_the_decoder() {
 }
 
 /// Every instruction in riscv-opcodes is illegal (or another instruction)
-/// when any extension it needs is disabled.
+/// when any extension it needs is disabled. An instruction that several
+/// extensions provide needs all of them disabled.
 #[test]
 fn instructions_need_their_extensions() {
     let entries = entries();
@@ -184,14 +212,17 @@ fn instructions_need_their_extensions() {
             .iter()
             .filter(|e| e.applies_to(isa) && e.base.is_none())
         {
-            for name in &e.extensions {
-                let ext = Extension::from_name(name).unwrap_or_else(|| panic!("unknown {name}"));
-                let dec = Decoder::new(isa).without(ext);
+            for group in &e.extensions {
+                let dec = group.iter().fold(Decoder::new(isa), |dec, name| {
+                    let ext =
+                        Extension::from_name(name).unwrap_or_else(|| panic!("unknown {name}"));
+                    dec.without(ext)
+                });
                 for inst in e.samples(&mut rng, 16) {
                     let ins = dec.decode(0, inst as u64).without_aliases();
                     if !ins.is_illegal() && ins.mnemonic() == e.name {
                         failures.add(
-                            format_args!("{isa:?} {} decoded without {name}", e.name),
+                            format_args!("{isa:?} {} decoded without {}", e.name, group.join("|")),
                             format_args!("{inst:#010x}"),
                         );
                     }
@@ -212,7 +243,7 @@ fn riscv_opcodes_covers_every_extension() {
     let named: Vec<&str> = entries()
         .iter()
         .filter(|e| e.base.is_none())
-        .flat_map(|e| e.extensions.clone())
+        .flat_map(|e| e.extensions.concat())
         .collect();
     for ext in Extensions::DEFAULT.iter() {
         assert_eq!(

@@ -494,6 +494,18 @@ pub(super) fn extract(ins: &mut Instruction, codec: Codec) {
             };
             ins.masked = (inst >> 25) & 1 == 0;
         }
+        Codec::RBs => {
+            ins.rd = operand_rd(inst) as u8;
+            ins.rs1 = operand_rs1(inst) as u8;
+            ins.rs2 = operand_rs2(inst) as u8;
+            ins.imm = (inst >> 30 & 3) as i32;
+        }
+        Codec::Rnum => {
+            ins.rd = operand_rd(inst) as u8;
+            ins.rs1 = operand_rs1(inst) as u8;
+            ins.rs2 = reg::ZERO;
+            ins.imm = (inst >> 20 & 0xf) as i32;
+        }
         Codec::VsetVli => {
             ins.rd = operand_rd(inst) as u8;
             ins.rs1 = operand_rs1(inst) as u8;

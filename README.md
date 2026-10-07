@@ -89,6 +89,7 @@ ISA specification disagree; see [Testing](#testing).
 - H (hypervisor)
 - Zalasr, Zacas and Zabha
 - Zfbfmin, Zvfbfmin and Zvfbfwma (BFloat16)
+- Zbkb, Zbkc and Zbkx; Zknd, Zkne, Zknh, Zksed and Zksh (scalar cryptography)
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`; Svinval,
   Smrnmi (`mnret`) and Ssctr (`sctrclr`)
 

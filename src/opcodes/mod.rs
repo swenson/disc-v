@@ -28,6 +28,7 @@ pub(crate) mod zfh;
 pub(crate) mod zicbo;
 pub(crate) mod zicond;
 pub(crate) mod zimop;
+pub(crate) mod zk;
 
 use crate::{Extension, Extensions, Isa};
 
@@ -103,6 +104,11 @@ pub(crate) enum Codec {
     /// As [`Codec::V`], with an unsigned 6-bit immediate in bit 26 and the
     /// vs1 field (`vror.vi`).
     Vu6,
+    /// Scalar AES and SM4 (`aes32esi`, `sm4ed`): rd, rs1, rs2 and a byte
+    /// select in bits 31:30.
+    RBs,
+    /// `aes64ks1i`: rd, rs1 and a round number in bits 23:20.
+    Rnum,
     /// `vsetvli`: rd, rs1 and an 11-bit `vtype` immediate.
     VsetVli,
     /// `vsetivli`: rd, a 5-bit AVL immediate in the rs1 field, and a 10-bit
@@ -186,6 +192,7 @@ pub(crate) mod fmt {
     pub(crate) const ADDR_RS1: &str = "(1)";
     pub(crate) const RS2: &str = "2";
     pub(crate) const RS2_ADDR_RS1: &str = "2,(1)";
+    pub(crate) const RD_RS1_RS2_BS: &str = "0,1,2,>";
     pub(crate) const UIMM: &str = "u";
     pub(crate) const FRD_FLI: &str = "3,F";
     pub(crate) const FRD_RS1_RS2: &str = "3,1,2";
@@ -268,6 +275,10 @@ pub(crate) struct Opcode {
     /// The extensions the instruction (or alias) needs, all of which must be
     /// enabled. Empty for the base ISA.
     pub(crate) requires: &'static [Extension],
+    /// Extensions that each provide the instruction (as Zbb and Zbkb both
+    /// provide `rol`), at least one of which must be enabled. Empty if
+    /// [`requires`](Self::requires) alone decides.
+    pub(crate) requires_any: &'static [Extension],
 }
 
 impl Opcode {
@@ -282,6 +293,15 @@ impl Opcode {
             hint_if: &[],
             isas: 0b111,
             requires: &[],
+            requires_any: &[],
+        }
+    }
+
+    /// Marks an instruction as provided by each of `exts`.
+    pub(crate) const fn requires_any(self, exts: &'static [Extension]) -> Self {
+        Opcode {
+            requires_any: exts,
+            ..self
         }
     }
 
@@ -329,6 +349,7 @@ impl Opcode {
     /// instruction also needs the instruction it expands to.
     pub(crate) fn exists_in(&self, isa: Isa, exts: Extensions) -> bool {
         exts.contains_all(self.requires)
+            && (self.requires_any.is_empty() || self.requires_any.iter().any(|&e| exts.contains(e)))
             && match self.decompress {
                 [None, None, None] => self.isas & (1 << isa as u8) != 0,
                 expansions => expansions[isa as usize].is_some_and(|e| e.exists_in(isa, exts)),

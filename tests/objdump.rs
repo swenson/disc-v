@@ -217,6 +217,10 @@ fn known_difference(isa: Isa, inst: u32, objdump: &str, disc_v: &str) -> Option<
         if isa == Isa::Rv32 && shift.contains(&objdump.split(' ').next().unwrap()) {
             return Some("RV32 shift amount >= 32");
         }
+        // aes64ks1i reserves round numbers above 10.
+        if objdump.starts_with("aes64ks1i ") {
+            return Some("aes64ks1i with a reserved round number");
+        }
         // c.addi16sp with a zero immediate is reserved.
         if inst & 0xef83 == 0x6101 {
             return Some("c.addi16sp 0");

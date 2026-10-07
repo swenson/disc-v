@@ -293,6 +293,24 @@ fn bfloat16() {
 }
 
 #[test]
+fn scalar_cryptography() {
+    check(Isa::Rv32, 0x08c5c533, "pack a0,a1,a2");
+    check(Isa::Rv32, 0x0805c533, "zext.h a0,a1");
+    check(Isa::Rv32, 0x08c5f533, "packh a0,a1,a2");
+    check(Isa::Rv32, 0x6875d513, "brev8 a0,a1");
+    check(Isa::Rv32, 0x08f59513, "zip a0,a1");
+    check(Isa::Rv32, 0x28c5a533, "xperm4 a0,a1,a2");
+    check(Isa::Rv32, 0xe2c58533, "aes32esi a0,a1,a2,0x3");
+    check(Isa::Rv32, 0x70c58533, "sm4ed a0,a1,a2,0x1");
+    check(Isa::Rv32, 0x10059513, "sha256sum0 a0,a1");
+    check(Isa::Rv32, 0x50c58533, "sha512sum0r a0,a1,a2");
+    check(Isa::Rv64, 0x32c58533, "aes64es a0,a1,a2");
+    check(Isa::Rv64, 0x31a59513, "aes64ks1i a0,a1,0xa");
+    check(Isa::Rv64, 0x31b59513, ".insn 4, 0x31b59513"); // reserved round number
+    check(Isa::Rv64, 0x08c5c53b, "packw a0,a1,a2");
+}
+
+#[test]
 fn rv128() {
     check(Isa::Rv128, 0x0005200f, "lq zero,0(a0)");
     check(Isa::Rv128, 0x00053503, "ld a0,0(a0)");

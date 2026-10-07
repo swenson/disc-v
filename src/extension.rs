@@ -70,6 +70,24 @@ pub enum Extension {
     Zbc,
     /// Single-bit instructions (`bset`, ...).
     Zbs,
+    /// Bit manipulation for cryptography (`pack`, `brev8`, ...). It also
+    /// provides several Zbb instructions, such as `rol` and `rev8`.
+    Zbkb,
+    /// Carry-less multiplication for cryptography: Zbc's `clmul` and
+    /// `clmulh`.
+    Zbkc,
+    /// Crossbar permutations (`xperm4`, `xperm8`).
+    Zbkx,
+    /// AES decryption.
+    Zknd,
+    /// AES encryption.
+    Zkne,
+    /// SHA-256 and SHA-512.
+    Zknh,
+    /// SM4.
+    Zksed,
+    /// SM3.
+    Zksh,
     /// Simple compressed instructions (`c.lbu`, `c.mul`, ...). Implies C.
     Zcb,
     /// Half-precision floating point. Implies Zfhmin.
@@ -116,7 +134,7 @@ pub enum Extension {
 
 impl Extension {
     /// Every extension, in declaration order.
-    const ALL: [Extension; 47] = {
+    const ALL: [Extension; 55] = {
         use Extension::*;
         [
             M,
@@ -147,6 +165,14 @@ impl Extension {
             Zbb,
             Zbc,
             Zbs,
+            Zbkb,
+            Zbkc,
+            Zbkx,
+            Zknd,
+            Zkne,
+            Zknh,
+            Zksed,
+            Zksh,
             Zcb,
             Zfh,
             Zfhmin,
@@ -201,6 +227,14 @@ impl Extension {
             Zbb => "zbb",
             Zbc => "zbc",
             Zbs => "zbs",
+            Zbkb => "zbkb",
+            Zbkc => "zbkc",
+            Zbkx => "zbkx",
+            Zknd => "zknd",
+            Zkne => "zkne",
+            Zknh => "zknh",
+            Zksed => "zksed",
+            Zksh => "zksh",
             Zcb => "zcb",
             Zfh => "zfh",
             Zfhmin => "zfhmin",
@@ -448,7 +482,7 @@ mod tests {
             assert_eq!(Extension::from_name(ext.name()), Some(ext));
         }
         assert_eq!(Extension::from_name("ZBA"), Some(Extension::Zba));
-        assert_eq!(Extension::from_name("zbkb"), None);
+        assert_eq!(Extension::from_name("xtheadba"), None);
     }
 
     #[test]

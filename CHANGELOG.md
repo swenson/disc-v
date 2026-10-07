@@ -17,6 +17,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Zalasr (`lb.aq`, ..., `sd.rl`), Zacas (`amocas.w`, `.d`, `.q`) and Zabha
   (byte and halfword atomics, and `amocas.b`/`.h`).
 - BFloat16: Zfbfmin (`fcvt.bf16.s`, `fcvt.s.bf16`), Zvfbfmin and Zvfbfwma.
+- Scalar cryptography: Zbkb, Zbkc, Zbkx, Zknd, Zkne, Zknh, Zksed and Zksh.
+  `Decoder::from_march` expands the Zk, Zkn and Zks bundles.
 - `Extension` and `Extensions`, a set of extensions with presets (`DEFAULT`,
   `GC`, `RVA23U64`, `RVA23S64`) that follows implications between extensions.
 

@@ -23,6 +23,7 @@
 //! - H (hypervisor), Svinval, Smrnmi and Ssctr
 //! - Zalasr, Zacas and Zabha
 //! - Zfbfmin, Zvfbfmin and Zvfbfwma (BFloat16)
+//! - Zbkb, Zbkc and Zbkx; Zknd, Zkne, Zknh, Zksed and Zksh (scalar cryptography)
 //!
 //! The text follows GNU objdump's for a raw binary (`objdump -D -b binary`),
 //! so branch targets are written as `0x1008`.

@@ -146,7 +146,8 @@ impl Decoder {
     /// define no instructions (such as Zkt, Sstc or Zvl128b). Some
     /// extensions are decoded as a larger extension that contains them:
     /// Zmmul as M, Zaamo and Zalrsc as A, Zca, Zcf and Zcd as C, the Zve
-    /// embedded vector extensions as V, and Sha as H.
+    /// embedded vector extensions as V, and Sha as H. The scalar cryptography
+    /// bundles Zk, Zkn and Zks are expanded.
     ///
     /// ```
     /// use disc_v::{Decoder, MarchError};
@@ -235,6 +236,12 @@ fn multi_letter(token: &str) -> Result<Extensions, MarchError<'_>> {
         C.into()
     } else if has_prefix("zve") {
         V.into()
+    } else if lower("zkn") {
+        Extensions::of(&[Zbkb, Zbkc, Zbkx, Zkne, Zknd, Zknh])
+    } else if lower("zks") {
+        Extensions::of(&[Zbkb, Zbkc, Zbkx, Zksed, Zksh])
+    } else if lower("zk") {
+        Extensions::of(&[Zbkb, Zbkc, Zbkx, Zkne, Zknd, Zknh])
     } else if lower("sha") {
         H.into()
     } else if lower("smctr") {
@@ -253,7 +260,7 @@ fn multi_letter(token: &str) -> Result<Extensions, MarchError<'_>> {
 /// Unprivileged extensions that define no instructions.
 const NO_INSTRUCTIONS: &[&str] = &[
     "zicntr", "zihpm", "zkt", "zvkt", "zvfh", "zvfhmin", "ztso", "za64rs", "za128rs", "zama16b",
-    "zic64b", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "supm",
+    "zic64b", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "supm", "zkr",
 ];
 
 /// `s` without a trailing version number such as `2p1`.

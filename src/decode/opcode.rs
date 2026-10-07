@@ -9,7 +9,7 @@
 use crate::Isa;
 use crate::opcodes::{
     Opcode, a, b, c, d, f, h, i, lookup_masked, m, q, system, v, zabha, zalasr, zawrs, zcb, zfa,
-    zfbfmin, zfh, zicbo, zicond, zimop,
+    zfbfmin, zfh, zicbo, zicond, zimop, zk,
 };
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
@@ -195,7 +195,61 @@ fn misc_mem(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     }
 }
 
+/// Scalar cryptography instructions with fixed immediates in OP-IMM.
+fn crypto_op_imm(inst: u64) -> Option<&'static Opcode> {
+    Some(match ((inst >> 12) & 7, inst >> 20) {
+        (1, 0x08f) => &zk::ZIP,
+        (5, 0x08f) => &zk::UNZIP,
+        (5, 0x687) => &zk::BREV8,
+        (1, 0x100) => &zk::SHA256SUM0,
+        (1, 0x101) => &zk::SHA256SUM1,
+        (1, 0x102) => &zk::SHA256SIG0,
+        (1, 0x103) => &zk::SHA256SIG1,
+        (1, 0x104) => &zk::SHA512SUM0,
+        (1, 0x105) => &zk::SHA512SUM1,
+        (1, 0x106) => &zk::SHA512SIG0,
+        (1, 0x107) => &zk::SHA512SIG1,
+        (1, 0x108) => &zk::SM3P0,
+        (1, 0x109) => &zk::SM3P1,
+        (1, 0x300) => &zk::AES64IM,
+        (1, imm) if imm >> 4 == 0x31 => &zk::AES64KS1I,
+        _ => return None,
+    })
+}
+
+/// Scalar cryptography instructions in OP with funct3=0. The AES and SM4
+/// instructions have a byte select in bits 31:30.
+fn crypto_op(inst: u64) -> Option<&'static Opcode> {
+    if (inst >> 12) & 7 != 0 {
+        return None;
+    }
+    let funct7 = inst >> 25;
+    Some(match (funct7 & 0x1f, funct7) {
+        (0b10001, _) => &zk::AES32ESI,
+        (0b10011, _) => &zk::AES32ESMI,
+        (0b10101, _) => &zk::AES32DSI,
+        (0b10111, _) => &zk::AES32DSMI,
+        (0b11000, _) => &zk::SM4ED,
+        (0b11010, _) => &zk::SM4KS,
+        (_, 0x19) => &zk::AES64ES,
+        (_, 0x1b) => &zk::AES64ESM,
+        (_, 0x1d) => &zk::AES64DS,
+        (_, 0x1f) => &zk::AES64DSM,
+        (_, 0x3f) => &zk::AES64KS2,
+        (_, 0x28) => &zk::SHA512SUM0R,
+        (_, 0x29) => &zk::SHA512SUM1R,
+        (_, 0x2a) => &zk::SHA512SIG0L,
+        (_, 0x2e) => &zk::SHA512SIG0H,
+        (_, 0x2b) => &zk::SHA512SIG1L,
+        (_, 0x2f) => &zk::SHA512SIG1H,
+        _ => return None,
+    })
+}
+
 fn op_imm(isa: Isa, inst: u64) -> Option<&'static Opcode> {
+    if let Some(op) = crypto_op_imm(inst) {
+        return Some(op);
+    }
     match (inst >> 12) & 7 {
         0 => Some(&i::ADDI),
         1 => {
@@ -413,6 +467,9 @@ fn amo(isa: Isa, inst: u64) -> Option<&'static Opcode> {
 }
 
 fn op(isa: Isa, inst: u64) -> Option<&'static Opcode> {
+    if let Some(op) = crypto_op(inst) {
+        return Some(op);
+    }
     match (inst >> 22) & 0x3f8 | (inst >> 12) & 7 {
         0 => Some(&i::ADD),
         1 => Some(&i::SLL),
@@ -431,6 +488,10 @@ fn op(isa: Isa, inst: u64) -> Option<&'static Opcode> {
         14 => Some(&m::REM),
         15 => Some(&m::REMU),
         36 if isa == Isa::Rv32 && inst >> 20 == 0x080 => Some(&b::ZEXT_H),
+        36 => Some(&zk::PACK),
+        39 => Some(&zk::PACKH),
+        162 => Some(&zk::XPERM4),
+        164 => Some(&zk::XPERM8),
         41 => Some(&b::CLMUL),
         42 => Some(&b::CLMULR),
         43 => Some(&b::CLMULH),
@@ -470,6 +531,7 @@ fn op_32(inst: u64) -> Option<&'static Opcode> {
         15 => Some(&m::REMUW),
         32 => Some(&b::ADD_UW),
         36 if inst >> 20 == 0x080 => Some(&b::ZEXT_H),
+        36 => Some(&zk::PACKW),
         130 => Some(&b::SH1ADD_UW),
         132 => Some(&b::SH2ADD_UW),
         134 => Some(&b::SH3ADD_UW),

@@ -68,9 +68,10 @@ pub struct Entry {
     pub mask: u32,
     pub nonzero: Vec<u32>,
     pub not_two: u32,
-    /// The extensions the instruction needs (by name); empty for the base
-    /// ISA.
-    pub extensions: Vec<&'static str>,
+    /// The extensions the instruction needs (by name), all of which must be
+    /// enabled; empty for the base ISA. Each is a group of extensions that
+    /// each provide it, such as `["zbb", "zbkb"]` for `rol`.
+    pub extensions: Vec<Vec<&'static str>>,
 }
 
 impl Entry {
@@ -124,7 +125,7 @@ pub fn entries() -> Vec<Entry> {
                 not_two: if f[6] == "-" { 0 } else { hex(f[6]) },
                 extensions: match f[7] {
                     "-" => vec![],
-                    s => s.split('+').collect(),
+                    s => s.split('+').map(|g| g.split('|').collect()).collect(),
                 },
             }
         })
