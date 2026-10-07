@@ -60,7 +60,13 @@ impl Display for Operands<'_> {
 /// [`fmt`](crate::opcodes::fmt).
 fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::Result {
     match c {
-        '(' | ',' | ' ' | ')' => out.write_char(c),
+        '(' | ',' | ' ' | ')' | '-' => out.write_char(c),
+        'L' => match ins.rs1 {
+            4 => out.write_str("{ra}"),
+            5 => out.write_str("{ra,s0}"),
+            15 => out.write_str("{ra,s0-s11}"),
+            rlist => write!(out, "{{ra,s0-s{}}}", rlist - 5),
+        },
         '0' => out.write_str(INT_NAMES[ins.rd as usize]),
         '1' => out.write_str(INT_NAMES[ins.rs1 as usize]),
         '2' => out.write_str(INT_NAMES[ins.rs2 as usize]),

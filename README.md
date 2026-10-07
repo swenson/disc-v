@@ -52,8 +52,26 @@ for ins in dec.disassemble(0x1000, &[0x05, 0x45]) {
 }
 ```
 
-`with` returns an error if the extension conflicts with one already enabled;
-`try_with` leaves the decoder unchanged instead.
+Some extensions give the same encodings different meanings, so they cannot
+be enabled together; the defaults leave out the one that conflicts. For
+example, Zcmp and Zcmt (compressed push/pop and table jumps, common in
+size-optimized embedded code) reuse the encodings of Zcd, the compressed
+double-precision loads and stores that C includes when D is enabled. `with`
+returns an error for a conflicting extension, and `try_with` leaves the
+decoder unchanged instead:
+
+```rust
+use disc_v::{Decoder, Extension};
+
+assert!(Decoder::RV32GC.with(Extension::Zcmp).is_err());
+assert_eq!(Decoder::RV32GC.try_with(Extension::Zcmp), Decoder::RV32GC);
+
+// Removing Zcd keeps the other compressed instructions (Zca, Zcf).
+let dec = Decoder::RV32GC.without(Extension::Zcd).with(Extension::Zcmp).unwrap();
+assert_eq!(dec.decode(0, 0xb862).to_string(), "cm.push {ra,s0-s1},-16");
+
+let dec = Decoder::from_march("rv32imac_zcmp_zcmt").unwrap();
+```
 
 ## Output format
 
@@ -91,6 +109,8 @@ ISA specification disagree; see
 - Zalasr, Zacas and Zabha
 - Zfbfmin, Zvfbfmin and Zvfbfwma (BFloat16)
 - Zbkb, Zbkc and Zbkx; Zknd, Zkne, Zknh, Zksed and Zksh (scalar cryptography)
+- Zca, Zcf and Zcd (the parts of C); Zcmp and Zcmt, which conflict with Zcd and
+  so are not decoded by default
 - `ecall`, `ebreak`, `sret`, `mret`, `dret`, `wfi` and `sfence.vma`; Svinval,
   Smrnmi (`mnret`) and Ssctr (`sctrclr`)
 

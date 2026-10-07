@@ -23,8 +23,22 @@ pub enum Extension {
     D,
     /// Quad-precision floating point. Implies D.
     Q,
-    /// Compressed instructions.
+    /// Compressed instructions: Zca, and Zcf and Zcd when F and D are
+    /// enabled.
     C,
+    /// Compressed integer instructions.
+    Zca,
+    /// Compressed single-precision loads and stores (RV32 only). Implies Zca
+    /// and F.
+    Zcf,
+    /// Compressed double-precision loads and stores. Implies Zca and D.
+    Zcd,
+    /// Compressed push, pop and register moves (`cm.push`, ...). Implies
+    /// Zca, and conflicts with Zcd.
+    Zcmp,
+    /// Compressed table jumps (`cm.jt`, `cm.jalt`). Implies Zca and Zicsr,
+    /// and conflicts with Zcd.
+    Zcmt,
     /// Vectors.
     V,
     /// The hypervisor extension.
@@ -134,7 +148,7 @@ pub enum Extension {
 
 impl Extension {
     /// Every extension, in declaration order.
-    const ALL: [Extension; 55] = {
+    const ALL: [Extension; 60] = {
         use Extension::*;
         [
             M,
@@ -143,6 +157,11 @@ impl Extension {
             D,
             Q,
             C,
+            Zca,
+            Zcf,
+            Zcd,
+            Zcmp,
+            Zcmt,
             V,
             H,
             Zicsr,
@@ -205,6 +224,11 @@ impl Extension {
             D => "d",
             Q => "q",
             C => "c",
+            Zca => "zca",
+            Zcf => "zcf",
+            Zcd => "zcd",
+            Zcmp => "zcmp",
+            Zcmt => "zcmt",
             V => "v",
             H => "h",
             Zicsr => "zicsr",
@@ -269,9 +293,12 @@ impl Extension {
         use Extension::*;
         match self {
             D | Zfhmin | Zfa | Zfbfmin => &[F],
+            C | Zcb | Zcmop | Zcmp => &[Zca],
+            Zcf => &[Zca, F],
+            Zcd => &[Zca, D],
+            Zcmt => &[Zca, Zicsr],
             Q => &[D],
             Zfh => &[Zfhmin],
-            Zcb | Zcmop => &[C],
             Zacas | Zabha => &[A],
             Zicfiss => &[Zimop],
             Zvbb | Zvbc | Zvkg | Zvkned | Zvknha | Zvksed | Zvksh | Zvfbfmin => &[V],
@@ -314,7 +341,9 @@ impl Extensions {
 
     /// Every supported extension that does not conflict with another. This
     /// is what [`decode`](fn@crate::decode) and the other free functions use.
-    pub const DEFAULT: Extensions = Extensions::of(&Extension::ALL);
+    pub const DEFAULT: Extensions = Extensions::of(&Extension::ALL)
+        .without(Extension::Zcmp)
+        .without(Extension::Zcmt);
 
     /// G and C: IMAFD, Zicsr, Zifencei and C, as in RV32GC and RV64GC.
     pub const GC: Extensions = {
@@ -387,11 +416,33 @@ impl Extensions {
             set = set.with(implied[i]);
             i += 1;
         }
+        // C includes Zcf and Zcd when F and D are enabled.
+        if set.contains(Extension::C) && set.contains(Extension::F) {
+            set = set.with(Extension::Zcf);
+        }
+        if set.contains(Extension::C) && set.contains(Extension::D) {
+            set = set.with(Extension::Zcd);
+        }
         set
     }
 
     /// The set with `ext` and the extensions that imply it removed.
+    ///
+    /// C is a bundle of Zca and (with F and D) Zcf and Zcd: removing C
+    /// removes every compressed instruction, and removing Zcf or Zcd removes
+    /// C but keeps Zca.
     pub const fn without(self, ext: Extension) -> Extensions {
+        let mut set = self.remove(ext);
+        match ext {
+            Extension::C => set = set.remove(Extension::Zca),
+            Extension::Zcf | Extension::Zcd => set.0 &= !Extension::C.bit(),
+            _ => {}
+        }
+        set
+    }
+
+    /// The set with `ext` and the extensions that imply it removed.
+    const fn remove(self, ext: Extension) -> Extensions {
         let mut set = Extensions(self.0 & !ext.bit());
         let mut i = 0;
         while i < Extension::ALL.len() {
@@ -400,7 +451,7 @@ impl Extensions {
             let mut j = 0;
             while j < implied.len() {
                 if implied[j] as u32 == ext as u32 && set.contains(other) {
-                    set = set.without(other);
+                    set = set.remove(other);
                 }
                 j += 1;
             }
@@ -409,9 +460,18 @@ impl Extensions {
         set
     }
 
-    /// The extensions in either set.
+    /// The extensions in either set (and the extensions they imply
+    /// together, such as Zcd for C and D).
     pub const fn union(self, other: Extensions) -> Extensions {
-        Extensions(self.0 | other.0)
+        let mut set = self;
+        let mut i = 0;
+        while i < Extension::ALL.len() {
+            if other.contains(Extension::ALL[i]) {
+                set = set.with(Extension::ALL[i]);
+            }
+            i += 1;
+        }
+        set
     }
 
     /// Whether the set contains every extension in `exts`.

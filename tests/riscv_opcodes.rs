@@ -10,8 +10,8 @@
 
 pub mod common;
 
-use common::{Entry, Failures, Rng, entries};
-use disc_v::{Isa, decode};
+use common::{Entry, Failures, Rng, embedded, entries, with_resolving_conflicts};
+use disc_v::{Decoder, Extension, Extensions, Isa};
 
 /// Encodings riscv-opcodes lists for an ISA where the specification says they
 /// do not exist, so disc-v decodes them as illegal.
@@ -32,14 +32,27 @@ fn reserved_by_spec(isa: Isa, name: &str, inst: u32) -> bool {
     match (isa, name) {
         // The register-pair forms of amocas reserve odd rd and rs2.
         (Isa::Rv32, "amocas.d") | (Isa::Rv64, "amocas.q") => rd & 1 == 1 || rs2 & 1 == 1,
+        // Zcmp reserves register lists below 4, and cm.mvsa01 into the same
+        // s-register twice.
+        (_, "cm.push" | "cm.pop" | "cm.popret" | "cm.popretz") => (inst >> 4) & 0xf < 4,
+        (_, "cm.mvsa01") => (inst >> 7) & 7 == (inst >> 2) & 7,
         _ => false,
     }
 }
 
+/// The riscv-opcodes name for disc-v's mnemonic `name`: riscv-opcodes has
+/// only cm.jalt, which the specification calls cm.jt for indices below 32.
+fn riscv_opcodes_name(name: &'static str) -> &'static str {
+    match name {
+        "cm.jt" => "cm.jalt",
+        name => name,
+    }
+}
+
 /// The mnemonic of `inst` without aliases, or `None` if it is illegal.
-fn decoded_name(isa: Isa, inst: u32) -> Option<&'static str> {
-    let ins = decode(isa, 0, inst as u64).without_aliases();
-    (!ins.is_illegal()).then(|| ins.mnemonic())
+fn decoded_name(dec: Decoder, inst: u32) -> Option<&'static str> {
+    let ins = dec.decode(0, inst as u64).without_aliases();
+    (!ins.is_illegal()).then(|| riscv_opcodes_name(ins.mnemonic()))
 }
 
 #[test]
@@ -52,11 +65,24 @@ fn every_riscv_opcodes_encoding_decodes_to_its_name() {
             .iter()
             .filter(|e| e.applies_to(isa) && !NOT_IN_SPEC.contains(&(isa, e.name)))
         {
+            // A decoder with the extensions the entry needs, including any
+            // that conflict with the defaults (such as Zcmp).
+            let dec = e.extensions.iter().fold(Decoder::new(isa), |dec, group| {
+                let ext = Extension::from_name(group[0]).unwrap();
+                if group
+                    .iter()
+                    .any(|n| dec.extensions().contains(Extension::from_name(n).unwrap()))
+                {
+                    dec
+                } else {
+                    with_resolving_conflicts(dec, ext)
+                }
+            });
             for inst in e.samples(&mut rng, 64) {
                 if reserved_by_spec(isa, e.name, inst) {
                     continue;
                 }
-                match decoded_name(isa, inst) {
+                match decoded_name(dec, inst) {
                     Some(name) if e.is_named(name) => {}
                     // Another entry for the same encoding, such as a more
                     // specific pseudo-op, may name it instead.
@@ -80,7 +106,12 @@ fn every_decoded_encoding_is_in_riscv_opcodes() {
     let entries = entries();
     let mut rng = Rng::new(2);
     let mut failures = Failures::default();
-    for isa in [Isa::Rv32, Isa::Rv64] {
+    let configs = [Extensions::DEFAULT, embedded()];
+    for (isa, exts) in [Isa::Rv32, Isa::Rv64]
+        .into_iter()
+        .flat_map(|i| configs.map(|c| (i, c)))
+    {
+        let dec = Decoder::with_only(isa, exts).unwrap();
         let entries: Vec<&Entry> = entries.iter().filter(|e| e.applies_to(isa)).collect();
         // Every compressed encoding, random 32-bit encodings, and each
         // encoding from riscv-opcodes with one bit flipped, which probes the
@@ -95,7 +126,7 @@ fn every_decoded_encoding_is_in_riscv_opcodes() {
             }
         }
         for inst in compressed.chain(random).chain(flipped) {
-            let Some(name) = decoded_name(isa, inst) else {
+            let Some(name) = decoded_name(dec, inst) else {
                 continue;
             };
             // riscv-opcodes leaves out HINT encodings, such as c.li with

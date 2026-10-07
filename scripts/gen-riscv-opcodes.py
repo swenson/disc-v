@@ -38,7 +38,7 @@ rv_q_zfa rv64_q_zfa rv_zfh_zfa rv_v rv_zvbb rv_zvbc rv_zvkg rv_zvkned
 rv_zvknha rv_zvksed rv_zvksh rv_h rv64_h rv_svinval rv_svinval_h rv_smrnmi
 rv_ssctr rv_zalasr rv_zacas rv64_zacas rv_zabha rv_zabha_zacas rv_zfbfmin
 rv_zvfbfmin rv_zvfbfwma rv_zbkb rv32_zbkb rv64_zbkb rv_zbkc rv_zbkx rv32_zknd rv64_zknd
-rv32_zkne rv64_zkne rv_zknh rv32_zknh rv64_zknh rv_zksed rv_zksh""".split()
+rv32_zkne rv64_zkne rv_zknh rv32_zknh rv64_zknh rv_zksed rv_zksh rv_zcmp rv_zcmt""".split()
 
 root = sys.argv[1]
 ext_dir = os.path.join(root, 'extensions')
@@ -110,7 +110,13 @@ def file_extensions(f, name):
     if parts == ['zicbo']:  # The file holds three extensions.
         parts = ['zicboz' if name == 'cbo.zero' else 'zicbop' if name.startswith('prefetch')
                  else 'zicbom']
-    return [p for p in parts if p not in BASE]
+    parts = [p for p in parts if p not in BASE]
+    # The compressed files are Zca, except rv_c_d (Zcd) and rv32_c_f (Zcf).
+    if parts == ['c', 'd']:
+        return ['zcd']
+    if parts == ['c', 'f']:
+        return ['zcf']
+    return ['zca' if p == 'c' else p for p in parts]
 
 
 def strip_suffix(name):

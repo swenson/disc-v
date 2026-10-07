@@ -9,7 +9,11 @@ use crate::{Disassembler, Extension, Extensions, Instruction, Isa, inst_length};
 
 /// Pairs of extensions that give different meanings to the same encodings,
 /// and so cannot be decoded together.
-const CONFLICTS: &[(Extension, Extension)] = &[];
+const CONFLICTS: &[(Extension, Extension)] = &[
+    // Zcmp and Zcmt use the encodings of c.fsdsp.
+    (Extension::Zcmp, Extension::Zcd),
+    (Extension::Zcmt, Extension::Zcd),
+];
 
 /// Decodes instructions for a base ISA with a chosen set of extensions.
 ///
@@ -145,9 +149,9 @@ impl Decoder {
     /// Version numbers (`rv64i2p1`) are ignored, as are extensions that
     /// define no instructions (such as Zkt, Sstc or Zvl128b). Some
     /// extensions are decoded as a larger extension that contains them:
-    /// Zmmul as M, Zaamo and Zalrsc as A, Zca, Zcf and Zcd as C, the Zve
-    /// embedded vector extensions as V, and Sha as H. The scalar cryptography
-    /// bundles Zk, Zkn and Zks are expanded.
+    /// Zmmul as M, Zaamo and Zalrsc as A, the Zve embedded vector extensions
+    /// as V, and Sha as H. The Zce, Zk, Zkn and Zks bundles are
+    /// expanded.
     ///
     /// ```
     /// use disc_v::{Decoder, MarchError};
@@ -232,8 +236,8 @@ fn multi_letter(token: &str) -> Result<Extensions, MarchError<'_>> {
         M.into()
     } else if lower("zaamo") || lower("zalrsc") {
         A.into()
-    } else if lower("zca") || lower("zcf") || lower("zcd") {
-        C.into()
+    } else if lower("zce") {
+        Extensions::of(&[Zca, Zcb, Zcmp, Zcmt])
     } else if has_prefix("zve") {
         V.into()
     } else if lower("zkn") {

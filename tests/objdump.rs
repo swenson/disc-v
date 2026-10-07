@@ -25,42 +25,36 @@ use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
 
-use common::{Failures, Rng, riscv_opcodes_samples};
+use common::{Failures, Rng, embedded, riscv_opcodes_samples};
 use disc_v::{Decoder, Extension, Extensions, Isa};
 
 /// Extensions whose instructions binutils decodes even when they are not in
 /// `-march` (and which it may not accept there).
 const ALWAYS_DECODED_BY_BINUTILS: &[Extension] = &[Extension::Sdext];
 
-/// The extensions to test: every default extension the assembler accepts in
-/// `-march`. disc-v is compared with the same set, so the test works with
-/// older binutils.
-fn extensions(prefix: &str) -> Extensions {
+/// The extensions in `config` that the assembler accepts in `-march` for
+/// `isa`. disc-v is compared with the same set, so the test works with older
+/// binutils.
+fn supported(prefix: &str, isa: Isa, config: Extensions) -> Extensions {
     let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("objdump-probe");
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("probe.s"), "nop\n").unwrap();
+    // Each extension is tried with the extensions it implies.
     let accepts = |ext: Extension| {
-        let name = ext.name();
-        let march = if name.len() == 1 {
-            format!("rv64i{name}")
-        } else {
-            format!("rv64gcvh_{name}")
-        };
         Command::new(format!("{prefix}as"))
             .current_dir(&dir)
-            .args([
-                format!("-march={march}").as_str(),
-                "probe.s",
-                "-o",
-                "probe.o",
-            ])
+            .arg(format!("-march={}", march(isa, ext.into())))
+            .args(["probe.s", "-o", "probe.o"])
             .output()
             .is_ok_and(|o| o.status.success())
     };
-    let mut exts = Extensions::DEFAULT;
-    for ext in Extensions::DEFAULT.iter() {
+    let mut exts = config;
+    for &ext in ALWAYS_DECODED_BY_BINUTILS {
+        exts = exts.with(ext);
+    }
+    for ext in config.iter() {
         if !ALWAYS_DECODED_BY_BINUTILS.contains(&ext) && !accepts(ext) {
-            eprintln!("binutils does not support {ext}; not testing it");
+            eprintln!("binutils does not support {ext} for {isa:?}; not testing it");
             exts = exts.without(ext);
         }
     }
@@ -217,6 +211,10 @@ fn known_difference(isa: Isa, inst: u32, objdump: &str, disc_v: &str) -> Option<
         if isa == Isa::Rv32 && shift.contains(&objdump.split(' ').next().unwrap()) {
             return Some("RV32 shift amount >= 32");
         }
+        // Zcmp reserves register lists below 4, which objdump decodes.
+        if objdump.starts_with("cm.push ") || objdump.starts_with("cm.pop") {
+            return Some("cm.push/cm.pop with a reserved register list");
+        }
         // c.addi16sp with a zero immediate is reserved.
         if inst & 0xef83 == 0x6101 {
             return Some("c.addi16sp 0");
@@ -265,9 +263,15 @@ fn matches_objdump() {
     };
     let mut rng = Rng::new(3);
     let insts = test_encodings(&mut rng);
-    let exts = extensions(&prefix);
     let mut failures = Failures::default();
-    for isa in [Isa::Rv32, Isa::Rv64] {
+    // The defaults, and a configuration with Zcmp and Zcmt, which conflict
+    // with the defaults.
+    let configs = [("default", Extensions::DEFAULT), ("embedded", embedded())];
+    for (isa, (config, exts)) in [Isa::Rv32, Isa::Rv64]
+        .into_iter()
+        .flat_map(|i| configs.map(|c| (i, c)))
+    {
+        let exts = supported(&prefix, isa, exts);
         let dec = Decoder::with_only(isa, exts).unwrap();
         let expected = objdump(&prefix, isa, exts, &insts);
         let mut pc = 0;
@@ -277,7 +281,7 @@ fn matches_objdump() {
                 let mnemonic = |s: &str| s.split(' ').next().unwrap().to_string();
                 failures.add(
                     format_args!(
-                        "{isa:?} objdump {} vs disc-v {}",
+                        "{isa:?} {config}: objdump {} vs disc-v {}",
                         mnemonic(want),
                         mnemonic(&got)
                     ),

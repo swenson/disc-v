@@ -21,6 +21,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `Decoder::from_march` expands the Zk, Zkn and Zks bundles. `aes64ks1i`
   is decoded with round numbers above 10, which the specification
   reserves, as objdump does.
+- Zcmp (`cm.push`, `cm.pop`, `cm.popret`, `cm.popretz`, `cm.mvsa01`,
+  `cm.mva01s`) and Zcmt (`cm.jt`, `cm.jalt`). They conflict with Zcd, so
+  they are not in the defaults; enable them with a `Decoder`, for example
+  `Decoder::from_march("rv32imac_zcmp_zcmt")`.
+- The parts of C as extensions: Zca, Zcf and Zcd. C is a bundle of Zca, and
+  Zcf and Zcd when F and D are enabled.
 - `Extension` and `Extensions`, a set of extensions with presets (`DEFAULT`,
   `GC`, `RVA23U64`, `RVA23S64`) that follows implications between extensions.
 

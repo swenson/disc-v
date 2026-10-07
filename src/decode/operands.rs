@@ -411,6 +411,26 @@ pub(super) fn extract(ins: &mut Instruction, codec: Codec) {
             ins.rs2 = reg::ZERO;
             ins.imm = 0;
         }
+        Codec::CmPushPop => {
+            let rlist = (inst >> 4 & 0xf) as u8;
+            // ra and s0-s(n), with s10 never saved alone.
+            let regs = match rlist {
+                15 => 13,
+                rlist => rlist.saturating_sub(3) as u32,
+            };
+            let bytes = (regs * ins.isa.xlen() / 8).div_ceil(16) * 16;
+            ins.rs1 = rlist;
+            ins.imm = (bytes + (inst >> 2 & 3) as u32 * 16) as i32;
+        }
+        Codec::CmMv => {
+            // s0-s1 are x8-x9, and s2-s7 are x18-x23.
+            let sreg = |s: u64| (if s < 2 { 8 + s } else { 16 + s }) as u8;
+            ins.rs1 = sreg(inst >> 7 & 7);
+            ins.rs2 = sreg(inst >> 2 & 7);
+        }
+        Codec::CmJt => {
+            ins.imm = (inst >> 2 & 0xff) as i32;
+        }
         Codec::Cr => {
             ins.rs1 = operand_crs1rd(inst) as u8;
             ins.rd = ins.rs1;

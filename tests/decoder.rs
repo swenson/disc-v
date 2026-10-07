@@ -112,6 +112,71 @@ fn shared_instructions() {
 }
 
 #[test]
+fn conflicts() {
+    use Extension::*;
+    let push = 0xb862; // cm.push {ra,s0-s1},-16; c.fsdsp with Zcd
+
+    // RV32GC has C and D, so Zcd, which Zcmp and Zcmt conflict with.
+    let gc = Decoder::RV32GC;
+    assert!(gc.extensions().contains(Zcd));
+    let conflict = gc.with(Zcmp).unwrap_err();
+    assert_eq!(
+        (conflict.extension(), conflict.conflicts_with()),
+        (Zcmp, Zcd)
+    );
+    assert_eq!(gc.try_with(Zcmp), gc);
+    assert_eq!(gc.try_with(Zcmt), gc);
+    check(gc, push, "fsd fs8,48(sp)");
+
+    // Without Zcd (which also removes the C bundle but keeps Zca and D),
+    // Zcmp is allowed.
+    let dec = gc.without(Zcd).with(Zcmp).unwrap();
+    assert!(dec.extensions().contains(D) && dec.extensions().contains(Zca));
+    assert!(!dec.extensions().contains(C));
+    check(dec, push, "cm.push {ra,s0-s1},-16");
+    check(dec, 0x2108, ".insn 2, 0x2108"); // c.fld needs Zcd
+    check(dec, 0x4505, "li a0,1");
+
+    // The defaults leave out Zcmp and Zcmt.
+    assert!(!Extensions::DEFAULT.contains(Zcmp));
+    check(Decoder::new(Isa::Rv32), push, "fsd fs8,48(sp)");
+    assert!(Decoder::with_only(Isa::Rv32, [C, D, Zcmp]).is_err());
+}
+
+#[test]
+fn push_pop_and_table_jumps() {
+    let rv32 = Decoder::from_march("rv32i_zca_zcmp_zcmt").unwrap();
+    let rv64 = Decoder::from_march("rv64i_zca_zcmp_zcmt").unwrap();
+    // The stack adjustment depends on the register list and XLEN.
+    check(rv32, 0xb862, "cm.push {ra,s0-s1},-16");
+    check(rv64, 0xb862, "cm.push {ra,s0-s1},-32");
+    check(rv32, 0xba56, "cm.pop {ra,s0},32");
+    check(rv32, 0xbe4e, "cm.popret {ra},64");
+    check(rv32, 0xbc6a, "cm.popretz {ra,s0-s1},48");
+    check(rv64, 0xbc6a, "cm.popretz {ra,s0-s1},64");
+    check(rv32, 0xb802, ".insn 2, 0xb802"); // reserved register list
+    check(rv32, 0xac26, "cm.mvsa01 s0,s1");
+    check(rv32, 0xac62, "cm.mva01s s0,s0");
+    check(rv32, 0xac22, ".insn 2, 0xac22"); // cm.mvsa01 s0,s0 is reserved
+    check(rv32, 0xa07e, "cm.jt 31");
+    check(rv32, 0xa082, "cm.jalt 32");
+}
+
+#[test]
+fn compressed_bundle() {
+    use Extension::*;
+    let exts = Extensions::from([C, F, D]);
+    assert!(exts.contains(Zca) && exts.contains(Zcf) && exts.contains(Zcd));
+    // Removing D keeps C (and Zcf); adding it back brings Zcd back.
+    let no_d = exts.without(D);
+    assert!(no_d.contains(C) && no_d.contains(Zcf) && !no_d.contains(Zcd));
+    assert!(no_d.with(D).contains(Zcd));
+    // Removing C removes every compressed extension.
+    let no_c = Extensions::from([C, F, Zcb]).without(C);
+    assert!(!no_c.contains(Zca) && !no_c.contains(Zcf) && !no_c.contains(Zcb));
+}
+
+#[test]
 fn with_only() {
     let dec = Decoder::with_only(Isa::Rv32, [Extension::M, Extension::C]).unwrap();
     assert_eq!(dec.isa(), Isa::Rv32);
@@ -153,7 +218,7 @@ fn from_march() {
     );
     assert_eq!(
         Decoder::from_march("rv32i_zmmul_zca").map(|d| d.extensions()),
-        Ok(Extensions::from([Extension::M, Extension::C])),
+        Ok(Extensions::from([Extension::M, Extension::Zca])),
     );
     assert_eq!(
         Decoder::from_march("rv64gc_zve64d").map(|d| d.extensions()),
@@ -167,8 +232,34 @@ fn from_march() {
         Err(MarchError::UnsupportedExtension("e"))
     );
     assert_eq!(
-        Decoder::from_march("rv64gc_zcmp"),
-        Err(MarchError::UnsupportedExtension("zcmp"))
+        Decoder::from_march("rv64gc_zilsd"),
+        Err(MarchError::UnsupportedExtension("zilsd"))
+    );
+    // Zcmp conflicts with Zcd, which C brings in with D.
+    assert_eq!(
+        Decoder::from_march("rv32gc_zcmp").map_err(|e| e.to_string()),
+        Err("zcmp conflicts with zcd".to_string()),
+    );
+    assert_eq!(
+        Decoder::from_march("rv32imac_zcmp").map(|d| d.extensions()),
+        Ok(Extensions::from([
+            Extension::M,
+            Extension::A,
+            Extension::C,
+            Extension::Zcmp
+        ])),
+    );
+    assert_eq!(
+        Decoder::from_march("rv32imaf_zce").map(|d| d.extensions()),
+        Ok(Extensions::from([
+            Extension::M,
+            Extension::A,
+            Extension::F,
+            Extension::Zca,
+            Extension::Zcb,
+            Extension::Zcmp,
+            Extension::Zcmt
+        ])),
     );
     // Scalar cryptography bundles are expanded.
     assert_eq!(
@@ -239,13 +330,14 @@ fn instructions_need_their_extensions() {
 #[test]
 fn riscv_opcodes_covers_every_extension() {
     use Extension::*;
-    let aliases_only = [Zicbop, Zihintntl, Zihintpause, Zicfilp, Zvknhb];
+    // C is a bundle of Zca and Zcd.
+    let aliases_only = [C, Zicbop, Zihintntl, Zihintpause, Zicfilp, Zvknhb];
     let named: Vec<&str> = entries()
         .iter()
         .filter(|e| e.base.is_none())
         .flat_map(|e| e.extensions.concat())
         .collect();
-    for ext in Extensions::DEFAULT.iter() {
+    for ext in Extensions::DEFAULT.iter().chain([Zcmp, Zcmt]) {
         assert_eq!(
             named.contains(&ext.name()),
             !aliases_only.contains(&ext),

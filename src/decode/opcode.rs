@@ -6,11 +6,11 @@
 
 //! Maps instruction encodings to opcode table entries.
 
-use crate::Isa;
 use crate::opcodes::{
-    Opcode, a, b, c, d, f, h, i, lookup_masked, m, q, system, v, zabha, zalasr, zawrs, zcb, zfa,
-    zfbfmin, zfh, zicbo, zicond, zimop, zk,
+    Opcode, a, b, c, d, f, h, i, lookup_masked, m, q, system, v, zabha, zalasr, zawrs, zcb, zcmp,
+    zfa, zfbfmin, zfh, zicbo, zicond, zimop, zk,
 };
+use crate::{Extension, Extensions, Isa};
 
 fn compressed_0(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     match (inst >> 13) & 7 {
@@ -101,7 +101,7 @@ fn compressed_1(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     }
 }
 
-fn compressed_2(isa: Isa, inst: u64) -> Option<&'static Opcode> {
+fn compressed_2(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode> {
     Some(match (inst >> 13) & 7 {
         0 => &c::C_SLLI,
         1 => {
@@ -133,6 +133,10 @@ fn compressed_2(isa: Isa, inst: u64) -> Option<&'static Opcode> {
             },
             _ => unreachable!(),
         },
+        // Zcmp and Zcmt replace c.fsdsp.
+        5 if exts.contains(Extension::Zcmp) || exts.contains(Extension::Zcmt) => {
+            return push_pop_and_table_jumps(exts, inst);
+        }
         5 => {
             if isa == Isa::Rv128 {
                 &c::C_SQSP
@@ -923,12 +927,38 @@ fn uncompressed(isa: Isa, inst: u64) -> Option<&'static Opcode> {
     }
 }
 
-/// Looks up the opcode for `inst`, or `None` if the encoding is not recognized.
-pub(super) fn lookup(isa: Isa, inst: u64) -> Option<&'static Opcode> {
+/// Zcmp and Zcmt, in the encoding space of c.fsdsp.
+fn push_pop_and_table_jumps(exts: Extensions, inst: u64) -> Option<&'static Opcode> {
+    if (inst >> 10) & 7 == 0 {
+        let op = if (inst >> 2) & 0xff < 32 {
+            &zcmp::CM_JT
+        } else {
+            &zcmp::CM_JALT
+        };
+        return exts.contains(Extension::Zcmt).then_some(op);
+    }
+    if !exts.contains(Extension::Zcmp) {
+        return None;
+    }
+    match ((inst >> 8) & 0x1f, (inst >> 5) & 3) {
+        (0x18, _) => Some(&zcmp::CM_PUSH),
+        (0x1a, _) => Some(&zcmp::CM_POP),
+        (0x1c, _) => Some(&zcmp::CM_POPRETZ),
+        (0x1e, _) => Some(&zcmp::CM_POPRET),
+        (field, 1) if field >> 2 == 3 => Some(&zcmp::CM_MVSA01),
+        (field, 3) if field >> 2 == 3 => Some(&zcmp::CM_MVA01S),
+        _ => None,
+    }
+}
+
+/// Looks up the opcode for `inst`, or `None` if the encoding is not
+/// recognized. Where extensions give an encoding different meanings, `exts`
+/// chooses between them.
+pub(super) fn lookup(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode> {
     match inst & 3 {
         0 => compressed_0(isa, inst),
         1 => compressed_1(isa, inst),
-        2 => compressed_2(isa, inst),
+        2 => compressed_2(isa, exts, inst),
         _ => uncompressed(isa, inst),
     }
 }

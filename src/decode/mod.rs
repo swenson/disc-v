@@ -21,7 +21,7 @@ pub(crate) fn decode(isa: Isa, exts: Extensions, pc: u64, inst: u64) -> Instruct
         Some(len) => inst & (u64::MAX >> (64 - 8 * len)),
         None => return Instruction::new(isa, pc, inst & 0xffff, &RESERVED_PARCEL),
     };
-    let op = opcode::lookup(isa, inst).unwrap_or(&ILLEGAL);
+    let op = opcode::lookup(isa, exts, inst).unwrap_or(&ILLEGAL);
     let mut ins = Instruction::new(isa, pc, inst, op);
     operands::extract(&mut ins, op.codec);
     if is_reserved(&ins, exts) {

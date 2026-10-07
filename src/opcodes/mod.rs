@@ -22,6 +22,7 @@ pub(crate) mod zabha;
 pub(crate) mod zalasr;
 pub(crate) mod zawrs;
 pub(crate) mod zcb;
+pub(crate) mod zcmp;
 pub(crate) mod zfa;
 pub(crate) mod zfbfmin;
 pub(crate) mod zfh;
@@ -64,6 +65,13 @@ pub(crate) enum Codec {
     CsH,
     /// Zcb unary operation on rd' (which is also rs1').
     CuRd,
+    /// `cm.push` and `cm.pop*`: the register list (in rs1) and the stack
+    /// adjustment in bytes.
+    CmPushPop,
+    /// `cm.mvsa01` and `cm.mva01s`: two s-registers (in rs1 and rs2).
+    CmMv,
+    /// `cm.jt` and `cm.jalt`: the jump table index.
+    CmJt,
     CjJal,
     Cj,
     Ciw4spn,
@@ -141,7 +149,8 @@ pub(crate) enum Codec {
 /// | `P` | prefetch offset: the immediate with its low five bits cleared |
 /// | `l` | length of the encoding in bytes |
 /// | `x` | the encoding, in hex, padded to a whole number of 16-bit parcels |
-/// | `,` ` ` `(` `)` | themselves |
+/// | `L` | `cm.push` register list, such as `{ra,s0-s1}` |
+/// | `,` ` ` `(` `)` `-` | themselves |
 pub(crate) mod fmt {
     pub(crate) const NONE: &str = "";
     pub(crate) const RS1: &str = "1";
@@ -193,6 +202,8 @@ pub(crate) mod fmt {
     pub(crate) const RS2: &str = "2";
     pub(crate) const RS2_ADDR_RS1: &str = "2,(1)";
     pub(crate) const RD_RS1_RS2_BS: &str = "0,1,2,>";
+    pub(crate) const RLIST_ADJ: &str = "L,i";
+    pub(crate) const RLIST_NEG_ADJ: &str = "L,-i";
     pub(crate) const UIMM: &str = "u";
     pub(crate) const FRD_FLI: &str = "3,F";
     pub(crate) const FRD_RS1_RS2: &str = "3,1,2";

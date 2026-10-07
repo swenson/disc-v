@@ -6,6 +6,8 @@
 use std::collections::BTreeMap;
 use std::fmt::Display;
 
+use disc_v::{Decoder, Extension, Extensions};
+
 /// A small deterministic xorshift generator, so failures are reproducible.
 pub struct Rng(u64);
 
@@ -130,4 +132,23 @@ pub fn entries() -> Vec<Entry> {
             }
         })
         .collect()
+}
+
+/// An embedded configuration with extensions that conflict with the
+/// defaults: Zcmp and Zcmt, which replace Zcd's c.fsdsp.
+pub fn embedded() -> Extensions {
+    use Extension::*;
+    Extensions::from([
+        M, A, F, Zca, Zcb, Zcmp, Zcmt, Zicsr, Zifencei, Zba, Zbb, Zbs,
+    ])
+}
+
+/// `dec` with `ext` enabled, after disabling whatever conflicts with it.
+pub fn with_resolving_conflicts(mut dec: Decoder, ext: Extension) -> Decoder {
+    loop {
+        match dec.with(ext) {
+            Ok(dec) => return dec,
+            Err(conflict) => dec = dec.without(conflict.conflicts_with()),
+        }
+    }
 }
