@@ -18,7 +18,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (byte and halfword atomics, and `amocas.b`/`.h`).
 - BFloat16: Zfbfmin (`fcvt.bf16.s`, `fcvt.s.bf16`), Zvfbfmin and Zvfbfwma.
 - Scalar cryptography: Zbkb, Zbkc, Zbkx, Zknd, Zkne, Zknh, Zksed and Zksh.
-  `Decoder::from_march` expands the Zk, Zkn and Zks bundles.
+  `Decoder::from_march` expands the Zk, Zkn and Zks bundles. `aes64ks1i`
+  is decoded with round numbers above 10, which the specification
+  reserves, as objdump does.
 - `Extension` and `Extensions`, a set of extensions with presets (`DEFAULT`,
   `GC`, `RVA23U64`, `RVA23S64`) that follows implications between extensions.
 

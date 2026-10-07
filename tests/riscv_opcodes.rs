@@ -32,8 +32,6 @@ fn reserved_by_spec(isa: Isa, name: &str, inst: u32) -> bool {
     match (isa, name) {
         // The register-pair forms of amocas reserve odd rd and rs2.
         (Isa::Rv32, "amocas.d") | (Isa::Rv64, "amocas.q") => rd & 1 == 1 || rs2 & 1 == 1,
-        // aes64ks1i reserves round numbers above 10.
-        (_, "aes64ks1i") => (inst >> 20) & 0xf > 10,
         _ => false,
     }
 }

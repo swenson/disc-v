@@ -8,7 +8,6 @@
 //! Zbkb also provides several Zbb instructions, such as `rol` and `rev8`;
 //! those are in [`b`](super::b).
 
-use super::Constraint::*;
 use super::{Codec, Opcode, fmt};
 use crate::Extension;
 
@@ -59,13 +58,11 @@ pub(crate) static AES64DSM: Opcode = Opcode::new("aes64dsm", Codec::R, fmt::RD_R
 pub(crate) static AES64IM: Opcode = Opcode::new("aes64im", Codec::R, fmt::RD_RS1)
     .requires(&[Extension::Zknd])
     .rv64_only();
-/// Round numbers above 10 are reserved.
-pub(crate) static AES64KS1I: Opcode = Opcode {
-    illegal_if: &[ImmEq(11), ImmEq(12), ImmEq(13), ImmEq(14), ImmEq(15)],
-    ..Opcode::new("aes64ks1i", Codec::Rnum, fmt::RD_RS1_SHAMT)
-        .requires_any(&[Extension::Zknd, Extension::Zkne])
-        .rv64_only()
-};
+/// The specification reserves round numbers above 10, but they are decoded
+/// (as objdump does), since the key schedule has uses besides AES itself.
+pub(crate) static AES64KS1I: Opcode = Opcode::new("aes64ks1i", Codec::Rnum, fmt::RD_RS1_SHAMT)
+    .requires_any(&[Extension::Zknd, Extension::Zkne])
+    .rv64_only();
 pub(crate) static AES64KS2: Opcode = Opcode::new("aes64ks2", Codec::R, fmt::RD_RS1_RS2)
     .requires_any(&[Extension::Zknd, Extension::Zkne])
     .rv64_only();

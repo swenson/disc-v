@@ -306,7 +306,8 @@ fn scalar_cryptography() {
     check(Isa::Rv32, 0x50c58533, "sha512sum0r a0,a1,a2");
     check(Isa::Rv64, 0x32c58533, "aes64es a0,a1,a2");
     check(Isa::Rv64, 0x31a59513, "aes64ks1i a0,a1,0xa");
-    check(Isa::Rv64, 0x31b59513, ".insn 4, 0x31b59513"); // reserved round number
+    // Round numbers above 10 are reserved, but decoded.
+    check(Isa::Rv64, 0x31b59513, "aes64ks1i a0,a1,0xb");
     check(Isa::Rv64, 0x08c5c53b, "packw a0,a1,a2");
 }
 

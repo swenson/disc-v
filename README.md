@@ -69,7 +69,8 @@ disc-v has no symbol information, so it uses objdump's raw-binary form,
 which is unambiguous.
 
 A few encodings are decoded differently from objdump where binutils and the
-ISA specification disagree; see [Testing](#testing).
+ISA specification disagree; see
+[Differences from the specification](#differences-from-the-specification).
 
 ## Supported instructions
 
@@ -113,18 +114,27 @@ Besides unit tests, the decoder is checked against two references:
   `riscv64-linux-gnu-objdump`) and is skipped if none is found; set
   `DISC_V_REQUIRE_BINUTILS=1` to make that an error, as CI does.
 
-Where binutils and the ISA specification disagree on whether an encoding is
-valid, disc-v follows the specification. The differences, such as RV32 shift
-amounts of 32 or more (reserved, but decoded by objdump), are listed in
-`known_difference` in `tests/objdump.rs`. Where riscv-opcodes disagrees with
-the specification, disc-v follows the specification, and the differences are
-listed in `NOT_IN_SPEC` in `tests/riscv_opcodes.rs`.
-
 CSR names come from riscv-opcodes, via `scripts/gen-csr-names.py`, and so do
 the vector instruction tables in `src/opcodes/v.rs`, via
 `scripts/gen-vector-opcodes.py`, which encodes objdump's operand order. The
 generators format their output with `rustfmt`, so generated code is formatted
 and linted like the rest of the crate.
+
+### Differences from the specification
+
+Where binutils and the ISA specification disagree on whether an encoding is
+valid, disc-v follows the specification, with the exceptions below. The
+differences from binutils, such as RV32 shift amounts of 32 or more
+(reserved, but decoded by objdump), are listed in `known_difference` in
+`tests/objdump.rs`. Where riscv-opcodes disagrees with the specification,
+disc-v follows the specification, and the differences are listed in
+`NOT_IN_SPEC` in `tests/riscv_opcodes.rs`.
+
+disc-v decodes a few encodings that the specification reserves, where they
+have plausible uses:
+
+- `aes64ks1i` with a round number above 10. The AES key schedule has uses
+  besides AES itself, and objdump decodes these too.
 
 ## Origins
 
