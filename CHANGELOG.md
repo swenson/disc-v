@@ -6,6 +6,17 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `Decoder`, which decodes for a chosen base ISA and set of extensions, so
+  that instructions (and aliases) of other extensions are not decoded. It has
+  presets (`RV32GC`, `RV64GC`, `RVA23U64`, `RVA23S64`), `with_only`, `with`,
+  `try_with` and `without`, and `from_march` for ISA strings such as
+  `rv64gc_zba`. The free functions are unchanged and decode every supported
+  extension, as before.
+- `Extension` and `Extensions`, a set of extensions with presets (`DEFAULT`,
+  `GC`, `RVA23U64`, `RVA23S64`) that follows implications between extensions.
+
 ## [0.1.1] - 2026-10-06
 
 ### Added

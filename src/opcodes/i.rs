@@ -8,6 +8,7 @@
 
 use super::Constraint::*;
 use super::{Codec, Opcode, Pseudo, fmt, pseudo, zicbo, zimop};
+use crate::Extension;
 use crate::reg;
 
 pub(crate) static LUI: Opcode = Opcode::new("lui", Codec::U, fmt::RD_UIMM);
@@ -148,7 +149,8 @@ pub(crate) static FENCE: Opcode = Opcode {
     )],
     ..Opcode::new("fence", Codec::RF, fmt::PRED_SUCC)
 };
-pub(crate) static FENCE_I: Opcode = Opcode::new("fence.i", Codec::None, fmt::NONE);
+pub(crate) static FENCE_I: Opcode =
+    Opcode::new("fence.i", Codec::None, fmt::NONE).requires(&[Extension::Zifencei]);
 pub(crate) static LWU: Opcode = Opcode::new("lwu", Codec::I, fmt::RD_OFFSET_RS1).rv64();
 pub(crate) static LD: Opcode = Opcode::new("ld", Codec::I, fmt::RD_OFFSET_RS1).rv64();
 pub(crate) static SD: Opcode = Opcode::new("sd", Codec::S, fmt::RS2_OFFSET_RS1).rv64();

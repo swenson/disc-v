@@ -25,6 +25,36 @@ encoded (`c.li a0,1` rather than `li a0,1`), like `objdump -M no-aliases`.
 
 The minimum supported Rust version is 1.85.1.
 
+## Choosing extensions
+
+`decode`, `decode_bytes` and `disassemble` decode every supported extension
+that does not conflict with another. To decode for a particular target, so
+that other extensions' instructions are shown as `.insn` (and their aliases
+are not used), use a `Decoder`:
+
+```rust
+use disc_v::{Decoder, Extension, Isa};
+
+// Presets.
+let dec = Decoder::RVA23U64;
+let dec = Decoder::RV64GC;
+
+// From an ISA string, as passed to compilers with -march.
+let dec = Decoder::from_march("rv32imac_zicsr_zba_zbb").unwrap();
+
+// By adding and removing extensions. Implied extensions follow: D implies F,
+// and removing F removes D.
+let dec = Decoder::RV64GC.with(Extension::Zicond).unwrap().without(Extension::D);
+let dec = Decoder::with_only(Isa::Rv32, [Extension::M, Extension::C]).unwrap();
+
+for ins in dec.disassemble(0x1000, &[0x05, 0x45]) {
+    println!("{ins}");
+}
+```
+
+`with` returns an error if the extension conflicts with one already enabled;
+`try_with` leaves the decoder unchanged instead.
+
 ## Output format
 
 The text is what `objdump -D -b binary` prints for the same bytes: the same

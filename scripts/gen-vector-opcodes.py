@@ -12,9 +12,19 @@ output is formatted with rustfmt, which must be installed.
 """
 import os, re, subprocess, sys
 
-# The vector extensions disc-v supports. Files that only $import from these
-# (rv_zvknhb, rv_zvkn, rv_zvks) add no encodings.
-FILES = ["rv_v", "rv_zvbb", "rv_zvbc", "rv_zvkg", "rv_zvkned", "rv_zvknha", "rv_zvksed", "rv_zvksh"]
+# The vector extensions disc-v supports, and the `Extension` each file's
+# instructions need. Files that only $import from these (rv_zvknhb, rv_zvkn,
+# rv_zvks) add no encodings; Zvknhb implies Zvknha.
+FILES = {
+    "rv_v": "V",
+    "rv_zvbb": "Zvbb",
+    "rv_zvbc": "Zvbc",
+    "rv_zvkg": "Zvkg",
+    "rv_zvkned": "Zvkned",
+    "rv_zvknha": "Zvknha",
+    "rv_zvksed": "Zvksed",
+    "rv_zvksh": "Zvksh",
+}
 
 # Instructions whose multiplicand comes before vs2: vd, vs1/rs1, vs2.
 MULTIPLY_ADD = """vmacc vnmsac vmadd vnmsub vwmaccu vwmacc vwmaccsu vwmaccus vfmacc vfnmacc
@@ -111,7 +121,7 @@ def operands(name, bits, mask, args):
 
 root = sys.argv[1]
 entries = []
-for f in FILES:
+for f, ext in FILES.items():
     for line in open(os.path.join(root, "extensions", f)):
         line = line.split("#", 1)[0].strip()
         if not line or line.startswith("$"):
@@ -121,20 +131,20 @@ for f in FILES:
             args = [a for a in args if a != "nf"]
             for nf in range(8):
                 n = name if nf == 0 else segment_name(name, nf + 1)
-                entries.append((n, bits | nf << 29, mask | 7 << 29, args))
+                entries.append((n, bits | nf << 29, mask | 7 << 29, args, ext))
         else:
-            entries.append((name, bits, mask, args))
+            entries.append((name, bits, mask, args, ext))
 
 aliases = {}
 for base, alias, constraints, fmt in ALIASES:
     aliases.setdefault(base, []).append((alias, constraints, fmt))
 
 tables = {t: [] for t in TABLES.values()}
-for name, bits, mask, args in entries:
+for name, bits, mask, args, ext in entries:
     table = TABLES[bits & 0x7F]
-    for other, obits, omask, _ in tables[table]:
+    for other, obits, omask, *_ in tables[table]:
         assert (bits ^ obits) & mask & omask, f"{name} overlaps {other}"
-    tables[table].append((name, bits, mask, args))
+    tables[table].append((name, bits, mask, args, ext))
 
 rev = subprocess.run(["git", "-C", root, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 
@@ -154,12 +164,13 @@ out = [f"""// Copyright (c) 2026 Christopher Swenson
 
 use super::Constraint::*;
 use super::{{Codec, MaskedOpcode, Opcode, Pseudo, masked}};
+use crate::Extension;
 """]
 for table, rows in tables.items():
     out.append(f"\npub(crate) static {table}: [MaskedOpcode; {len(rows)}] = [")
-    for name, bits, mask, args in rows:
+    for name, bits, mask, args, ext in rows:
         codec, fmt = operands(name, bits, mask, args)
-        op = f'Opcode::new("{name}", Codec::{codec}, "{fmt}")'
+        op = f'Opcode::new("{name}", Codec::{codec}, "{fmt}").requires(&[Extension::{ext}])'
         if name in aliases:
             ps = ", ".join(f"Pseudo::new(&{ident(a)}, &[{c}])" for a, c, _ in aliases[name])
             op = f"Opcode {{ pseudo: &[{ps}], ..{op} }}"
@@ -167,7 +178,8 @@ for table, rows in tables.items():
     out.append("];")
 out.append("")
 for base, alias, _, fmt in ALIASES:
-    e = next(e for e in entries if e[0] == base)
-    codec = operands(*e)[0]
-    out.append(f'static {ident(alias)}: Opcode = Opcode::new("{alias}", Codec::{codec}, "{fmt}");')
+    name, bits, mask, args, ext = next(e for e in entries if e[0] == base)
+    codec = operands(name, bits, mask, args)[0]
+    out.append(f'static {ident(alias)}: Opcode = '
+               f'Opcode::new("{alias}", Codec::{codec}, "{fmt}").requires(&[Extension::{ext}]);')
 sys.stdout.write(rustfmt("\n".join(out) + "\n"))

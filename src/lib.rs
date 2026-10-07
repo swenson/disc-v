@@ -25,6 +25,11 @@
 //! The text follows GNU objdump's for a raw binary (`objdump -D -b binary`),
 //! so branch targets are written as `0x1008`.
 //!
+//! [`decode`](fn@decode), [`decode_bytes`] and [`disassemble`] decode every
+//! supported extension that does not conflict with another. A [`Decoder`]
+//! decodes for a particular target instead, such as [`Decoder::RVA23U64`] or
+//! one from an ISA string with [`Decoder::from_march`].
+//!
 //! ```
 //! use disc_v::{disassemble, Isa};
 //!
@@ -40,13 +45,22 @@
 
 mod csr;
 mod decode;
+mod decoder;
+mod extension;
 mod format;
 mod instruction;
 mod opcodes;
 mod reg;
 
+pub use decoder::{Conflict, Decoder, MarchError};
+pub use extension::{Extension, Extensions};
 pub use format::Operands;
 pub use instruction::Instruction;
+
+// Compiles and runs the README's examples as doc tests.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
 
 /// The base integer ISA, which determines the register width and which
 /// encodings are valid.
@@ -83,7 +97,7 @@ impl Isa {
 /// assert_eq!(ins.to_string(), "beqz a0,0xffc");
 /// ```
 pub fn decode(isa: Isa, pc: u64, inst: u64) -> Instruction {
-    decode::decode(isa, pc, inst)
+    Decoder::new(isa).decode(pc, inst)
 }
 
 /// Decodes the instruction at the start of `bytes`, located at address `pc`.
@@ -98,11 +112,7 @@ pub fn decode(isa: Isa, pc: u64, inst: u64) -> Instruction {
 /// assert_eq!(ins.length(), 4);
 /// ```
 pub fn decode_bytes(isa: Isa, pc: u64, bytes: &[u8]) -> Option<Instruction> {
-    let first = u16::from_le_bytes([*bytes.first()?, *bytes.get(1)?]);
-    let len = inst_length(first).unwrap_or(2);
-    let mut word = [0; 8];
-    word[..len].copy_from_slice(bytes.get(..len)?);
-    Some(decode(isa, pc, u64::from_le_bytes(word)))
+    Decoder::new(isa).decode_bytes(pc, bytes)
 }
 
 /// Disassembles `bytes`, the first of which is at address `pc`.
@@ -110,14 +120,14 @@ pub fn decode_bytes(isa: Isa, pc: u64, bytes: &[u8]) -> Option<Instruction> {
 /// Iteration stops when the remaining bytes are too short for the next
 /// instruction; see [`Disassembler::remainder`].
 pub fn disassemble(isa: Isa, pc: u64, bytes: &[u8]) -> Disassembler<'_> {
-    Disassembler { isa, pc, bytes }
+    Decoder::new(isa).disassemble(pc, bytes)
 }
 
 /// An iterator over the instructions in a byte slice. Create one with
-/// [`disassemble`].
+/// [`disassemble`] or [`Decoder::disassemble`].
 #[derive(Clone, Debug)]
 pub struct Disassembler<'a> {
-    isa: Isa,
+    decoder: Decoder,
     pc: u64,
     bytes: &'a [u8],
 }
@@ -139,7 +149,7 @@ impl Iterator for Disassembler<'_> {
     type Item = Instruction;
 
     fn next(&mut self) -> Option<Instruction> {
-        let ins = decode_bytes(self.isa, self.pc, self.bytes)?;
+        let ins = self.decoder.decode_bytes(self.pc, self.bytes)?;
         self.bytes = &self.bytes[ins.length()..];
         self.pc = self.pc.wrapping_add(ins.length() as u64);
         Some(ins)

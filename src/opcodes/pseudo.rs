@@ -8,6 +8,7 @@
 //! when their operands match. See [`Opcode::pseudo`](super::Opcode::pseudo).
 
 use super::{Codec, Opcode, fmt};
+use crate::Extension;
 
 pub(crate) static NOP: Opcode = Opcode::new("nop", Codec::I, fmt::NONE);
 pub(crate) static MV: Opcode = Opcode::new("mv", Codec::I, fmt::RD_RS1);
@@ -48,14 +49,22 @@ pub(crate) static RDINSTRET: Opcode = Opcode::new("rdinstret", Codec::ICsr, fmt:
 pub(crate) static RDCYCLEH: Opcode = Opcode::new("rdcycleh", Codec::ICsr, fmt::RD);
 pub(crate) static RDTIMEH: Opcode = Opcode::new("rdtimeh", Codec::ICsr, fmt::RD);
 pub(crate) static RDINSTRETH: Opcode = Opcode::new("rdinstreth", Codec::ICsr, fmt::RD);
-pub(crate) static FRCSR: Opcode = Opcode::new("frcsr", Codec::ICsr, fmt::RD);
-pub(crate) static FRRM: Opcode = Opcode::new("frrm", Codec::ICsr, fmt::RD);
-pub(crate) static FRFLAGS: Opcode = Opcode::new("frflags", Codec::ICsr, fmt::RD);
-pub(crate) static FSCSR: Opcode = Opcode::new("fscsr", Codec::ICsr, fmt::RD_RS1);
-pub(crate) static FSRM: Opcode = Opcode::new("fsrm", Codec::ICsr, fmt::RD_RS1);
-pub(crate) static FSFLAGS: Opcode = Opcode::new("fsflags", Codec::ICsr, fmt::RD_RS1);
-pub(crate) static FSRMI: Opcode = Opcode::new("fsrmi", Codec::ICsr, fmt::RD_ZIMM);
-pub(crate) static FSFLAGSI: Opcode = Opcode::new("fsflagsi", Codec::ICsr, fmt::RD_ZIMM);
+pub(crate) static FRCSR: Opcode =
+    Opcode::new("frcsr", Codec::ICsr, fmt::RD).requires(&[Extension::F]);
+pub(crate) static FRRM: Opcode =
+    Opcode::new("frrm", Codec::ICsr, fmt::RD).requires(&[Extension::F]);
+pub(crate) static FRFLAGS: Opcode =
+    Opcode::new("frflags", Codec::ICsr, fmt::RD).requires(&[Extension::F]);
+pub(crate) static FSCSR: Opcode =
+    Opcode::new("fscsr", Codec::ICsr, fmt::RD_RS1).requires(&[Extension::F]);
+pub(crate) static FSRM: Opcode =
+    Opcode::new("fsrm", Codec::ICsr, fmt::RD_RS1).requires(&[Extension::F]);
+pub(crate) static FSFLAGS: Opcode =
+    Opcode::new("fsflags", Codec::ICsr, fmt::RD_RS1).requires(&[Extension::F]);
+pub(crate) static FSRMI: Opcode =
+    Opcode::new("fsrmi", Codec::ICsr, fmt::RD_ZIMM).requires(&[Extension::F]);
+pub(crate) static FSFLAGSI: Opcode =
+    Opcode::new("fsflagsi", Codec::ICsr, fmt::RD_ZIMM).requires(&[Extension::F]);
 pub(crate) static LI: Opcode = Opcode::new("li", Codec::Li, fmt::RD_IMM);
 pub(crate) static ZEXT_B: Opcode = Opcode::new("zext.b", Codec::I, fmt::RD_RS1);
 pub(crate) static JR_OFFSET: Opcode = Opcode::new("jr", Codec::I, fmt::OFFSET_RS1);
@@ -71,6 +80,9 @@ pub(crate) static CSRC: Opcode = Opcode::new("csrc", Codec::ICsr, fmt::CSR_RS1);
 pub(crate) static CSRWI: Opcode = Opcode::new("csrwi", Codec::ICsr, fmt::CSR_ZIMM);
 pub(crate) static CSRSI: Opcode = Opcode::new("csrsi", Codec::ICsr, fmt::CSR_ZIMM);
 pub(crate) static CSRCI: Opcode = Opcode::new("csrci", Codec::ICsr, fmt::CSR_ZIMM);
-pub(crate) static FSCSR_RS1: Opcode = Opcode::new("fscsr", Codec::ICsr, fmt::RS1);
-pub(crate) static FSRM_RS1: Opcode = Opcode::new("fsrm", Codec::ICsr, fmt::RS1);
-pub(crate) static FSFLAGS_RS1: Opcode = Opcode::new("fsflags", Codec::ICsr, fmt::RS1);
+pub(crate) static FSCSR_RS1: Opcode =
+    Opcode::new("fscsr", Codec::ICsr, fmt::RS1).requires(&[Extension::F]);
+pub(crate) static FSRM_RS1: Opcode =
+    Opcode::new("fsrm", Codec::ICsr, fmt::RS1).requires(&[Extension::F]);
+pub(crate) static FSFLAGS_RS1: Opcode =
+    Opcode::new("fsflags", Codec::ICsr, fmt::RS1).requires(&[Extension::F]);

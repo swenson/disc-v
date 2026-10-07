@@ -26,7 +26,7 @@ pub(crate) mod zicbo;
 pub(crate) mod zicond;
 pub(crate) mod zimop;
 
-use crate::Isa;
+use crate::{Extension, Extensions, Isa};
 
 /// How an instruction's operands are laid out in its encoding.
 ///
@@ -258,6 +258,9 @@ pub(crate) struct Opcode {
     /// The base ISAs the instruction exists in, as a bit set indexed by
     /// [`Isa`].
     pub(crate) isas: u8,
+    /// The extensions the instruction (or alias) needs, all of which must be
+    /// enabled. Empty for the base ISA.
+    pub(crate) requires: &'static [Extension],
 }
 
 impl Opcode {
@@ -271,6 +274,15 @@ impl Opcode {
             illegal_if: &[],
             hint_if: &[],
             isas: 0b111,
+            requires: &[],
+        }
+    }
+
+    /// Marks an instruction as needing all of `exts`.
+    pub(crate) const fn requires(self, exts: &'static [Extension]) -> Self {
+        Opcode {
+            requires: exts,
+            ..self
         }
     }
 
@@ -306,11 +318,14 @@ impl Opcode {
         }
     }
 
-    pub(crate) fn exists_in(&self, isa: Isa) -> bool {
-        match self.decompress {
-            [None, None, None] => self.isas & (1 << isa as u8) != 0,
-            expansions => expansions[isa as usize].is_some_and(|e| e.exists_in(isa)),
-        }
+    /// Whether the instruction exists in `isa` with `exts`. A compressed
+    /// instruction also needs the instruction it expands to.
+    pub(crate) fn exists_in(&self, isa: Isa, exts: Extensions) -> bool {
+        exts.contains_all(self.requires)
+            && match self.decompress {
+                [None, None, None] => self.isas & (1 << isa as u8) != 0,
+                expansions => expansions[isa as usize].is_some_and(|e| e.exists_in(isa, exts)),
+            }
     }
 }
 

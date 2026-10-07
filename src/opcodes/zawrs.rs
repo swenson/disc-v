@@ -4,6 +4,9 @@
 //! Zawrs: wait-on-reservation-set.
 
 use super::{Codec, Opcode, fmt};
+use crate::Extension;
 
-pub(crate) static WRS_NTO: Opcode = Opcode::new("wrs.nto", Codec::None, fmt::NONE);
-pub(crate) static WRS_STO: Opcode = Opcode::new("wrs.sto", Codec::None, fmt::NONE);
+pub(crate) static WRS_NTO: Opcode =
+    Opcode::new("wrs.nto", Codec::None, fmt::NONE).requires(&[Extension::Zawrs]);
+pub(crate) static WRS_STO: Opcode =
+    Opcode::new("wrs.sto", Codec::None, fmt::NONE).requires(&[Extension::Zawrs]);

@@ -6,6 +6,7 @@
 
 use super::Constraint::*;
 use super::{Codec, Opcode, Pseudo, fmt};
+use crate::Extension;
 use crate::reg;
 
 /// Builds a numbered family of opcodes, such as `mop.r.0` to `mop.r.31`.
@@ -13,11 +14,12 @@ const fn family<const N: usize>(
     names: [&'static str; N],
     codec: Codec,
     format: &'static str,
+    requires: &'static [Extension],
 ) -> [Opcode; N] {
     let mut ops = [const { Opcode::new("", Codec::None, fmt::NONE) }; N];
     let mut i = 0;
     while i < N {
-        ops[i] = Opcode::new(names[i], codec, format);
+        ops[i] = Opcode::new(names[i], codec, format).requires(requires);
         i += 1;
     }
     ops
@@ -35,6 +37,7 @@ pub(crate) static MOP_R: [Opcode; 32] = {
         ],
         Codec::R,
         fmt::RD_RS1,
+        &[Extension::Zimop],
     );
     ops[28].pseudo = &MOP_R_28_ALIASES;
     ops
@@ -49,6 +52,7 @@ pub(crate) static MOP_RR: [Opcode; 8] = {
         ],
         Codec::R,
         fmt::RD_RS1_RS2,
+        &[Extension::Zimop],
     );
     ops[7].pseudo = &MOP_RR_7_ALIASES;
     ops
@@ -63,6 +67,7 @@ pub(crate) static C_MOP: [Opcode; 8] = {
         ],
         Codec::Ci,
         fmt::NONE,
+        &[Extension::Zcmop],
     );
     ops[0].pseudo = &C_MOP_1_ALIASES;
     ops[2].pseudo = &C_MOP_5_ALIASES;
@@ -89,12 +94,20 @@ static MOP_RR_7_ALIASES: [Pseudo; 2] = [
 static C_MOP_1_ALIASES: [Pseudo; 1] = [Pseudo::new(&C_SSPUSH, &[])];
 static C_MOP_5_ALIASES: [Pseudo; 1] = [Pseudo::new(&C_SSPOPCHK, &[])];
 
-pub(crate) static SSPOPCHK: Opcode = Opcode::new("sspopchk", Codec::R, fmt::RS1);
-pub(crate) static SSRDP: Opcode = Opcode::new("ssrdp", Codec::R, fmt::RD);
-pub(crate) static SSPUSH: Opcode = Opcode::new("sspush", Codec::R, fmt::RS2);
-pub(crate) static C_SSPUSH: Opcode = Opcode::new("sspush", Codec::Ci, fmt::RS1);
-pub(crate) static C_SSPOPCHK: Opcode = Opcode::new("sspopchk", Codec::Ci, fmt::RS1);
-pub(crate) static SSAMOSWAP_W: Opcode = Opcode::new("ssamoswap.w", Codec::RA, fmt::RD_RS2_ADDR_RS1);
-pub(crate) static SSAMOSWAP_D: Opcode =
-    Opcode::new("ssamoswap.d", Codec::RA, fmt::RD_RS2_ADDR_RS1).rv64();
-pub(crate) static LPAD: Opcode = Opcode::new("lpad", Codec::U, fmt::UIMM);
+pub(crate) static SSPOPCHK: Opcode =
+    Opcode::new("sspopchk", Codec::R, fmt::RS1).requires(&[Extension::Zicfiss]);
+pub(crate) static SSRDP: Opcode =
+    Opcode::new("ssrdp", Codec::R, fmt::RD).requires(&[Extension::Zicfiss]);
+pub(crate) static SSPUSH: Opcode =
+    Opcode::new("sspush", Codec::R, fmt::RS2).requires(&[Extension::Zicfiss]);
+pub(crate) static C_SSPUSH: Opcode =
+    Opcode::new("sspush", Codec::Ci, fmt::RS1).requires(&[Extension::Zicfiss]);
+pub(crate) static C_SSPOPCHK: Opcode =
+    Opcode::new("sspopchk", Codec::Ci, fmt::RS1).requires(&[Extension::Zicfiss]);
+pub(crate) static SSAMOSWAP_W: Opcode =
+    Opcode::new("ssamoswap.w", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zicfiss]);
+pub(crate) static SSAMOSWAP_D: Opcode = Opcode::new("ssamoswap.d", Codec::RA, fmt::RD_RS2_ADDR_RS1)
+    .requires(&[Extension::Zicfiss])
+    .rv64();
+pub(crate) static LPAD: Opcode =
+    Opcode::new("lpad", Codec::U, fmt::UIMM).requires(&[Extension::Zicfilp]);
