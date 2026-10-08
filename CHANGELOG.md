@@ -6,6 +6,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-08
+
 ### Added
 
 - `Decoder`, which decodes for a chosen base ISA and set of extensions, so
@@ -40,6 +42,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `decode`, `decode_bytes` and `disassemble` decode the extensions added in
+  this release (except those that conflict with the defaults), so
+  encodings that were shown as `.insn` now decode. In particular, RV32
+  `ld` and `sd` with an even register (Zilsd) are no longer `.insn`. Use a
+  `Decoder` to decode for a particular target.
 - disc-v's functions do not panic in optimized builds: the remaining
   bounds and string-boundary checks that could not be optimized away are
   gone, and `panic-check/` checks this in CI.
@@ -100,6 +107,7 @@ Initial release.
   1.85.1.
 - Tests against the encodings in riscv-opcodes and against GNU objdump.
 
-[Unreleased]: https://github.com/swenson/disc-v/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/swenson/disc-v/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/swenson/disc-v/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/swenson/disc-v/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/swenson/disc-v/releases/tag/v0.1.0
