@@ -171,6 +171,10 @@ impl core::iter::FusedIterator for Disassembler<'_> {}
 /// Returns the length in bytes of the instruction whose first 16-bit parcel
 /// is `parcel`, or `None` for the reserved lengths of 10 bytes or more.
 ///
+/// The decoding functions show each 16-bit parcel of an encoding with a
+/// reserved length as a 2-byte `.2byte` directive, as objdump does, so that
+/// disassembly can continue.
+///
 /// ```
 /// use disc_v::inst_length;
 ///

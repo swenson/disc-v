@@ -400,7 +400,9 @@ impl Opcode {
     }
 }
 
-// Opcodes are compared by address, and `Debug` shows only the mnemonic
+// Each opcode is a unique static, so opcodes are compared by address (two
+// statics with the same fields, such as an instruction and an alias with
+// the same name, are different opcodes). `Debug` shows only the mnemonic
 // rather than the alias and expansion tables.
 impl PartialEq for Opcode {
     fn eq(&self, other: &Self) -> bool {

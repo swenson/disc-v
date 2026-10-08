@@ -38,6 +38,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Extension` and `Extensions`, a set of extensions with presets (`DEFAULT`,
   `GC`, `RVA23U64`, `RVA23S64`) that follows implications between extensions.
 
+### Fixed
+
+- `Decoder::from_march` no longer panics on ISA strings with non-ASCII
+  characters after the base, and reads version numbers in a run of
+  single-letter extensions correctly (`rv32imc2` is M and C, and
+  `rv32imac2p0` is accepted).
+
 ## [0.1.1] - 2026-10-06
 
 ### Added

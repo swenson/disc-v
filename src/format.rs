@@ -110,7 +110,12 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
         }
         'p' => write_fence_set(out, ins.pred),
         's' => write_fence_set(out, ins.succ),
-        _ => unreachable!("unknown format character {c:?}"),
+        // Format strings are static, and the tests show every one, so this
+        // is a bug in a table; release builds leave the operand out.
+        _ => {
+            debug_assert!(false, "unknown format character {c:?}");
+            Ok(())
+        }
     }
 }
 
@@ -118,6 +123,7 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
 /// a number if it has reserved values.
 fn write_vtype(out: &mut fmt::Formatter<'_>, vtype: u32) -> fmt::Result {
     let (sew, lmul) = ((vtype >> 3) & 7, vtype & 7);
+    // LMUL 4 is reserved; its empty name makes the vtype a number below.
     let lmul = ["m1", "m2", "m4", "m8", "", "mf8", "mf4", "mf2"][lmul as usize];
     if vtype >> 8 != 0 || sew > 3 || lmul.is_empty() {
         return write!(out, "{vtype}");

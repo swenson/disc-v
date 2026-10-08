@@ -50,7 +50,7 @@ fn compressed_0(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode
         } else {
             &c::C_SD
         }),
-        _ => unreachable!(),
+        _ => None,
     }
 }
 
@@ -96,12 +96,12 @@ fn compressed_1(isa: Isa, inst: u64) -> Option<&'static Opcode> {
                 },
                 _ => None,
             },
-            _ => unreachable!(),
+            _ => None,
         },
         5 => Some(&c::C_J),
         6 => Some(&c::C_BEQZ),
         7 => Some(&c::C_BNEZ),
-        _ => unreachable!(),
+        _ => None,
     }
 }
 
@@ -138,7 +138,7 @@ fn compressed_2(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode
                 },
                 _ => &c::C_ADD,
             },
-            _ => unreachable!(),
+            _ => return None,
         },
         // Zcmp and Zcmt replace c.fsdsp.
         5 if exts.contains(Extension::Zcmp) || exts.contains(Extension::Zcmt) => {
@@ -160,7 +160,7 @@ fn compressed_2(isa: Isa, exts: Extensions, inst: u64) -> Option<&'static Opcode
                 &c::C_SDSP
             }
         }
-        _ => unreachable!(),
+        _ => return None,
     })
 }
 
@@ -175,7 +175,7 @@ fn load(isa: Isa, inst: u64) -> Option<&'static Opcode> {
         5 => &i::LHU,
         6 => &i::LWU,
         7 => &i::LDU,
-        _ => unreachable!(),
+        _ => return None,
     })
 }
 

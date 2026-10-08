@@ -5,324 +5,203 @@
 
 use core::fmt;
 
-/// A RISC-V extension that defines instructions disc-v can decode.
-///
-/// Extensions that define no instructions, such as Zkt or Sstc, are not
-/// listed; [`Decoder::from_march`](crate::Decoder::from_march) accepts and
-/// ignores them.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[non_exhaustive]
-pub enum Extension {
+/// Defines [`Extension`], with each variant's name in an ISA string, and
+/// [`Extension::ALL`], so that every variant is in `ALL`.
+macro_rules! extensions {
+    ($($(#[$doc:meta])* $variant:ident = $name:literal,)*) => {
+        /// A RISC-V extension that defines instructions disc-v can decode.
+        ///
+        /// Extensions that define no instructions, such as Zkt or Sstc, are
+        /// not listed; [`Decoder::from_march`](crate::Decoder::from_march)
+        /// accepts and ignores them.
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[non_exhaustive]
+        pub enum Extension {
+            $($(#[$doc])* $variant,)*
+        }
+
+        impl Extension {
+            /// Every extension, in declaration order.
+            const ALL: &[Extension] = &[$(Extension::$variant),*];
+
+            /// The extension's name in an ISA string, such as `"zba"` or
+            /// `"m"`.
+            pub const fn name(self) -> &'static str {
+                match self {
+                    $(Extension::$variant => $name,)*
+                }
+            }
+        }
+    };
+}
+
+extensions! {
     /// The RV32E and RV64E bases: only registers x0-x15 exist, so
     /// instructions that use x16-x31 are reserved. This restricts the base
     /// ISA rather than adding instructions, so it is not in
     /// [`Extensions::DEFAULT`].
-    E,
+    E = "e",
     /// Integer multiplication and division.
-    M,
+    M = "m",
     /// Atomic instructions.
-    A,
+    A = "a",
     /// Single-precision floating point.
-    F,
+    F = "f",
     /// Double-precision floating point. Implies F.
-    D,
+    D = "d",
     /// Quad-precision floating point. Implies D.
-    Q,
+    Q = "q",
     /// Compressed instructions: Zca, and Zcf and Zcd when F and D are
     /// enabled.
-    C,
+    C = "c",
     /// Compressed integer instructions.
-    Zca,
+    Zca = "zca",
     /// Compressed single-precision loads and stores (RV32 only). Implies Zca
     /// and F.
-    Zcf,
+    Zcf = "zcf",
     /// Compressed double-precision loads and stores. Implies Zca and D.
-    Zcd,
+    Zcd = "zcd",
     /// Compressed push, pop and register moves (`cm.push`, ...). Implies
     /// Zca, and conflicts with Zcd.
-    Zcmp,
+    Zcmp = "zcmp",
     /// Compressed table jumps (`cm.jt`, `cm.jalt`). Implies Zca and Zicsr,
     /// and conflicts with Zcd.
-    Zcmt,
+    Zcmt = "zcmt",
     /// Load and store register pairs on RV32 (`ld`, `sd`).
-    Zilsd,
+    Zilsd = "zilsd",
     /// Compressed load and store register pairs on RV32 (`c.ld`, `c.sd`,
     /// ...). Implies Zilsd and Zca, and conflicts with Zcf.
-    Zclsd,
+    Zclsd = "zclsd",
     /// Vectors.
-    V,
+    V = "v",
     /// The hypervisor extension.
-    H,
+    H = "h",
     /// Control and status register instructions.
-    Zicsr,
+    Zicsr = "zicsr",
     /// `fence.i`.
-    Zifencei,
+    Zifencei = "zifencei",
     /// Integer conditional operations (`czero.*`).
-    Zicond,
+    Zicond = "zicond",
     /// Load-acquire and store-release (`lw.aq`, `sw.rl`, ...).
-    Zalasr,
+    Zalasr = "zalasr",
     /// Atomic compare-and-swap (`amocas.*`). Implies A.
-    Zacas,
+    Zacas = "zacas",
     /// Byte and halfword atomics (`amoadd.b`, ...). Implies A.
-    Zabha,
+    Zabha = "zabha",
     /// Wait-on-reservation-set (`wrs.*`).
-    Zawrs,
+    Zawrs = "zawrs",
     /// Cache-block management (`cbo.clean`, `cbo.flush`, `cbo.inval`).
-    Zicbom,
+    Zicbom = "zicbom",
     /// Cache-block zero (`cbo.zero`).
-    Zicboz,
+    Zicboz = "zicboz",
     /// Cache-block prefetch hints (`prefetch.*`).
-    Zicbop,
+    Zicbop = "zicbop",
     /// Non-temporal locality hints (`ntl.*`).
-    Zihintntl,
+    Zihintntl = "zihintntl",
     /// The `pause` hint.
-    Zihintpause,
+    Zihintpause = "zihintpause",
     /// May-be-operations (`mop.r.N`, `mop.rr.N`).
-    Zimop,
+    Zimop = "zimop",
     /// Compressed may-be-operations (`c.mop.N`). Implies C.
-    Zcmop,
+    Zcmop = "zcmop",
     /// Shadow stacks (`sspush`, `sspopchk`, `ssrdp`, `ssamoswap.*`).
     /// Implies Zimop.
-    Zicfiss,
+    Zicfiss = "zicfiss",
     /// Landing pads (`lpad`).
-    Zicfilp,
+    Zicfilp = "zicfilp",
     /// Address generation (`sh1add`, ...).
-    Zba,
+    Zba = "zba",
     /// Basic bit manipulation (`andn`, `clz`, ...).
-    Zbb,
+    Zbb = "zbb",
     /// Carry-less multiplication (`clmul`, ...).
-    Zbc,
+    Zbc = "zbc",
     /// Single-bit instructions (`bset`, ...).
-    Zbs,
+    Zbs = "zbs",
     /// Bit manipulation for cryptography (`pack`, `brev8`, ...). It also
     /// provides several Zbb instructions, such as `rol` and `rev8`.
-    Zbkb,
+    Zbkb = "zbkb",
     /// Carry-less multiplication for cryptography: Zbc's `clmul` and
     /// `clmulh`.
-    Zbkc,
+    Zbkc = "zbkc",
     /// Crossbar permutations (`xperm4`, `xperm8`).
-    Zbkx,
+    Zbkx = "zbkx",
     /// AES decryption.
-    Zknd,
+    Zknd = "zknd",
     /// AES encryption.
-    Zkne,
+    Zkne = "zkne",
     /// SHA-256 and SHA-512.
-    Zknh,
+    Zknh = "zknh",
     /// SM4.
-    Zksed,
+    Zksed = "zksed",
     /// SM3.
-    Zksh,
+    Zksh = "zksh",
     /// Simple compressed instructions (`c.lbu`, `c.mul`, ...). Implies C.
-    Zcb,
+    Zcb = "zcb",
     /// Half-precision floating point. Implies Zfhmin.
-    Zfh,
+    Zfh = "zfh",
     /// Minimal half-precision floating point: loads, stores and
     /// conversions. Implies F.
-    Zfhmin,
+    Zfhmin = "zfhmin",
     /// Additional floating-point instructions (`fli`, `fround`, ...).
     /// Implies F.
-    Zfa,
+    Zfa = "zfa",
     /// Conversions between BFloat16 and single precision. Implies F.
-    Zfbfmin,
+    Zfbfmin = "zfbfmin",
     /// Single-precision floating point in the integer registers: F's
     /// instructions except its loads, stores and moves, with integer
     /// register operands. Conflicts with F (and so with the extensions that
     /// imply it, such as D, Zfa and C's Zcf).
-    Zfinx,
+    Zfinx = "zfinx",
     /// Double-precision floating point in the integer registers (register
     /// pairs on RV32). Implies Zfinx.
-    Zdinx,
+    Zdinx = "zdinx",
     /// Half-precision floating point in the integer registers. Implies
     /// Zhinxmin.
-    Zhinx,
+    Zhinx = "zhinx",
     /// Minimal half-precision floating point in the integer registers: the
     /// conversions. Implies Zfinx.
-    Zhinxmin,
+    Zhinxmin = "zhinxmin",
     /// Vector BFloat16 conversions. Implies V.
-    Zvfbfmin,
+    Zvfbfmin = "zvfbfmin",
     /// Vector BFloat16 widening multiply-add. Implies Zvfbfmin.
-    Zvfbfwma,
+    Zvfbfwma = "zvfbfwma",
     /// Vector bit manipulation. Implies V.
-    Zvbb,
+    Zvbb = "zvbb",
     /// Vector carry-less multiplication. Implies V.
-    Zvbc,
+    Zvbc = "zvbc",
     /// Vector GCM/GMAC. Implies V.
-    Zvkg,
+    Zvkg = "zvkg",
     /// Vector AES. Implies V.
-    Zvkned,
+    Zvkned = "zvkned",
     /// Vector SHA-256. Implies V.
-    Zvknha,
+    Zvknha = "zvknha",
     /// Vector SHA-256 and SHA-512. Implies Zvknha, whose instructions it
     /// shares.
-    Zvknhb,
+    Zvknhb = "zvknhb",
     /// Vector SM4. Implies V.
-    Zvksed,
+    Zvksed = "zvksed",
     /// Vector SM3. Implies V.
-    Zvksh,
+    Zvksh = "zvksh",
     /// Fine-grained address-translation cache invalidation (`sinval.vma`,
     /// ...).
-    Svinval,
+    Svinval = "svinval",
     /// Debug mode (`dret`).
-    Sdext,
+    Sdext = "sdext",
     /// Resumable non-maskable interrupts (`mnret`).
-    Smrnmi,
+    Smrnmi = "smrnmi",
     /// Control-transfer records (`sctrclr`).
-    Ssctr,
+    Ssctr = "ssctr",
 }
 
+// Extensions are a bit set in a u128.
+const _: () = assert!(Extension::ALL.len() <= 128);
+
 impl Extension {
-    /// Every extension, in declaration order.
-    const ALL: [Extension; 67] = {
-        use Extension::*;
-        [
-            E,
-            M,
-            A,
-            F,
-            D,
-            Q,
-            C,
-            Zca,
-            Zcf,
-            Zcd,
-            Zcmp,
-            Zcmt,
-            Zilsd,
-            Zclsd,
-            V,
-            H,
-            Zicsr,
-            Zifencei,
-            Zicond,
-            Zalasr,
-            Zacas,
-            Zabha,
-            Zawrs,
-            Zicbom,
-            Zicboz,
-            Zicbop,
-            Zihintntl,
-            Zihintpause,
-            Zimop,
-            Zcmop,
-            Zicfiss,
-            Zicfilp,
-            Zba,
-            Zbb,
-            Zbc,
-            Zbs,
-            Zbkb,
-            Zbkc,
-            Zbkx,
-            Zknd,
-            Zkne,
-            Zknh,
-            Zksed,
-            Zksh,
-            Zcb,
-            Zfh,
-            Zfhmin,
-            Zfa,
-            Zfbfmin,
-            Zfinx,
-            Zdinx,
-            Zhinx,
-            Zhinxmin,
-            Zvfbfmin,
-            Zvfbfwma,
-            Zvbb,
-            Zvbc,
-            Zvkg,
-            Zvkned,
-            Zvknha,
-            Zvknhb,
-            Zvksed,
-            Zvksh,
-            Svinval,
-            Sdext,
-            Smrnmi,
-            Ssctr,
-        ]
-    };
-
-    /// The extension's name in an ISA string, such as `"zba"` or `"m"`.
-    pub const fn name(self) -> &'static str {
-        use Extension::*;
-        match self {
-            E => "e",
-            M => "m",
-            A => "a",
-            F => "f",
-            D => "d",
-            Q => "q",
-            C => "c",
-            Zca => "zca",
-            Zcf => "zcf",
-            Zcd => "zcd",
-            Zcmp => "zcmp",
-            Zcmt => "zcmt",
-            Zilsd => "zilsd",
-            Zclsd => "zclsd",
-            V => "v",
-            H => "h",
-            Zicsr => "zicsr",
-            Zifencei => "zifencei",
-            Zicond => "zicond",
-            Zalasr => "zalasr",
-            Zacas => "zacas",
-            Zabha => "zabha",
-            Zawrs => "zawrs",
-            Zicbom => "zicbom",
-            Zicboz => "zicboz",
-            Zicbop => "zicbop",
-            Zihintntl => "zihintntl",
-            Zihintpause => "zihintpause",
-            Zimop => "zimop",
-            Zcmop => "zcmop",
-            Zicfiss => "zicfiss",
-            Zicfilp => "zicfilp",
-            Zba => "zba",
-            Zbb => "zbb",
-            Zbc => "zbc",
-            Zbs => "zbs",
-            Zbkb => "zbkb",
-            Zbkc => "zbkc",
-            Zbkx => "zbkx",
-            Zknd => "zknd",
-            Zkne => "zkne",
-            Zknh => "zknh",
-            Zksed => "zksed",
-            Zksh => "zksh",
-            Zcb => "zcb",
-            Zfh => "zfh",
-            Zfhmin => "zfhmin",
-            Zfa => "zfa",
-            Zfbfmin => "zfbfmin",
-            Zfinx => "zfinx",
-            Zdinx => "zdinx",
-            Zhinx => "zhinx",
-            Zhinxmin => "zhinxmin",
-            Zvfbfmin => "zvfbfmin",
-            Zvfbfwma => "zvfbfwma",
-            Zvbb => "zvbb",
-            Zvbc => "zvbc",
-            Zvkg => "zvkg",
-            Zvkned => "zvkned",
-            Zvknha => "zvknha",
-            Zvknhb => "zvknhb",
-            Zvksed => "zvksed",
-            Zvksh => "zvksh",
-            Svinval => "svinval",
-            Sdext => "sdext",
-            Smrnmi => "smrnmi",
-            Ssctr => "ssctr",
-        }
-    }
-
     /// The extension named `name` in an ISA string, ignoring case.
     pub fn from_name(name: &str) -> Option<Extension> {
         Extension::ALL
-            .into_iter()
+            .iter()
+            .copied()
             .find(|e| e.name().eq_ignore_ascii_case(name))
     }
 
@@ -396,7 +275,7 @@ impl Extensions {
 
     /// Every supported extension that does not conflict with another. This
     /// is what [`decode`](fn@crate::decode) and the other free functions use.
-    pub const DEFAULT: Extensions = Extensions::of(&Extension::ALL)
+    pub const DEFAULT: Extensions = Extensions::of(Extension::ALL)
         .without(Extension::E)
         .without(Extension::Zcmp)
         .without(Extension::Zcmt)
@@ -535,7 +414,8 @@ impl Extensions {
     /// The extensions in the set, in declaration order.
     pub fn iter(self) -> impl Iterator<Item = Extension> {
         Extension::ALL
-            .into_iter()
+            .iter()
+            .copied()
             .filter(move |&e| self.contains(e))
     }
 }
@@ -591,7 +471,7 @@ mod tests {
 
     #[test]
     fn names_round_trip() {
-        for ext in Extension::ALL {
+        for &ext in Extension::ALL {
             assert_eq!(Extension::from_name(ext.name()), Some(ext));
         }
         assert_eq!(Extension::from_name("ZBA"), Some(Extension::Zba));
@@ -601,7 +481,7 @@ mod tests {
     #[test]
     fn all_lists_every_extension_once() {
         let mut bits = 0u128;
-        for (i, ext) in Extension::ALL.into_iter().enumerate() {
+        for (i, &ext) in Extension::ALL.iter().enumerate() {
             assert_eq!(ext as usize, i);
             bits |= ext.bit();
         }

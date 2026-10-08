@@ -158,6 +158,10 @@ impl Decoder {
     /// as V, and Sha as H. The Zce, Zk, Zkn and Zks bundles are
     /// expanded.
     ///
+    /// Unknown supervisor- and machine-level extensions (names starting
+    /// with `s`) are also ignored, since nearly all of them define no
+    /// instructions, while unknown `z` and `x` extensions are errors.
+    ///
     /// ```
     /// use disc_v::{Decoder, MarchError};
     ///
@@ -205,8 +209,8 @@ fn single_letters(token: &str) -> Result<Extensions, MarchError<'_>> {
     let mut extensions = Extensions::EMPTY;
     let mut rest = token;
     while let Some(c) = rest.chars().next() {
-        let name = &rest[..1];
-        rest = strip_version(&rest[1..]);
+        let (name, after) = rest.split_at(c.len_utf8());
+        rest = strip_version(after);
         extensions = extensions.union(match c.to_ascii_lowercase() {
             'i' => Extensions::EMPTY,
             // The RV32E and RV64E bases.
@@ -225,9 +229,7 @@ fn single_letters(token: &str) -> Result<Extensions, MarchError<'_>> {
 /// The extensions of a multi-letter extension such as `zba2p0`.
 fn multi_letter(token: &str) -> Result<Extensions, MarchError<'_>> {
     use Extension::*;
-    let name = token
-        .strip_suffix(strip_version_suffix(token))
-        .unwrap_or(token);
+    let name = token.strip_suffix(trailing_version(token)).unwrap_or(token);
     if let Some(ext) = Extension::from_name(name) {
         return Ok(ext.into());
     }
@@ -271,27 +273,30 @@ const NO_INSTRUCTIONS: &[&str] = &[
     "zic64b", "ziccamoa", "ziccif", "zicclsm", "ziccrse", "supm", "zkr",
 ];
 
-/// `s` without a trailing version number such as `2p1`.
+/// `s` without the version number at its start, such as `2p1` in `2p1m`.
 fn strip_version(s: &str) -> &str {
-    &s[strip_version_suffix(s).len()..]
+    &s[leading_version(s).len()..]
 }
 
-/// The version number at the start of `s`, or at the end of an extension
-/// name: digits, optionally followed by `p` and more digits.
-fn strip_version_suffix(s: &str) -> &str {
-    // At the start of a run of single letters.
-    let digits = s.bytes().take_while(u8::is_ascii_digit).count();
-    if digits > 0 {
-        let rest = &s[digits..];
-        let minor = match rest.as_bytes() {
-            [b'p' | b'P', d, ..] if d.is_ascii_digit() => {
-                1 + rest[1..].bytes().take_while(u8::is_ascii_digit).count()
-            }
-            _ => 0,
-        };
-        return &s[..digits + minor];
+/// The version number at the start of `s`, in a run of single-letter
+/// extensions: digits, optionally followed by `p` and more digits.
+fn leading_version(s: &str) -> &str {
+    let major = s.bytes().take_while(u8::is_ascii_digit).count();
+    if major == 0 {
+        return "";
     }
-    // At the end of a multi-letter name.
+    let minor = match &s.as_bytes()[major..] {
+        [b'p' | b'P', d, rest @ ..] if d.is_ascii_digit() => {
+            2 + rest.iter().take_while(|b| b.is_ascii_digit()).count()
+        }
+        _ => 0,
+    };
+    &s[..major + minor]
+}
+
+/// The version number at the end of a multi-letter extension name, such as
+/// `1p0` in `zba1p0`.
+fn trailing_version(s: &str) -> &str {
     let bytes = s.as_bytes();
     let mut end = bytes.len();
     while end > 0 && bytes[end - 1].is_ascii_digit() {
@@ -385,10 +390,15 @@ mod tests {
 
     #[test]
     fn version_suffixes() {
-        assert_eq!(strip_version_suffix("2p1m"), "2p1");
-        assert_eq!(strip_version_suffix("zba1p0"), "1p0");
-        assert_eq!(strip_version_suffix("zba1"), "1");
-        assert_eq!(strip_version_suffix("zba"), "");
-        assert_eq!(strip_version_suffix("zvl128b"), "");
+        assert_eq!(leading_version("2p1m"), "2p1");
+        assert_eq!(leading_version("2m"), "2");
+        assert_eq!(leading_version("2pm"), "2");
+        assert_eq!(leading_version("mc2"), "");
+        assert_eq!(strip_version("2p1mc"), "mc");
+        assert_eq!(strip_version("mc2"), "mc2");
+        assert_eq!(trailing_version("zba1p0"), "1p0");
+        assert_eq!(trailing_version("zba1"), "1");
+        assert_eq!(trailing_version("zba"), "");
+        assert_eq!(trailing_version("zvl128b"), "");
     }
 }

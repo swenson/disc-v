@@ -49,26 +49,29 @@ fn operand_shamt6(inst: u64) -> u32 {
 fn operand_shamt7(inst: u64) -> u32 {
     (inst << 37 >> 57) as u32
 }
+// The compressed formats name their register fields by role. Several roles
+// share bits: rd' and rs2' are bits 4:2, rs1' and rd'/rs1' are bits 9:7,
+// and rd, rs1 and rd/rs1 are bits 11:7, as rd is in the 32-bit formats.
 fn operand_crdq(inst: u64) -> u32 {
     (inst << 59 >> 61) as u32
+}
+fn operand_crs2q(inst: u64) -> u32 {
+    operand_crdq(inst)
 }
 fn operand_crs1q(inst: u64) -> u32 {
     (inst << 54 >> 61) as u32
 }
 fn operand_crs1rdq(inst: u64) -> u32 {
-    (inst << 54 >> 61) as u32
-}
-fn operand_crs2q(inst: u64) -> u32 {
-    (inst << 59 >> 61) as u32
+    operand_crs1q(inst)
 }
 fn operand_crd(inst: u64) -> u32 {
-    (inst << 52 >> 59) as u32
+    operand_rd(inst)
 }
 fn operand_crs1(inst: u64) -> u32 {
-    (inst << 52 >> 59) as u32
+    operand_rd(inst)
 }
 fn operand_crs1rd(inst: u64) -> u32 {
-    (inst << 52 >> 59) as u32
+    operand_rd(inst)
 }
 fn operand_crs2(inst: u64) -> u32 {
     (inst << 57 >> 59) as u32

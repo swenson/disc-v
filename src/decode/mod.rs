@@ -79,7 +79,9 @@ fn uses_upper_registers(ins: &Instruction) -> bool {
 /// reserved.
 fn odd_register_pair(ins: &Instruction) -> bool {
     // The operands' formats are in the mnemonic: fcvt.<rd>.<rs1>, or a
-    // single suffix for all of them (fadd.d).
+    // single suffix for all of them (fadd.d). The mnemonic is also the
+    // output that the objdump tests compare, so a change to it is caught
+    // there.
     let name = ins.op.name;
     let (rd, rs) = match name.strip_prefix("fcvt.").and_then(|t| t.split_once('.')) {
         Some((to, from)) => (to == "d", from == "d"),

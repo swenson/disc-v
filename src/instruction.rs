@@ -135,7 +135,8 @@ impl Instruction {
     }
 
     /// The target address of a PC-relative operand, wrapped to the
-    /// register width.
+    /// register width on RV32. Addresses are 64 bits, so on RV128 it is the
+    /// low 64 bits of the target.
     pub(crate) fn target(&self) -> u64 {
         let target = self.pc.wrapping_add(self.imm as i64 as u64);
         match self.isa {

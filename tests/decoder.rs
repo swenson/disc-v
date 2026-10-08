@@ -334,6 +334,25 @@ fn from_march() {
         Decoder::from_march("rv64gc_xtheadba"),
         Err(MarchError::UnsupportedExtension("xtheadba"))
     );
+    // Version numbers on single letters.
+    let mc = Ok(Extensions::from([Extension::M, Extension::C]));
+    for march in ["rv32imc2", "rv32imc2p0", "rv32i2p1m2c", "rv32i2p1m2p0c2p0"] {
+        assert_eq!(
+            Decoder::from_march(march).map(|d| d.extensions()),
+            mc,
+            "{march}"
+        );
+    }
+    // Non-ASCII names are errors, not panics.
+    assert_eq!(
+        Decoder::from_march("rv32i_é"),
+        Err(MarchError::UnsupportedExtension("é"))
+    );
+    assert_eq!(
+        Decoder::from_march("rv32imé"),
+        Err(MarchError::UnsupportedExtension("é"))
+    );
+    assert_eq!(Decoder::from_march("rv32é"), Err(MarchError::InvalidBase));
     // Zcmp conflicts with Zcd, which C brings in with D.
     assert_eq!(
         Decoder::from_march("rv32gc_zcmp").map_err(|e| e.to_string()),
@@ -377,6 +396,24 @@ fn from_march() {
         Decoder::from_march("rv64gcp"),
         Err(MarchError::UnsupportedExtension("p"))
     );
+}
+
+/// `from_march` returns an error rather than panicking on any input: random
+/// strings built from pieces of ISA strings and multi-byte characters.
+#[test]
+fn from_march_never_panics() {
+    let pieces = [
+        "rv32", "rv64", "rv128", "i", "e", "g", "m", "c", "_", "z", "s", "x", "zba", "2p1", "p",
+        "0", "9", "é", "€", "𝔵", "", "zve", "zvl", "sstc",
+    ];
+    let mut rng = Rng::new(7);
+    for _ in 0..100_000 {
+        let n = rng.next_u32() % 8;
+        let march: String = (0..n)
+            .map(|_| pieces[rng.next_u32() as usize % pieces.len()])
+            .collect();
+        let _ = Decoder::from_march(&march);
+    }
 }
 
 #[test]
