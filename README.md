@@ -147,6 +147,16 @@ Besides unit tests, the decoder is checked against two references:
   `riscv64-linux-gnu-objdump`) and is skipped if none is found; set
   `DISC_V_REQUIRE_BINUTILS=1` to make that an error, as CI does.
 
+`panic-check/` checks that disc-v cannot panic: a `no_std` program that
+calls every public function on inputs the compiler cannot see, whose panic
+handler calls a function that does not exist, so that it only links if no
+panic is reachable. `scripts/panic-check.sh` builds it for RISC-V and Arm
+at optimization levels 2, 3, `s` and `z`, as CI does with the stable
+compiler and the minimum supported version, and lists the source of any
+panics it finds. (Debug builds can still panic, such as on a debug
+assertion, as can `MarchError`'s `Debug` output, which uses core's `Debug`
+for `str`; see `panic-check/README.md`.)
+
 CSR names come from riscv-opcodes, via `scripts/gen-csr-names.py`, and so do
 the vector instruction tables in `src/opcodes/v.rs`, via
 `scripts/gen-vector-opcodes.py`, which encodes objdump's operand order. The

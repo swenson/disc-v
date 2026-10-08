@@ -179,13 +179,14 @@ impl Decoder {
         ]
         .into_iter()
         .find_map(|(prefix, isa)| {
-            let head = march.get(..prefix.len())?;
-            head.eq_ignore_ascii_case(prefix)
-                .then(|| (isa, &march[prefix.len()..]))
+            let (head, rest) = march.split_at_checked(prefix.len())?;
+            head.eq_ignore_ascii_case(prefix).then_some((isa, rest))
         })
         .ok_or(MarchError::InvalidBase)?;
         let mut extensions = Extensions::EMPTY;
-        for (i, token) in rest.split('_').enumerate() {
+        // Not split('_'): its searcher has panic paths that the optimizer
+        // does not always remove (see panic-check/).
+        for (i, token) in rest.split(['_']).enumerate() {
             let first = token.chars().next().map(|c| c.to_ascii_lowercase());
             match first {
                 Some('z' | 's' | 'x') if i > 0 => {
@@ -209,7 +210,9 @@ fn single_letters(token: &str) -> Result<Extensions, MarchError<'_>> {
     let mut extensions = Extensions::EMPTY;
     let mut rest = token;
     while let Some(c) = rest.chars().next() {
-        let (name, after) = rest.split_at(c.len_utf8());
+        let Some((name, after)) = rest.split_at_checked(c.len_utf8()) else {
+            break;
+        };
         rest = strip_version(after);
         extensions = extensions.union(match c.to_ascii_lowercase() {
             'i' => Extensions::EMPTY,
@@ -275,43 +278,41 @@ const NO_INSTRUCTIONS: &[&str] = &[
 
 /// `s` without the version number at its start, such as `2p1` in `2p1m`.
 fn strip_version(s: &str) -> &str {
-    &s[leading_version(s).len()..]
+    s.strip_prefix(leading_version(s)).unwrap_or(s)
 }
 
 /// The version number at the start of `s`, in a run of single-letter
 /// extensions: digits, optionally followed by `p` and more digits.
 fn leading_version(s: &str) -> &str {
-    let major = s.bytes().take_while(u8::is_ascii_digit).count();
-    if major == 0 {
+    fn skip_digits(s: &str) -> &str {
+        s.trim_start_matches(|c: char| c.is_ascii_digit())
+    }
+    let after_major = skip_digits(s);
+    if after_major.len() == s.len() {
         return "";
     }
-    let minor = match &s.as_bytes()[major..] {
-        [b'p' | b'P', d, rest @ ..] if d.is_ascii_digit() => {
-            2 + rest.iter().take_while(|b| b.is_ascii_digit()).count()
-        }
-        _ => 0,
+    let after = match after_major.strip_prefix(['p', 'P']) {
+        Some(minor) if minor.starts_with(|c: char| c.is_ascii_digit()) => skip_digits(minor),
+        _ => after_major,
     };
-    &s[..major + minor]
+    s.strip_suffix(after).unwrap_or("")
 }
 
 /// The version number at the end of a multi-letter extension name, such as
 /// `1p0` in `zba1p0`.
 fn trailing_version(s: &str) -> &str {
-    let bytes = s.as_bytes();
-    let mut end = bytes.len();
-    while end > 0 && bytes[end - 1].is_ascii_digit() {
-        end -= 1;
+    fn skip_digits(s: &str) -> &str {
+        s.trim_end_matches(|c: char| c.is_ascii_digit())
     }
-    if end == bytes.len() {
+    let before_minor = skip_digits(s);
+    if before_minor.len() == s.len() {
         return "";
     }
-    if end > 1 && matches!(bytes[end - 1], b'p' | b'P') && bytes[end - 2].is_ascii_digit() {
-        end -= 1;
-        while end > 0 && bytes[end - 1].is_ascii_digit() {
-            end -= 1;
-        }
-    }
-    &s[end..]
+    let before = match before_minor.strip_suffix(['p', 'P']) {
+        Some(major) if major.ends_with(|c: char| c.is_ascii_digit()) => skip_digits(major),
+        _ => before_minor,
+    };
+    s.strip_prefix(before).unwrap_or("")
 }
 
 /// Finds a pair of conflicting extensions in `extensions`.

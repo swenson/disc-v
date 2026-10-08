@@ -38,6 +38,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Extension` and `Extensions`, a set of extensions with presets (`DEFAULT`,
   `GC`, `RVA23U64`, `RVA23S64`) that follows implications between extensions.
 
+### Changed
+
+- disc-v's functions do not panic in optimized builds: the remaining
+  bounds and string-boundary checks that could not be optimized away are
+  gone, and `panic-check/` checks this in CI.
+
 ### Fixed
 
 - `Decoder::from_march` no longer panics on ISA strings with non-ASCII

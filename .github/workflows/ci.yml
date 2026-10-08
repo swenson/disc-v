@@ -26,6 +26,7 @@ jobs:
         with:
           components: rustfmt
       - run: cargo fmt --check
+      - run: cargo fmt --check --manifest-path panic-check/Cargo.toml
 
   clippy:
     runs-on: ubuntu-26.04
@@ -77,6 +78,29 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --release --target thumbv7em-none-eabi
       - run: cargo build --release --target riscv32imc-unknown-none-elf
+
+  panic-check:
+    name: panic check (${{ matrix.rust }})
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable, 1.85.1]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          targets: riscv32imc-unknown-none-elf, thumbv7em-none-eabi
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: panic-check
+      # For listing the panics, if there are any.
+      - name: Install RISC-V binutils
+        run: sudo apt-get update && sudo apt-get install -y binutils-riscv64-unknown-elf
+      - run: cargo clippy --release --manifest-path panic-check/Cargo.toml
+      - run: scripts/panic-check.sh
 
   generated:
     name: generated files are up to date

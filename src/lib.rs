@@ -160,7 +160,7 @@ impl Iterator for Disassembler<'_> {
 
     fn next(&mut self) -> Option<Instruction> {
         let ins = self.decoder.decode_bytes(self.pc, self.bytes)?;
-        self.bytes = &self.bytes[ins.length()..];
+        self.bytes = self.bytes.get(ins.length()..).unwrap_or(&[]);
         self.pc = self.pc.wrapping_add(ins.length() as u64);
         Some(ins)
     }

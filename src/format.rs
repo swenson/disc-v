@@ -69,13 +69,13 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
             15 => out.write_str("{ra,s0-s11}"),
             rlist => write!(out, "{{ra,s0-s{}}}", rlist - 5),
         },
-        '0' => out.write_str(INT_NAMES[ins.rd as usize]),
-        '1' => out.write_str(INT_NAMES[ins.rs1 as usize]),
-        '2' => out.write_str(INT_NAMES[ins.rs2 as usize]),
-        '3' => out.write_str(fp_names[ins.rd as usize]),
-        '4' => out.write_str(fp_names[ins.rs1 as usize]),
-        '5' => out.write_str(fp_names[ins.rs2 as usize]),
-        '6' => out.write_str(fp_names[ins.rs3 as usize]),
+        '0' => out.write_str(reg(&INT_NAMES, ins.rd)),
+        '1' => out.write_str(reg(&INT_NAMES, ins.rs1)),
+        '2' => out.write_str(reg(&INT_NAMES, ins.rs2)),
+        '3' => out.write_str(reg(fp_names, ins.rd)),
+        '4' => out.write_str(reg(fp_names, ins.rs1)),
+        '5' => out.write_str(reg(fp_names, ins.rs2)),
+        '6' => out.write_str(reg(fp_names, ins.rs3)),
         '7' => write!(out, "{}", ins.rs1),
         'i' => write!(out, "{}", ins.imm),
         '>' => write!(out, "{:#x}", ins.imm),
@@ -91,7 +91,7 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
             let names = [
                 "rne", "rtz", "rdn", "rup", "rmm", "unknown", "unknown", "dyn",
             ];
-            write!(out, ",{}", names[ins.rm as usize])
+            write!(out, ",{}", names[ins.rm as usize & 7])
         }
         'P' => write!(out, "{}", ins.imm & !0x1f),
         'D' => write!(out, "v{}", ins.rd),
@@ -101,7 +101,7 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
         'M' => Ok(()),
         'Z' => out.write_str("v0"),
         'T' => write_vtype(out, ins.imm as u32),
-        'F' => out.write_str(FLI_CONSTANTS[ins.rs1 as usize]),
+        'F' => out.write_str(FLI_CONSTANTS[ins.rs1 as usize & 31]),
         'l' => write!(out, "{}", ins.len),
         'x' => {
             // As objdump does, padded to a whole number of 16-bit parcels.
@@ -117,6 +117,11 @@ fn write_part(out: &mut fmt::Formatter<'_>, ins: &Instruction, c: char) -> fmt::
             Ok(())
         }
     }
+}
+
+/// The name of register `r` (a 5-bit field) in `names`.
+fn reg(names: &'static [&'static str; 32], r: u8) -> &'static str {
+    names[r as usize & 31]
 }
 
 /// Writes a `vtype` immediate as objdump does, such as `e32,m1,ta,ma`, or as

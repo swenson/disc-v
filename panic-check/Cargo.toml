@@ -1,0 +1,28 @@
+# Copyright (c) 2026 Christopher Swenson
+# Licensed under the Apache-2.0 license.
+
+# Checks that no call into disc-v can panic; see README.md.
+
+[package]
+name = "disc-v-panic-check"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+disc-v = { path = ".." }
+
+[features]
+# Link with a panic handler, so that scripts/panic-sites.py can list the
+# panics instead of the link failing.
+diagnose = []
+
+[profile.release]
+panic = "abort"
+lto = true
+codegen-units = 1
+opt-level = "s"
+debug = true
+
+# Not part of disc-v's (implicit) workspace.
+[workspace]

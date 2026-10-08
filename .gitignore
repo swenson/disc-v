@@ -1,3 +1,4 @@
 /target
+/panic-check/target
 Cargo.lock
 /target-analyzer
