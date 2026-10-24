@@ -8,88 +8,90 @@
 
 use super::Constraint::*;
 use super::{Codec, Extra, Opcode, Pseudo, fmt, pseudo};
-use crate::Extension;
+use crate::{Extension, Mnemonic};
 
-pub(crate) static FLW: Opcode = Opcode::new("flw", Codec::I, fmt::FRD_OFFSET_RS1)
+pub(crate) static FLW: Opcode = Opcode::new(Mnemonic::Flw, Codec::I, fmt::FRD_OFFSET_RS1)
     .requires(&[Extension::F])
     .f_registers();
-pub(crate) static FSW: Opcode = Opcode::new("fsw", Codec::S, fmt::FRS2_OFFSET_RS1)
+pub(crate) static FSW: Opcode = Opcode::new(Mnemonic::Fsw, Codec::S, fmt::FRS2_OFFSET_RS1)
     .requires(&[Extension::F])
     .f_registers();
 pub(crate) static FMADD_S: Opcode =
-    Opcode::new("fmadd.s", Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FmaddS, Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3).requires(&[Extension::F]);
 pub(crate) static FMSUB_S: Opcode =
-    Opcode::new("fmsub.s", Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FmsubS, Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3).requires(&[Extension::F]);
 pub(crate) static FNMSUB_S: Opcode =
-    Opcode::new("fnmsub.s", Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FnmsubS, Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3)
+        .requires(&[Extension::F]);
 pub(crate) static FNMADD_S: Opcode =
-    Opcode::new("fnmadd.s", Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FnmaddS, Codec::R4M, fmt::RM_FRD_FRS1_FRS2_FRS3)
+        .requires(&[Extension::F]);
 pub(crate) static FADD_S: Opcode =
-    Opcode::new("fadd.s", Codec::RM, fmt::RM_FRD_FRS1_FRS2).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FaddS, Codec::RM, fmt::RM_FRD_FRS1_FRS2).requires(&[Extension::F]);
 pub(crate) static FSUB_S: Opcode =
-    Opcode::new("fsub.s", Codec::RM, fmt::RM_FRD_FRS1_FRS2).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FsubS, Codec::RM, fmt::RM_FRD_FRS1_FRS2).requires(&[Extension::F]);
 pub(crate) static FMUL_S: Opcode =
-    Opcode::new("fmul.s", Codec::RM, fmt::RM_FRD_FRS1_FRS2).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FmulS, Codec::RM, fmt::RM_FRD_FRS1_FRS2).requires(&[Extension::F]);
 pub(crate) static FDIV_S: Opcode =
-    Opcode::new("fdiv.s", Codec::RM, fmt::RM_FRD_FRS1_FRS2).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FdivS, Codec::RM, fmt::RM_FRD_FRS1_FRS2).requires(&[Extension::F]);
 pub(crate) static FSGNJ_S: Opcode = Opcode {
     extra: &Extra {
         pseudo: &[Pseudo::new(&pseudo::FMV_S, &[Rs2EqRs1])],
         ..Extra::NONE
     },
-    ..Opcode::new("fsgnj.s", Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F])
+    ..Opcode::new(Mnemonic::FsgnjS, Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F])
 };
 pub(crate) static FSGNJN_S: Opcode = Opcode {
     extra: &Extra {
         pseudo: &[Pseudo::new(&pseudo::FNEG_S, &[Rs2EqRs1])],
         ..Extra::NONE
     },
-    ..Opcode::new("fsgnjn.s", Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F])
+    ..Opcode::new(Mnemonic::FsgnjnS, Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F])
 };
 pub(crate) static FSGNJX_S: Opcode = Opcode {
     extra: &Extra {
         pseudo: &[Pseudo::new(&pseudo::FABS_S, &[Rs2EqRs1])],
         ..Extra::NONE
     },
-    ..Opcode::new("fsgnjx.s", Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F])
+    ..Opcode::new(Mnemonic::FsgnjxS, Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F])
 };
 pub(crate) static FMIN_S: Opcode =
-    Opcode::new("fmin.s", Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FminS, Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F]);
 pub(crate) static FMAX_S: Opcode =
-    Opcode::new("fmax.s", Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FmaxS, Codec::R, fmt::FRD_FRS1_FRS2).requires(&[Extension::F]);
 pub(crate) static FSQRT_S: Opcode =
-    Opcode::new("fsqrt.s", Codec::RM, fmt::RM_FRD_FRS1).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FsqrtS, Codec::RM, fmt::RM_FRD_FRS1).requires(&[Extension::F]);
 pub(crate) static FLE_S: Opcode =
-    Opcode::new("fle.s", Codec::R, fmt::RD_FRS1_FRS2).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FleS, Codec::R, fmt::RD_FRS1_FRS2).requires(&[Extension::F]);
 pub(crate) static FLT_S: Opcode =
-    Opcode::new("flt.s", Codec::R, fmt::RD_FRS1_FRS2).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FltS, Codec::R, fmt::RD_FRS1_FRS2).requires(&[Extension::F]);
 pub(crate) static FEQ_S: Opcode =
-    Opcode::new("feq.s", Codec::R, fmt::RD_FRS1_FRS2).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FeqS, Codec::R, fmt::RD_FRS1_FRS2).requires(&[Extension::F]);
 pub(crate) static FCVT_W_S: Opcode =
-    Opcode::new("fcvt.w.s", Codec::RM, fmt::RM_RD_FRS1).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FcvtWS, Codec::RM, fmt::RM_RD_FRS1).requires(&[Extension::F]);
 pub(crate) static FCVT_WU_S: Opcode =
-    Opcode::new("fcvt.wu.s", Codec::RM, fmt::RM_RD_FRS1).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FcvtWuS, Codec::RM, fmt::RM_RD_FRS1).requires(&[Extension::F]);
 pub(crate) static FCVT_S_W: Opcode =
-    Opcode::new("fcvt.s.w", Codec::RM, fmt::RM_FRD_RS1).requires(&[Extension::F]);
+    Opcode::new(Mnemonic::FcvtSW, Codec::RM, fmt::RM_FRD_RS1).requires(&[Extension::F]);
 pub(crate) static FCVT_S_WU: Opcode =
-    Opcode::new("fcvt.s.wu", Codec::RM, fmt::RM_FRD_RS1).requires(&[Extension::F]);
-pub(crate) static FMV_X_W: Opcode = Opcode::new("fmv.x.w", Codec::R, fmt::RD_FRS1)
+    Opcode::new(Mnemonic::FcvtSWu, Codec::RM, fmt::RM_FRD_RS1).requires(&[Extension::F]);
+pub(crate) static FMV_X_W: Opcode = Opcode::new(Mnemonic::FmvXW, Codec::R, fmt::RD_FRS1)
     .requires(&[Extension::F])
     .f_registers();
 pub(crate) static FCLASS_S: Opcode =
-    Opcode::new("fclass.s", Codec::R, fmt::RD_FRS1).requires(&[Extension::F]);
-pub(crate) static FMV_W_X: Opcode = Opcode::new("fmv.w.x", Codec::R, fmt::FRD_RS1)
+    Opcode::new(Mnemonic::FclassS, Codec::R, fmt::RD_FRS1).requires(&[Extension::F]);
+pub(crate) static FMV_W_X: Opcode = Opcode::new(Mnemonic::FmvWX, Codec::R, fmt::FRD_RS1)
     .requires(&[Extension::F])
     .f_registers();
-pub(crate) static FCVT_L_S: Opcode = Opcode::new("fcvt.l.s", Codec::RM, fmt::RM_RD_FRS1)
+pub(crate) static FCVT_L_S: Opcode = Opcode::new(Mnemonic::FcvtLS, Codec::RM, fmt::RM_RD_FRS1)
     .requires(&[Extension::F])
     .rv64();
-pub(crate) static FCVT_LU_S: Opcode = Opcode::new("fcvt.lu.s", Codec::RM, fmt::RM_RD_FRS1)
+pub(crate) static FCVT_LU_S: Opcode = Opcode::new(Mnemonic::FcvtLuS, Codec::RM, fmt::RM_RD_FRS1)
     .requires(&[Extension::F])
     .rv64();
-pub(crate) static FCVT_S_L: Opcode = Opcode::new("fcvt.s.l", Codec::RM, fmt::RM_FRD_RS1)
+pub(crate) static FCVT_S_L: Opcode = Opcode::new(Mnemonic::FcvtSL, Codec::RM, fmt::RM_FRD_RS1)
     .requires(&[Extension::F])
     .rv64();
-pub(crate) static FCVT_S_LU: Opcode = Opcode::new("fcvt.s.lu", Codec::RM, fmt::RM_FRD_RS1)
+pub(crate) static FCVT_S_LU: Opcode = Opcode::new(Mnemonic::FcvtSLu, Codec::RM, fmt::RM_FRD_RS1)
     .requires(&[Extension::F])
     .rv64();

@@ -6,17 +6,17 @@
 
 use super::Constraint::*;
 use super::{Codec, Extra, Opcode, Pseudo, fmt};
-use crate::Extension;
 use crate::reg;
+use crate::{Extension, Mnemonic};
 
 /// Builds a numbered family of opcodes, such as `mop.r.0` to `mop.r.31`.
 const fn family<const N: usize>(
-    names: [&'static str; N],
+    names: [Mnemonic; N],
     codec: Codec,
     format: &'static str,
     requires: &'static [Extension],
 ) -> [Opcode; N] {
-    let mut ops = [const { Opcode::new("", Codec::None, fmt::NONE) }; N];
+    let mut ops = [const { Opcode::new(Mnemonic::Illegal, Codec::None, fmt::NONE) }; N];
     let mut i = 0;
     while i < N {
         ops[i] = Opcode::new(names[i], codec, format).requires(requires);
@@ -29,11 +29,38 @@ const fn family<const N: usize>(
 pub(crate) static MOP_R: [Opcode; 32] = {
     let mut ops = family(
         [
-            "mop.r.0", "mop.r.1", "mop.r.2", "mop.r.3", "mop.r.4", "mop.r.5", "mop.r.6", "mop.r.7",
-            "mop.r.8", "mop.r.9", "mop.r.10", "mop.r.11", "mop.r.12", "mop.r.13", "mop.r.14",
-            "mop.r.15", "mop.r.16", "mop.r.17", "mop.r.18", "mop.r.19", "mop.r.20", "mop.r.21",
-            "mop.r.22", "mop.r.23", "mop.r.24", "mop.r.25", "mop.r.26", "mop.r.27", "mop.r.28",
-            "mop.r.29", "mop.r.30", "mop.r.31",
+            Mnemonic::MopR0,
+            Mnemonic::MopR1,
+            Mnemonic::MopR2,
+            Mnemonic::MopR3,
+            Mnemonic::MopR4,
+            Mnemonic::MopR5,
+            Mnemonic::MopR6,
+            Mnemonic::MopR7,
+            Mnemonic::MopR8,
+            Mnemonic::MopR9,
+            Mnemonic::MopR10,
+            Mnemonic::MopR11,
+            Mnemonic::MopR12,
+            Mnemonic::MopR13,
+            Mnemonic::MopR14,
+            Mnemonic::MopR15,
+            Mnemonic::MopR16,
+            Mnemonic::MopR17,
+            Mnemonic::MopR18,
+            Mnemonic::MopR19,
+            Mnemonic::MopR20,
+            Mnemonic::MopR21,
+            Mnemonic::MopR22,
+            Mnemonic::MopR23,
+            Mnemonic::MopR24,
+            Mnemonic::MopR25,
+            Mnemonic::MopR26,
+            Mnemonic::MopR27,
+            Mnemonic::MopR28,
+            Mnemonic::MopR29,
+            Mnemonic::MopR30,
+            Mnemonic::MopR31,
         ],
         Codec::R,
         fmt::RD_RS1,
@@ -47,8 +74,14 @@ pub(crate) static MOP_R: [Opcode; 32] = {
 pub(crate) static MOP_RR: [Opcode; 8] = {
     let mut ops = family(
         [
-            "mop.rr.0", "mop.rr.1", "mop.rr.2", "mop.rr.3", "mop.rr.4", "mop.rr.5", "mop.rr.6",
-            "mop.rr.7",
+            Mnemonic::MopRr0,
+            Mnemonic::MopRr1,
+            Mnemonic::MopRr2,
+            Mnemonic::MopRr3,
+            Mnemonic::MopRr4,
+            Mnemonic::MopRr5,
+            Mnemonic::MopRr6,
+            Mnemonic::MopRr7,
         ],
         Codec::R,
         fmt::RD_RS1_RS2,
@@ -62,8 +95,14 @@ pub(crate) static MOP_RR: [Opcode; 8] = {
 pub(crate) static C_MOP: [Opcode; 8] = {
     let mut ops = family(
         [
-            "c.mop.1", "c.mop.3", "c.mop.5", "c.mop.7", "c.mop.9", "c.mop.11", "c.mop.13",
-            "c.mop.15",
+            Mnemonic::CMop1,
+            Mnemonic::CMop3,
+            Mnemonic::CMop5,
+            Mnemonic::CMop7,
+            Mnemonic::CMop9,
+            Mnemonic::CMop11,
+            Mnemonic::CMop13,
+            Mnemonic::CMop15,
         ],
         Codec::Ci,
         fmt::NONE,
@@ -111,19 +150,21 @@ static C_MOP_5_EXTRA: Extra = Extra {
 static C_MOP_5_ALIASES: [Pseudo; 1] = [Pseudo::new(&C_SSPOPCHK, &[])];
 
 pub(crate) static SSPOPCHK: Opcode =
-    Opcode::new("sspopchk", Codec::R, fmt::RS1).requires(&[Extension::Zicfiss]);
+    Opcode::new(Mnemonic::Sspopchk, Codec::R, fmt::RS1).requires(&[Extension::Zicfiss]);
 pub(crate) static SSRDP: Opcode =
-    Opcode::new("ssrdp", Codec::R, fmt::RD).requires(&[Extension::Zicfiss]);
+    Opcode::new(Mnemonic::Ssrdp, Codec::R, fmt::RD).requires(&[Extension::Zicfiss]);
 pub(crate) static SSPUSH: Opcode =
-    Opcode::new("sspush", Codec::R, fmt::RS2).requires(&[Extension::Zicfiss]);
+    Opcode::new(Mnemonic::Sspush, Codec::R, fmt::RS2).requires(&[Extension::Zicfiss]);
 pub(crate) static C_SSPUSH: Opcode =
-    Opcode::new("sspush", Codec::Ci, fmt::RS1).requires(&[Extension::Zicfiss]);
+    Opcode::new(Mnemonic::Sspush, Codec::Ci, fmt::RS1).requires(&[Extension::Zicfiss]);
 pub(crate) static C_SSPOPCHK: Opcode =
-    Opcode::new("sspopchk", Codec::Ci, fmt::RS1).requires(&[Extension::Zicfiss]);
+    Opcode::new(Mnemonic::Sspopchk, Codec::Ci, fmt::RS1).requires(&[Extension::Zicfiss]);
 pub(crate) static SSAMOSWAP_W: Opcode =
-    Opcode::new("ssamoswap.w", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zicfiss]);
-pub(crate) static SSAMOSWAP_D: Opcode = Opcode::new("ssamoswap.d", Codec::RA, fmt::RD_RS2_ADDR_RS1)
-    .requires(&[Extension::Zicfiss])
-    .rv64();
+    Opcode::new(Mnemonic::SsamoswapW, Codec::RA, fmt::RD_RS2_ADDR_RS1)
+        .requires(&[Extension::Zicfiss]);
+pub(crate) static SSAMOSWAP_D: Opcode =
+    Opcode::new(Mnemonic::SsamoswapD, Codec::RA, fmt::RD_RS2_ADDR_RS1)
+        .requires(&[Extension::Zicfiss])
+        .rv64();
 pub(crate) static LPAD: Opcode =
-    Opcode::new("lpad", Codec::U, fmt::UIMM).requires(&[Extension::Zicfilp]);
+    Opcode::new(Mnemonic::Lpad, Codec::U, fmt::UIMM).requires(&[Extension::Zicfilp]);

@@ -82,7 +82,7 @@ fn odd_register_pair(ins: &Instruction) -> bool {
     // single suffix for all of them (fadd.d). The mnemonic is also the
     // output that the objdump tests compare, so a change to it is caught
     // there.
-    let name = ins.op.name;
+    let name = ins.op.mnemonic.name();
     let (rd, rs) = match name.strip_prefix("fcvt.").and_then(|t| t.split_once('.')) {
         Some((to, from)) => (to == "d", from == "d"),
         None => (name.ends_with(".d"), name.ends_with(".d")),

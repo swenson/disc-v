@@ -12,7 +12,7 @@ use core::fmt::{self, Debug, Display, Write};
 use core::hash::{Hash, Hasher};
 use core::ptr::{addr_of, read_volatile, write_volatile};
 
-use disc_v::{Decoder, Extension, Extensions, Instruction, Isa};
+use disc_v::{Decoder, Extension, Extensions, Instruction, Isa, Mnemonic, RoundingMode};
 
 /// The program's input, read with volatile loads so that nothing is
 /// constant-folded.
@@ -94,6 +94,28 @@ fn instruction(ins: &Instruction) {
     output(ins.pc() as usize ^ ins.raw() as usize ^ ins.length());
     output(ins.mnemonic().len() ^ ins.is_illegal() as usize);
     output((*ins == ins.without_aliases()) as usize);
+    mnemonic(ins.id());
+    mnemonic(ins.without_aliases().id());
+    output(ins.rd() as usize ^ ins.rs1() as usize ^ ins.rs2() as usize ^ ins.rs3() as usize);
+    output(ins.imm() as usize ^ ins.imm2() as usize ^ ins.target() as usize);
+    output(ins.pred() as usize ^ ins.succ() as usize);
+    output(ins.aq() as usize ^ ins.rl() as usize ^ ins.is_masked() as usize);
+    output(ins.fp_in_x_registers() as usize);
+    if let Some(mode) = ins.rounding_mode() {
+        rounding_mode(mode);
+    }
+}
+
+fn mnemonic(m: Mnemonic) {
+    show(&m);
+    hash(&m);
+    output(m.name().len() ^ (m == Mnemonic::Addi) as usize ^ (m < Mnemonic::Addi) as usize);
+}
+
+fn rounding_mode(mode: RoundingMode) {
+    debug(&mode);
+    hash(&mode);
+    output((mode == RoundingMode::Dyn) as usize);
 }
 
 /// Every extension, including those that are not in the defaults.
@@ -192,6 +214,15 @@ fn decoders(bytes: &[u8; 256]) {
             // Not Debug: MarchError's Debug output escapes the extension
             // name with core's Debug for str, which has panic paths of its
             // own that the optimizer cannot remove.
+            Err(err) => {
+                let _ = write!(Sink, "{err}");
+                hash(&err);
+            }
+        }
+        match Decoder::from_march_reporting(march, |name| {
+            let _ = write!(Sink, "{name}");
+        }) {
+            Ok(dec) => decoder(dec, bytes),
             Err(err) => {
                 let _ = write!(Sink, "{err}");
                 hash(&err);

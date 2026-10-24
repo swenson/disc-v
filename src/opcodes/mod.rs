@@ -37,7 +37,7 @@ pub(crate) mod zilsd;
 pub(crate) mod zimop;
 pub(crate) mod zk;
 
-use crate::{Extension, Extensions, Isa};
+use crate::{Extension, Extensions, Isa, Mnemonic};
 
 // Some codecs, constraints and table helpers are only used by the tables
 // that the `vector` and vendor features add.
@@ -318,7 +318,7 @@ pub(crate) fn lookup_masked(table: &'static [MaskedOpcode], inst: u64) -> Option
 
 /// One entry in the opcode tables.
 pub(crate) struct Opcode {
-    pub(crate) name: &'static str,
+    pub(crate) mnemonic: Mnemonic,
     /// Operand format string; see [`fmt`].
     pub(crate) format: &'static str,
     /// The extensions the instruction (or alias) needs, all of which must be
@@ -369,9 +369,9 @@ impl Extra {
 }
 
 impl Opcode {
-    pub(crate) const fn new(name: &'static str, codec: Codec, format: &'static str) -> Self {
+    pub(crate) const fn new(mnemonic: Mnemonic, codec: Codec, format: &'static str) -> Self {
         Opcode {
-            name,
+            mnemonic,
             format,
             requires: &[],
             extra: &Extra::NONE,
@@ -474,12 +474,13 @@ impl Eq for Opcode {}
 
 impl core::fmt::Debug for Opcode {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str(self.name)
+        f.write_str(self.mnemonic.name())
     }
 }
 
 /// An encoding that is not a valid instruction, shown as objdump does.
-pub(crate) static ILLEGAL: Opcode = Opcode::new(".insn", Codec::Illegal, fmt::INSN);
+pub(crate) static ILLEGAL: Opcode = Opcode::new(Mnemonic::Illegal, Codec::Illegal, fmt::INSN);
 /// A 16-bit parcel of an encoding with a reserved length (10 bytes or more),
 /// which `.insn` cannot express.
-pub(crate) static RESERVED_PARCEL: Opcode = Opcode::new(".2byte", Codec::Illegal, fmt::RAW);
+pub(crate) static RESERVED_PARCEL: Opcode =
+    Opcode::new(Mnemonic::ReservedParcel, Codec::Illegal, fmt::RAW);
