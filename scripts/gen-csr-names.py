@@ -33,7 +33,7 @@ with contextlib.redirect_stdout(code):
     //! (Copyright (c) 2022 RISC-V International, BSD-3-Clause).
 
     /// Returns the name of CSR `csr`, or `None` if it has no standard name.
-    pub(crate) fn csr_name(csr: u16) -> Option<&'static str> {{
+    pub fn csr_name(csr: u16) -> Option<&'static str> {{
         Some(match csr {{''')
     for num in sorted(names):
         print(f'        {num:#05x} => "{names[num]}",')

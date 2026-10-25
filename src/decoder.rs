@@ -186,40 +186,86 @@ impl Decoder {
     /// );
     /// ```
     pub fn from_march(march: &str) -> Result<Decoder, MarchError<'_>> {
-        let (isa, rest) = [
-            ("rv32", Isa::Rv32),
-            ("rv64", Isa::Rv64),
-            ("rv128", Isa::Rv128),
-        ]
-        .into_iter()
-        .find_map(|(prefix, isa)| {
-            let (head, rest) = march.split_at_checked(prefix.len())?;
-            head.eq_ignore_ascii_case(prefix).then_some((isa, rest))
-        })
-        .ok_or(MarchError::InvalidBase)?;
-        let mut extensions = Extensions::EMPTY;
-        // Not split('_'): its searcher has panic paths that the optimizer
-        // does not always remove (see panic-check/).
-        for (i, token) in rest.split(['_']).enumerate() {
-            let first = token.chars().next().map(|c| c.to_ascii_lowercase());
-            match first {
-                Some('z' | 's' | 'x') if i > 0 => {
-                    extensions = extensions.union(multi_letter(token)?);
-                }
-                _ => {
-                    if i == 0 && !matches!(first, Some('i' | 'g' | 'e')) {
-                        return Err(MarchError::InvalidBase);
-                    }
-                    extensions = extensions.union(single_letters(token)?);
-                }
-            }
+        let mut first_unsupported = None;
+        let (isa, extensions) = parse_march(march, &mut |name| {
+            first_unsupported.get_or_insert(name);
+        })?;
+        if let Some(name) = first_unsupported {
+            return Err(MarchError::UnsupportedExtension(name));
         }
+        Decoder::with_only(isa, extensions).map_err(MarchError::Conflict)
+    }
+
+    /// A decoder for the extensions of an ISA string that disc-v supports,
+    /// calling `unsupported` with the name of each extension it names that
+    /// disc-v does not, instead of refusing the string as
+    /// [`from_march`](Self::from_march) does.
+    ///
+    /// The string is read as [`from_march`](Self::from_march) reads it; the
+    /// unsupported extensions are left out, so the decoder decodes everything
+    /// else the string declares. A string that names no valid base, or two
+    /// extensions that conflict, is still an error.
+    ///
+    /// ```
+    /// use disc_v::Decoder;
+    ///
+    /// let mut unsupported = Vec::new();
+    /// let dec = Decoder::from_march_reporting("rv64gc_xventanacondops_zba", |name| {
+    ///     unsupported.push(name)
+    /// })
+    /// .unwrap();
+    /// assert_eq!(unsupported, ["xventanacondops"]);
+    /// assert_eq!(dec, Decoder::RV64GC.with(disc_v::Extension::Zba).unwrap());
+    /// ```
+    pub fn from_march_reporting<'a>(
+        march: &'a str,
+        mut unsupported: impl FnMut(&'a str),
+    ) -> Result<Decoder, MarchError<'a>> {
+        let (isa, extensions) = parse_march(march, &mut unsupported)?;
         Decoder::with_only(isa, extensions).map_err(MarchError::Conflict)
     }
 }
 
-/// The extensions of a run of single-letter extensions, such as `imafdc`.
-fn single_letters(token: &str) -> Result<Extensions, MarchError<'_>> {
+/// The base ISA and the extensions an ISA string names, calling `unsupported`
+/// with each extension name disc-v does not support.
+fn parse_march<'a>(
+    march: &'a str,
+    unsupported: &mut dyn FnMut(&'a str),
+) -> Result<(Isa, Extensions), MarchError<'a>> {
+    let (isa, rest) = [
+        ("rv32", Isa::Rv32),
+        ("rv64", Isa::Rv64),
+        ("rv128", Isa::Rv128),
+    ]
+    .into_iter()
+    .find_map(|(prefix, isa)| {
+        let (head, rest) = march.split_at_checked(prefix.len())?;
+        head.eq_ignore_ascii_case(prefix).then_some((isa, rest))
+    })
+    .ok_or(MarchError::InvalidBase)?;
+    let mut extensions = Extensions::EMPTY;
+    // Not split('_'): its searcher has panic paths that the optimizer
+    // does not always remove (see panic-check/).
+    for (i, token) in rest.split(['_']).enumerate() {
+        let first = token.chars().next().map(|c| c.to_ascii_lowercase());
+        match first {
+            Some('z' | 's' | 'x') if i > 0 => {
+                extensions = extensions.union(multi_letter(token, unsupported));
+            }
+            _ => {
+                if i == 0 && !matches!(first, Some('i' | 'g' | 'e')) {
+                    return Err(MarchError::InvalidBase);
+                }
+                extensions = extensions.union(single_letters(token, unsupported));
+            }
+        }
+    }
+    Ok((isa, extensions))
+}
+
+/// The extensions of a run of single-letter extensions, such as `imafdc`,
+/// calling `unsupported` with each letter disc-v does not support.
+fn single_letters<'a>(token: &'a str, unsupported: &mut dyn FnMut(&'a str)) -> Extensions {
     use Extension::*;
     let mut extensions = Extensions::EMPTY;
     let mut rest = token;
@@ -236,26 +282,30 @@ fn single_letters(token: &str) -> Result<Extensions, MarchError<'_>> {
             'b' => Extensions::of(&[Zba, Zbb, Zbs]),
             c => match Extension::from_name(name) {
                 Some(ext) if c.is_ascii_alphabetic() => ext.into(),
-                _ => return Err(MarchError::UnsupportedExtension(name)),
+                _ => {
+                    unsupported(name);
+                    Extensions::EMPTY
+                }
             },
         });
     }
-    Ok(extensions)
+    extensions
 }
 
-/// The extensions of a multi-letter extension such as `zba2p0`.
-fn multi_letter(token: &str) -> Result<Extensions, MarchError<'_>> {
+/// The extensions of a multi-letter extension such as `zba2p0`, or none
+/// after calling `unsupported` with its name when disc-v does not support it.
+fn multi_letter<'a>(token: &'a str, unsupported: &mut dyn FnMut(&'a str)) -> Extensions {
     use Extension::*;
     let name = token.strip_suffix(trailing_version(token)).unwrap_or(token);
     if let Some(ext) = Extension::from_name(name) {
-        return Ok(ext.into());
+        return ext.into();
     }
     let lower = |s: &str| name.eq_ignore_ascii_case(s);
     let has_prefix = |p: &str| {
         name.get(..p.len())
             .is_some_and(|h| h.eq_ignore_ascii_case(p))
     };
-    Ok(if lower("zmmul") {
+    if lower("zmmul") {
         M.into()
     } else if lower("zaamo") || lower("zalrsc") {
         A.into()
@@ -280,8 +330,9 @@ fn multi_letter(token: &str) -> Result<Extensions, MarchError<'_>> {
         // instructions.
         Extensions::EMPTY
     } else {
-        return Err(MarchError::UnsupportedExtension(name));
-    })
+        unsupported(name);
+        Extensions::EMPTY
+    }
 }
 
 /// Unprivileged extensions that define no instructions.
@@ -437,8 +488,13 @@ mod tests {
                     continue;
                 }
                 let (va, vb) = (vendor(a), vendor(b));
-                assert_ne!(va, vb, "{} and {} overlap", a.op.name, b.op.name);
-                assert!(conflicts(va, vb), "{} and {} overlap", a.op.name, b.op.name);
+                assert_ne!(va, vb, "{} and {} overlap", a.op.mnemonic, b.op.mnemonic);
+                assert!(
+                    conflicts(va, vb),
+                    "{} and {} overlap",
+                    a.op.mnemonic,
+                    b.op.mnemonic
+                );
             }
         }
         for &(a, b) in CONFLICTS.iter().filter(|(a, _)| a.is_vendor()) {

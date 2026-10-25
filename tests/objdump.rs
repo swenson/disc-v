@@ -259,6 +259,27 @@ fn known_difference(
         if isa == Isa::Rv32 && shift.contains(&objdump.split(' ').next().unwrap()) {
             return Some("RV32 shift amount >= 32");
         }
+        // CV32E40P's decoder raises an illegal instruction for the bits of a
+        // lane move's, cv.shuffle.sci.h's or an immediate shift's six-bit
+        // immediate it does not use; objdump decodes them.
+        let unused = match objdump.split(' ').next().unwrap() {
+            "cv.extract.h" | "cv.extractu.h" | "cv.insert.h" => Some(0x3e),
+            "cv.extract.b" | "cv.extractu.b" | "cv.insert.b" | "cv.shuffle.sci.h" => Some(0x3c),
+            "cv.srl.sci.h" | "cv.sra.sci.h" | "cv.sll.sci.h" => Some(0x30),
+            "cv.srl.sci.b" | "cv.sra.sci.b" | "cv.sll.sci.b" => Some(0x38),
+            _ => None,
+        };
+        let immediate = objdump
+            .rsplit(',')
+            .next()
+            .and_then(|imm| imm.parse::<i64>().ok());
+        if isa == Isa::Rv32
+            && unused
+                .zip(immediate)
+                .is_some_and(|(mask, imm)| imm & mask != 0)
+        {
+            return Some("CORE-V immediate bits CV32E40P reserves");
+        }
         // Zcmp reserves register lists below 4, which objdump decodes.
         if objdump.starts_with("cm.push ") || objdump.starts_with("cm.pop") {
             return Some("cm.push/cm.pop with a reserved register list");

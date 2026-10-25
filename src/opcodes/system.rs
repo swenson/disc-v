@@ -8,15 +8,15 @@
 
 use super::Constraint::*;
 use super::{Codec, Extra, Opcode, Pseudo, fmt, pseudo};
-use crate::Extension;
 use crate::reg;
+use crate::{Extension, Mnemonic};
 
-pub(crate) static ECALL: Opcode = Opcode::new("ecall", Codec::None, fmt::NONE);
-pub(crate) static EBREAK: Opcode = Opcode::new("ebreak", Codec::None, fmt::NONE);
-pub(crate) static SRET: Opcode = Opcode::new("sret", Codec::None, fmt::NONE);
-pub(crate) static MRET: Opcode = Opcode::new("mret", Codec::None, fmt::NONE);
+pub(crate) static ECALL: Opcode = Opcode::new(Mnemonic::Ecall, Codec::None, fmt::NONE);
+pub(crate) static EBREAK: Opcode = Opcode::new(Mnemonic::Ebreak, Codec::None, fmt::NONE);
+pub(crate) static SRET: Opcode = Opcode::new(Mnemonic::Sret, Codec::None, fmt::NONE);
+pub(crate) static MRET: Opcode = Opcode::new(Mnemonic::Mret, Codec::None, fmt::NONE);
 pub(crate) static DRET: Opcode =
-    Opcode::new("dret", Codec::None, fmt::NONE).requires(&[Extension::Sdext]);
+    Opcode::new(Mnemonic::Dret, Codec::None, fmt::NONE).requires(&[Extension::Sdext]);
 pub(crate) static SFENCE_VMA: Opcode = Opcode {
     extra: &Extra {
         pseudo: &[
@@ -28,22 +28,22 @@ pub(crate) static SFENCE_VMA: Opcode = Opcode {
         ],
         ..Extra::NONE
     },
-    ..Opcode::new("sfence.vma", Codec::R, fmt::RS1_RS2)
+    ..Opcode::new(Mnemonic::SfenceVma, Codec::R, fmt::RS1_RS2)
 };
-pub(crate) static WFI: Opcode = Opcode::new("wfi", Codec::None, fmt::NONE);
+pub(crate) static WFI: Opcode = Opcode::new(Mnemonic::Wfi, Codec::None, fmt::NONE);
 // Svinval.
 pub(crate) static SINVAL_VMA: Opcode =
-    Opcode::new("sinval.vma", Codec::R, fmt::RS1_RS2).requires(&[Extension::Svinval]);
+    Opcode::new(Mnemonic::SinvalVma, Codec::R, fmt::RS1_RS2).requires(&[Extension::Svinval]);
 pub(crate) static SFENCE_W_INVAL: Opcode =
-    Opcode::new("sfence.w.inval", Codec::None, fmt::NONE).requires(&[Extension::Svinval]);
+    Opcode::new(Mnemonic::SfenceWInval, Codec::None, fmt::NONE).requires(&[Extension::Svinval]);
 pub(crate) static SFENCE_INVAL_IR: Opcode =
-    Opcode::new("sfence.inval.ir", Codec::None, fmt::NONE).requires(&[Extension::Svinval]);
+    Opcode::new(Mnemonic::SfenceInvalIr, Codec::None, fmt::NONE).requires(&[Extension::Svinval]);
 // Smrnmi.
 pub(crate) static MNRET: Opcode =
-    Opcode::new("mnret", Codec::None, fmt::NONE).requires(&[Extension::Smrnmi]);
+    Opcode::new(Mnemonic::Mnret, Codec::None, fmt::NONE).requires(&[Extension::Smrnmi]);
 // Ssctr.
 pub(crate) static SCTRCLR: Opcode =
-    Opcode::new("sctrclr", Codec::None, fmt::NONE).requires(&[Extension::Ssctr]);
+    Opcode::new(Mnemonic::Sctrclr, Codec::None, fmt::NONE).requires(&[Extension::Ssctr]);
 pub(crate) static CSRRW: Opcode = Opcode {
     extra: &Extra {
         pseudo: &[
@@ -61,7 +61,7 @@ pub(crate) static CSRRW: Opcode = Opcode {
         ],
         ..Extra::NONE
     },
-    ..Opcode::new("csrrw", Codec::ICsr, fmt::RD_CSR_RS1).requires(&[Extension::Zicsr])
+    ..Opcode::new(Mnemonic::Csrrw, Codec::ICsr, fmt::RD_CSR_RS1).requires(&[Extension::Zicsr])
 };
 pub(crate) static CSRRS: Opcode = Opcode {
     extra: &Extra {
@@ -80,14 +80,14 @@ pub(crate) static CSRRS: Opcode = Opcode {
         ],
         ..Extra::NONE
     },
-    ..Opcode::new("csrrs", Codec::ICsr, fmt::RD_CSR_RS1).requires(&[Extension::Zicsr])
+    ..Opcode::new(Mnemonic::Csrrs, Codec::ICsr, fmt::RD_CSR_RS1).requires(&[Extension::Zicsr])
 };
 pub(crate) static CSRRC: Opcode = Opcode {
     extra: &Extra {
         pseudo: &[Pseudo::new(&pseudo::CSRC, &[RdEq(reg::ZERO)])],
         ..Extra::NONE
     },
-    ..Opcode::new("csrrc", Codec::ICsr, fmt::RD_CSR_RS1).requires(&[Extension::Zicsr])
+    ..Opcode::new(Mnemonic::Csrrc, Codec::ICsr, fmt::RD_CSR_RS1).requires(&[Extension::Zicsr])
 };
 pub(crate) static CSRRWI: Opcode = Opcode {
     extra: &Extra {
@@ -98,19 +98,19 @@ pub(crate) static CSRRWI: Opcode = Opcode {
         ],
         ..Extra::NONE
     },
-    ..Opcode::new("csrrwi", Codec::ICsr, fmt::RD_CSR_ZIMM).requires(&[Extension::Zicsr])
+    ..Opcode::new(Mnemonic::Csrrwi, Codec::ICsr, fmt::RD_CSR_ZIMM).requires(&[Extension::Zicsr])
 };
 pub(crate) static CSRRSI: Opcode = Opcode {
     extra: &Extra {
         pseudo: &[Pseudo::new(&pseudo::CSRSI, &[RdEq(reg::ZERO)])],
         ..Extra::NONE
     },
-    ..Opcode::new("csrrsi", Codec::ICsr, fmt::RD_CSR_ZIMM).requires(&[Extension::Zicsr])
+    ..Opcode::new(Mnemonic::Csrrsi, Codec::ICsr, fmt::RD_CSR_ZIMM).requires(&[Extension::Zicsr])
 };
 pub(crate) static CSRRCI: Opcode = Opcode {
     extra: &Extra {
         pseudo: &[Pseudo::new(&pseudo::CSRCI, &[RdEq(reg::ZERO)])],
         ..Extra::NONE
     },
-    ..Opcode::new("csrrci", Codec::ICsr, fmt::RD_CSR_ZIMM).requires(&[Extension::Zicsr])
+    ..Opcode::new(Mnemonic::Csrrci, Codec::ICsr, fmt::RD_CSR_ZIMM).requires(&[Extension::Zicsr])
 };

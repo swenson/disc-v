@@ -8,14 +8,14 @@
 
 use super::Constraint::*;
 use super::{Codec, Extra, Opcode, fmt};
-use crate::{Extension, reg};
+use crate::{Extension, Mnemonic, reg};
 
 pub(crate) static LD: Opcode = Opcode {
     extra: &Extra {
         illegal_if: &[RdOdd],
         ..Extra::NONE
     },
-    ..Opcode::new("ld", Codec::I, fmt::RD_OFFSET_RS1)
+    ..Opcode::new(Mnemonic::Ld, Codec::I, fmt::RD_OFFSET_RS1)
         .requires(&[Extension::Zilsd])
         .rv32_only()
 };
@@ -24,7 +24,7 @@ pub(crate) static SD: Opcode = Opcode {
         illegal_if: &[Rs2Odd],
         ..Extra::NONE
     },
-    ..Opcode::new("sd", Codec::S, fmt::RS2_OFFSET_RS1)
+    ..Opcode::new(Mnemonic::Sd, Codec::S, fmt::RS2_OFFSET_RS1)
         .requires(&[Extension::Zilsd])
         .rv32_only()
 };
@@ -34,7 +34,7 @@ pub(crate) static C_LD: Opcode = Opcode {
         illegal_if: &[RdOdd],
         ..Extra::NONE
     },
-    ..Opcode::new("c.ld", Codec::ClLd, fmt::RD_OFFSET_RS1).requires(&[Extension::Zclsd])
+    ..Opcode::new(Mnemonic::CLd, Codec::ClLd, fmt::RD_OFFSET_RS1).requires(&[Extension::Zclsd])
 };
 pub(crate) static C_SD: Opcode = Opcode {
     extra: &Extra {
@@ -42,7 +42,7 @@ pub(crate) static C_SD: Opcode = Opcode {
         illegal_if: &[Rs2Odd],
         ..Extra::NONE
     },
-    ..Opcode::new("c.sd", Codec::CsSd, fmt::RS2_OFFSET_RS1).requires(&[Extension::Zclsd])
+    ..Opcode::new(Mnemonic::CSd, Codec::CsSd, fmt::RS2_OFFSET_RS1).requires(&[Extension::Zclsd])
 };
 pub(crate) static C_LDSP: Opcode = Opcode {
     extra: &Extra {
@@ -50,7 +50,7 @@ pub(crate) static C_LDSP: Opcode = Opcode {
         illegal_if: &[RdOdd, RdEq(reg::ZERO)],
         ..Extra::NONE
     },
-    ..Opcode::new("c.ldsp", Codec::CiLdsp, fmt::RD_OFFSET_RS1).requires(&[Extension::Zclsd])
+    ..Opcode::new(Mnemonic::CLdsp, Codec::CiLdsp, fmt::RD_OFFSET_RS1).requires(&[Extension::Zclsd])
 };
 pub(crate) static C_SDSP: Opcode = Opcode {
     extra: &Extra {
@@ -58,5 +58,6 @@ pub(crate) static C_SDSP: Opcode = Opcode {
         illegal_if: &[Rs2Odd],
         ..Extra::NONE
     },
-    ..Opcode::new("c.sdsp", Codec::CssSdsp, fmt::RS2_OFFSET_RS1).requires(&[Extension::Zclsd])
+    ..Opcode::new(Mnemonic::CSdsp, Codec::CssSdsp, fmt::RS2_OFFSET_RS1)
+        .requires(&[Extension::Zclsd])
 };

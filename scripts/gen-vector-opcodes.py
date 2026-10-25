@@ -5,6 +5,10 @@
 of https://github.com/riscv/riscv-opcodes.
 
 Usage: scripts/gen-vector-opcodes.py <riscv-opcodes checkout> > src/opcodes/v.rs
+       scripts/gen-vector-opcodes.py --mnemonics <riscv-opcodes checkout>
+
+The second form prints the vector lines of the `mnemonics!` list in
+src/mnemonic.rs, for a new instruction's variant.
 
 Each instruction becomes a match/mask entry with an operand format string
 (see `fmt` in src/opcodes/mod.rs). The operand order follows GNU objdump. The
@@ -122,7 +126,8 @@ def operands(name, bits, mask, args):
     return codec, ",".join(parts) + vm
 
 
-root = sys.argv[1]
+mnemonics = sys.argv[1] == "--mnemonics"
+root = sys.argv[2] if mnemonics else sys.argv[1]
 entries = []
 for f, ext in FILES.items():
     for line in open(os.path.join(root, "extensions", f)):
@@ -156,6 +161,18 @@ def ident(name):
     return re.sub(r"[^A-Z0-9]", "_", name.upper())
 
 
+def variant(name):
+    """The `Mnemonic` variant: the name in camel case, a `.` or `_` starting a word."""
+    return "".join(p[:1].upper() + p[1:] for p in re.split(r"[._]", name) if p)
+
+
+if mnemonics:
+    names = [e[0] for e in entries] + [alias for _, alias, _, _ in ALIASES]
+    for name in dict.fromkeys(names):
+        print(f'    #[cfg(feature = "vector")] {variant(name)} = "{name}",')
+    sys.exit(0)
+
+
 out = [f"""// Copyright (c) 2026 Christopher Swenson
 // Licensed under the Apache-2.0 license.
 
@@ -168,13 +185,13 @@ out = [f"""// Copyright (c) 2026 Christopher Swenson
 
 use super::Constraint::*;
 use super::{{Codec, Extra, MaskedOpcode, Opcode, Pseudo, masked}};
-use crate::Extension;
+use crate::{{Extension, Mnemonic}};
 """]
 for table, rows in tables.items():
     out.append(f"\npub(crate) static {table}: [MaskedOpcode; {len(rows)}] = [")
     for name, bits, mask, args, ext in rows:
         codec, fmt = operands(name, bits, mask, args)
-        op = f'Opcode::new("{name}", Codec::{codec}, "{fmt}").requires(&[Extension::{ext}])'
+        op = f'Opcode::new(Mnemonic::{variant(name)}, Codec::{codec}, "{fmt}").requires(&[Extension::{ext}])'
         if name in aliases:
             ps = ", ".join(f"Pseudo::new(&{ident(a)}, &[{c}])" for a, c, _ in aliases[name])
             op = f"Opcode {{ extra: &Extra {{ pseudo: &[{ps}], ..Extra::NONE }}, ..{op} }}"
@@ -185,5 +202,5 @@ for base, alias, _, fmt in ALIASES:
     name, bits, mask, args, ext = next(e for e in entries if e[0] == base)
     codec = operands(name, bits, mask, args)[0]
     out.append(f'static {ident(alias)}: Opcode = '
-               f'Opcode::new("{alias}", Codec::{codec}, "{fmt}").requires(&[Extension::{ext}]);')
+               f'Opcode::new(Mnemonic::{variant(alias)}, Codec::{codec}, "{fmt}").requires(&[Extension::{ext}]);')
 sys.stdout.write(rustfmt("\n".join(out) + "\n"))

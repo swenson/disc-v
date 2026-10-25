@@ -13,243 +13,243 @@
 
 use super::Constraint::*;
 use super::{Codec, Extra, MaskedOpcode, Opcode, masked};
-use crate::Extension;
+use crate::{Extension, Mnemonic};
 
 pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
     masked(
         0x0000100b,
         0xf800707f,
-        Opcode::new("th.addsl", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadBa]),
+        Opcode::new(Mnemonic::ThAddsl, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadBa]),
     ),
     masked(
         0x1000100b,
         0xfc00707f,
-        Opcode::new("th.srri", Codec::IUimm6, "0,1,i").requires(&[Extension::XTheadBb]),
+        Opcode::new(Mnemonic::ThSrri, Codec::IUimm6, "0,1,i").requires(&[Extension::XTheadBb]),
     ),
     masked(
         0x1400100b,
         0xfe00707f,
-        Opcode::new("th.srriw", Codec::ISh5, "0,1,i")
+        Opcode::new(Mnemonic::ThSrriw, Codec::ISh5, "0,1,i")
             .requires(&[Extension::XTheadBb])
             .rv64(),
     ),
     masked(
         0x0000200b,
         0x0000707f,
-        Opcode::new("th.ext", Codec::ImmPair6, "0,1,i,j").requires(&[Extension::XTheadBb]),
+        Opcode::new(Mnemonic::ThExt, Codec::ImmPair6, "0,1,i,j").requires(&[Extension::XTheadBb]),
     ),
     masked(
         0x0000300b,
         0x0000707f,
-        Opcode::new("th.extu", Codec::ImmPair6, "0,1,i,j").requires(&[Extension::XTheadBb]),
+        Opcode::new(Mnemonic::ThExtu, Codec::ImmPair6, "0,1,i,j").requires(&[Extension::XTheadBb]),
     ),
     masked(
         0x8400100b,
         0xfff0707f,
-        Opcode::new("th.ff0", Codec::R, "0,1").requires(&[Extension::XTheadBb]),
+        Opcode::new(Mnemonic::ThFf0, Codec::R, "0,1").requires(&[Extension::XTheadBb]),
     ),
     masked(
         0x8600100b,
         0xfff0707f,
-        Opcode::new("th.ff1", Codec::R, "0,1").requires(&[Extension::XTheadBb]),
+        Opcode::new(Mnemonic::ThFf1, Codec::R, "0,1").requires(&[Extension::XTheadBb]),
     ),
     masked(
         0x8200100b,
         0xfff0707f,
-        Opcode::new("th.rev", Codec::R, "0,1").requires(&[Extension::XTheadBb]),
+        Opcode::new(Mnemonic::ThRev, Codec::R, "0,1").requires(&[Extension::XTheadBb]),
     ),
     masked(
         0x8000100b,
         0xfff0707f,
-        Opcode::new("th.tstnbz", Codec::R, "0,1").requires(&[Extension::XTheadBb]),
+        Opcode::new(Mnemonic::ThTstnbz, Codec::R, "0,1").requires(&[Extension::XTheadBb]),
     ),
     masked(
         0x9000100b,
         0xfff0707f,
-        Opcode::new("th.revw", Codec::R, "0,1")
+        Opcode::new(Mnemonic::ThRevw, Codec::R, "0,1")
             .requires(&[Extension::XTheadBb])
             .rv64(),
     ),
     masked(
         0x8800100b,
         0xfc00707f,
-        Opcode::new("th.tst", Codec::IUimm6, "0,1,i").requires(&[Extension::XTheadBs]),
+        Opcode::new(Mnemonic::ThTst, Codec::IUimm6, "0,1,i").requires(&[Extension::XTheadBs]),
     ),
     masked(
         0x0210000b,
         0xfff07fff,
-        Opcode::new("th.dcache.csw", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCsw, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0220000b,
         0xfff07fff,
-        Opcode::new("th.dcache.isw", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheIsw, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0230000b,
         0xfff07fff,
-        Opcode::new("th.dcache.cisw", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCisw, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0240000b,
         0xfff07fff,
-        Opcode::new("th.dcache.cval1", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCval1, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0250000b,
         0xfff07fff,
-        Opcode::new("th.dcache.cva", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCva, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0260000b,
         0xfff07fff,
-        Opcode::new("th.dcache.iva", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheIva, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0270000b,
         0xfff07fff,
-        Opcode::new("th.dcache.civa", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCiva, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0280000b,
         0xfff07fff,
-        Opcode::new("th.dcache.cpal1", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCpal1, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0290000b,
         0xfff07fff,
-        Opcode::new("th.dcache.cpa", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCpa, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x02a0000b,
         0xfff07fff,
-        Opcode::new("th.dcache.ipa", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheIpa, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x02b0000b,
         0xfff07fff,
-        Opcode::new("th.dcache.cipa", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCipa, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0300000b,
         0xfff07fff,
-        Opcode::new("th.icache.iva", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThIcacheIva, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0380000b,
         0xfff07fff,
-        Opcode::new("th.icache.ipa", Codec::R, "1").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThIcacheIpa, Codec::R, "1").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0010000b,
         0xffffffff,
-        Opcode::new("th.dcache.call", Codec::None, "").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCall, Codec::None, "").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0020000b,
         0xffffffff,
-        Opcode::new("th.dcache.iall", Codec::None, "").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheIall, Codec::None, "").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0030000b,
         0xffffffff,
-        Opcode::new("th.dcache.ciall", Codec::None, "").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThDcacheCiall, Codec::None, "").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0100000b,
         0xffffffff,
-        Opcode::new("th.icache.iall", Codec::None, "").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThIcacheIall, Codec::None, "").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0110000b,
         0xffffffff,
-        Opcode::new("th.icache.ialls", Codec::None, "").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThIcacheIalls, Codec::None, "").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0150000b,
         0xffffffff,
-        Opcode::new("th.l2cache.call", Codec::None, "").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThL2cacheCall, Codec::None, "").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0160000b,
         0xffffffff,
-        Opcode::new("th.l2cache.iall", Codec::None, "").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThL2cacheIall, Codec::None, "").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x0170000b,
         0xffffffff,
-        Opcode::new("th.l2cache.ciall", Codec::None, "").requires(&[Extension::XTheadCmo]),
+        Opcode::new(Mnemonic::ThL2cacheCiall, Codec::None, "").requires(&[Extension::XTheadCmo]),
     ),
     masked(
         0x4000100b,
         0xfe00707f,
-        Opcode::new("th.mveqz", Codec::R, "0,1,2").requires(&[Extension::XTheadCondMov]),
+        Opcode::new(Mnemonic::ThMveqz, Codec::R, "0,1,2").requires(&[Extension::XTheadCondMov]),
     ),
     masked(
         0x4200100b,
         0xfe00707f,
-        Opcode::new("th.mvnez", Codec::R, "0,1,2").requires(&[Extension::XTheadCondMov]),
+        Opcode::new(Mnemonic::ThMvnez, Codec::R, "0,1,2").requires(&[Extension::XTheadCondMov]),
     ),
     masked(
         0x4000600b,
         0xf800707f,
-        Opcode::new("th.flrw", Codec::RImm2, "3,1,2,i")
+        Opcode::new(Mnemonic::ThFlrw, Codec::RImm2, "3,1,2,i")
             .requires(&[Extension::XTheadFMemIdx, Extension::F])
             .f_registers(),
     ),
     masked(
         0x6000600b,
         0xf800707f,
-        Opcode::new("th.flrd", Codec::RImm2, "3,1,2,i")
+        Opcode::new(Mnemonic::ThFlrd, Codec::RImm2, "3,1,2,i")
             .requires(&[Extension::XTheadFMemIdx, Extension::D])
             .f_registers(),
     ),
     masked(
         0x5000600b,
         0xf800707f,
-        Opcode::new("th.flurw", Codec::RImm2, "3,1,2,i")
+        Opcode::new(Mnemonic::ThFlurw, Codec::RImm2, "3,1,2,i")
             .requires(&[Extension::XTheadFMemIdx, Extension::F])
             .f_registers(),
     ),
     masked(
         0x7000600b,
         0xf800707f,
-        Opcode::new("th.flurd", Codec::RImm2, "3,1,2,i")
+        Opcode::new(Mnemonic::ThFlurd, Codec::RImm2, "3,1,2,i")
             .requires(&[Extension::XTheadFMemIdx, Extension::D])
             .f_registers(),
     ),
     masked(
         0x4000700b,
         0xf800707f,
-        Opcode::new("th.fsrw", Codec::RImm2, "3,1,2,i")
+        Opcode::new(Mnemonic::ThFsrw, Codec::RImm2, "3,1,2,i")
             .requires(&[Extension::XTheadFMemIdx, Extension::F])
             .f_registers(),
     ),
     masked(
         0x6000700b,
         0xf800707f,
-        Opcode::new("th.fsrd", Codec::RImm2, "3,1,2,i")
+        Opcode::new(Mnemonic::ThFsrd, Codec::RImm2, "3,1,2,i")
             .requires(&[Extension::XTheadFMemIdx, Extension::D])
             .f_registers(),
     ),
     masked(
         0x5000700b,
         0xf800707f,
-        Opcode::new("th.fsurw", Codec::RImm2, "3,1,2,i")
+        Opcode::new(Mnemonic::ThFsurw, Codec::RImm2, "3,1,2,i")
             .requires(&[Extension::XTheadFMemIdx, Extension::F])
             .f_registers(),
     ),
     masked(
         0x7000700b,
         0xf800707f,
-        Opcode::new("th.fsurd", Codec::RImm2, "3,1,2,i")
+        Opcode::new(Mnemonic::ThFsurd, Codec::RImm2, "3,1,2,i")
             .requires(&[Extension::XTheadFMemIdx, Extension::D])
             .f_registers(),
     ),
     masked(
         0xa000100b,
         0xfff0707f,
-        Opcode::new("th.fmv.hw.x", Codec::R, "3,1")
+        Opcode::new(Mnemonic::ThFmvHwX, Codec::R, "3,1")
             .requires(&[Extension::XTheadFmv, Extension::D])
             .rv32_only()
             .f_registers(),
@@ -257,7 +257,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
     masked(
         0xc000100b,
         0xfff0707f,
-        Opcode::new("th.fmv.x.hw", Codec::R, "0,4")
+        Opcode::new(Mnemonic::ThFmvXHw, Codec::R, "0,4")
             .requires(&[Extension::XTheadFmv, Extension::D])
             .rv32_only()
             .f_registers(),
@@ -265,44 +265,44 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
     masked(
         0x0040000b,
         0xffffffff,
-        Opcode::new("th.ipush", Codec::None, "").requires(&[Extension::XTheadInt]),
+        Opcode::new(Mnemonic::ThIpush, Codec::None, "").requires(&[Extension::XTheadInt]),
     ),
     masked(
         0x0050000b,
         0xffffffff,
-        Opcode::new("th.ipop", Codec::None, "").requires(&[Extension::XTheadInt]),
+        Opcode::new(Mnemonic::ThIpop, Codec::None, "").requires(&[Extension::XTheadInt]),
     ),
     masked(
         0x2000100b,
         0xfe00707f,
-        Opcode::new("th.mula", Codec::R, "0,1,2").requires(&[Extension::XTheadMac]),
+        Opcode::new(Mnemonic::ThMula, Codec::R, "0,1,2").requires(&[Extension::XTheadMac]),
     ),
     masked(
         0x2200100b,
         0xfe00707f,
-        Opcode::new("th.muls", Codec::R, "0,1,2").requires(&[Extension::XTheadMac]),
+        Opcode::new(Mnemonic::ThMuls, Codec::R, "0,1,2").requires(&[Extension::XTheadMac]),
     ),
     masked(
         0x2800100b,
         0xfe00707f,
-        Opcode::new("th.mulah", Codec::R, "0,1,2").requires(&[Extension::XTheadMac]),
+        Opcode::new(Mnemonic::ThMulah, Codec::R, "0,1,2").requires(&[Extension::XTheadMac]),
     ),
     masked(
         0x2a00100b,
         0xfe00707f,
-        Opcode::new("th.mulsh", Codec::R, "0,1,2").requires(&[Extension::XTheadMac]),
+        Opcode::new(Mnemonic::ThMulsh, Codec::R, "0,1,2").requires(&[Extension::XTheadMac]),
     ),
     masked(
         0x2400100b,
         0xfe00707f,
-        Opcode::new("th.mulaw", Codec::R, "0,1,2")
+        Opcode::new(Mnemonic::ThMulaw, Codec::R, "0,1,2")
             .requires(&[Extension::XTheadMac])
             .rv64(),
     ),
     masked(
         0x2600100b,
         0xfe00707f,
-        Opcode::new("th.mulsw", Codec::R, "0,1,2")
+        Opcode::new(Mnemonic::ThMulsw, Codec::R, "0,1,2")
             .requires(&[Extension::XTheadMac])
             .rv64(),
     ),
@@ -314,7 +314,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lbia", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLbia, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -326,7 +326,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lbib", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLbib, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -338,7 +338,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lbuia", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLbuia, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -350,7 +350,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lbuib", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLbuib, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -362,7 +362,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lhia", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLhia, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -374,7 +374,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lhib", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLhib, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -386,7 +386,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lhuia", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLhuia, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -398,7 +398,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lhuib", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLhuib, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -410,7 +410,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lwia", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLwia, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -422,7 +422,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lwib", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLwib, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
         },
     ),
@@ -434,7 +434,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lwuia", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLwuia, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
                 .rv64()
         },
@@ -447,7 +447,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lwuib", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLwuib, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
                 .rv64()
         },
@@ -460,7 +460,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.ldia", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLdia, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
                 .rv64()
         },
@@ -473,7 +473,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.ldib", Codec::ImmUpdate, "0,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLdib, Codec::ImmUpdate, "0,(1),i,j")
                 .requires(&[Extension::XTheadMemIdx])
                 .rv64()
         },
@@ -481,166 +481,174 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
     masked(
         0x1800500b,
         0xf800707f,
-        Opcode::new("th.sbia", Codec::ImmUpdate, "0,(1),i,j").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSbia, Codec::ImmUpdate, "0,(1),i,j")
+            .requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x0800500b,
         0xf800707f,
-        Opcode::new("th.sbib", Codec::ImmUpdate, "0,(1),i,j").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSbib, Codec::ImmUpdate, "0,(1),i,j")
+            .requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x3800500b,
         0xf800707f,
-        Opcode::new("th.shia", Codec::ImmUpdate, "0,(1),i,j").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThShia, Codec::ImmUpdate, "0,(1),i,j")
+            .requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x2800500b,
         0xf800707f,
-        Opcode::new("th.shib", Codec::ImmUpdate, "0,(1),i,j").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThShib, Codec::ImmUpdate, "0,(1),i,j")
+            .requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x5800500b,
         0xf800707f,
-        Opcode::new("th.swia", Codec::ImmUpdate, "0,(1),i,j").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSwia, Codec::ImmUpdate, "0,(1),i,j")
+            .requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x4800500b,
         0xf800707f,
-        Opcode::new("th.swib", Codec::ImmUpdate, "0,(1),i,j").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSwib, Codec::ImmUpdate, "0,(1),i,j")
+            .requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x7800500b,
         0xf800707f,
-        Opcode::new("th.sdia", Codec::ImmUpdate, "0,(1),i,j")
+        Opcode::new(Mnemonic::ThSdia, Codec::ImmUpdate, "0,(1),i,j")
             .requires(&[Extension::XTheadMemIdx])
             .rv64(),
     ),
     masked(
         0x6800500b,
         0xf800707f,
-        Opcode::new("th.sdib", Codec::ImmUpdate, "0,(1),i,j")
+        Opcode::new(Mnemonic::ThSdib, Codec::ImmUpdate, "0,(1),i,j")
             .requires(&[Extension::XTheadMemIdx])
             .rv64(),
     ),
     masked(
         0x0000400b,
         0xf800707f,
-        Opcode::new("th.lrb", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLrb, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x8000400b,
         0xf800707f,
-        Opcode::new("th.lrbu", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLrbu, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x1000400b,
         0xf800707f,
-        Opcode::new("th.lurb", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLurb, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x9000400b,
         0xf800707f,
-        Opcode::new("th.lurbu", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLurbu, Codec::RImm2, "0,1,2,i")
+            .requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x2000400b,
         0xf800707f,
-        Opcode::new("th.lrh", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLrh, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0xa000400b,
         0xf800707f,
-        Opcode::new("th.lrhu", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLrhu, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x3000400b,
         0xf800707f,
-        Opcode::new("th.lurh", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLurh, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0xb000400b,
         0xf800707f,
-        Opcode::new("th.lurhu", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLurhu, Codec::RImm2, "0,1,2,i")
+            .requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x4000400b,
         0xf800707f,
-        Opcode::new("th.lrw", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLrw, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x5000400b,
         0xf800707f,
-        Opcode::new("th.lurw", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThLurw, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0xc000400b,
         0xf800707f,
-        Opcode::new("th.lrwu", Codec::RImm2, "0,1,2,i")
+        Opcode::new(Mnemonic::ThLrwu, Codec::RImm2, "0,1,2,i")
             .requires(&[Extension::XTheadMemIdx])
             .rv64(),
     ),
     masked(
         0xd000400b,
         0xf800707f,
-        Opcode::new("th.lurwu", Codec::RImm2, "0,1,2,i")
+        Opcode::new(Mnemonic::ThLurwu, Codec::RImm2, "0,1,2,i")
             .requires(&[Extension::XTheadMemIdx])
             .rv64(),
     ),
     masked(
         0x6000400b,
         0xf800707f,
-        Opcode::new("th.lrd", Codec::RImm2, "0,1,2,i")
+        Opcode::new(Mnemonic::ThLrd, Codec::RImm2, "0,1,2,i")
             .requires(&[Extension::XTheadMemIdx])
             .rv64(),
     ),
     masked(
         0x7000400b,
         0xf800707f,
-        Opcode::new("th.lurd", Codec::RImm2, "0,1,2,i")
+        Opcode::new(Mnemonic::ThLurd, Codec::RImm2, "0,1,2,i")
             .requires(&[Extension::XTheadMemIdx])
             .rv64(),
     ),
     masked(
         0x0000500b,
         0xf800707f,
-        Opcode::new("th.srb", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSrb, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x1000500b,
         0xf800707f,
-        Opcode::new("th.surb", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSurb, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x2000500b,
         0xf800707f,
-        Opcode::new("th.srh", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSrh, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x3000500b,
         0xf800707f,
-        Opcode::new("th.surh", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSurh, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x4000500b,
         0xf800707f,
-        Opcode::new("th.srw", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSrw, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x5000500b,
         0xf800707f,
-        Opcode::new("th.surw", Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
+        Opcode::new(Mnemonic::ThSurw, Codec::RImm2, "0,1,2,i").requires(&[Extension::XTheadMemIdx]),
     ),
     masked(
         0x6000500b,
         0xf800707f,
-        Opcode::new("th.srd", Codec::RImm2, "0,1,2,i")
+        Opcode::new(Mnemonic::ThSrd, Codec::RImm2, "0,1,2,i")
             .requires(&[Extension::XTheadMemIdx])
             .rv64(),
     ),
     masked(
         0x7000500b,
         0xf800707f,
-        Opcode::new("th.surd", Codec::RImm2, "0,1,2,i")
+        Opcode::new(Mnemonic::ThSurd, Codec::RImm2, "0,1,2,i")
             .requires(&[Extension::XTheadMemIdx])
             .rv64(),
     ),
@@ -652,7 +660,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1, Rs2EqRs1, RdEqRs2],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lwd", Codec::Pair, "0,2,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLwd, Codec::Pair, "0,2,(1),i,j")
                 .requires(&[Extension::XTheadMemPair])
         },
     ),
@@ -664,7 +672,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1, Rs2EqRs1, RdEqRs2],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.lwud", Codec::Pair, "0,2,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLwud, Codec::Pair, "0,2,(1),i,j")
                 .requires(&[Extension::XTheadMemPair])
         },
     ),
@@ -676,7 +684,7 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
                 illegal_if: &[RdEqRs1, Rs2EqRs1, RdEqRs2],
                 ..Extra::NONE
             },
-            ..Opcode::new("th.ldd", Codec::Pair, "0,2,(1),i,j")
+            ..Opcode::new(Mnemonic::ThLdd, Codec::Pair, "0,2,(1),i,j")
                 .requires(&[Extension::XTheadMemPair])
                 .rv64()
         },
@@ -684,38 +692,39 @@ pub(crate) static CUSTOM_0: [MaskedOpcode; 106] = [
     masked(
         0xe000500b,
         0xf800707f,
-        Opcode::new("th.swd", Codec::Pair, "0,2,(1),i,j").requires(&[Extension::XTheadMemPair]),
+        Opcode::new(Mnemonic::ThSwd, Codec::Pair, "0,2,(1),i,j")
+            .requires(&[Extension::XTheadMemPair]),
     ),
     masked(
         0xf800500b,
         0xf800707f,
-        Opcode::new("th.sdd", Codec::Pair, "0,2,(1),i,j")
+        Opcode::new(Mnemonic::ThSdd, Codec::Pair, "0,2,(1),i,j")
             .requires(&[Extension::XTheadMemPair])
             .rv64(),
     ),
     masked(
         0x0400000b,
         0xfe007fff,
-        Opcode::new("th.sfence.vmas", Codec::R, "1,2").requires(&[Extension::XTheadSync]),
+        Opcode::new(Mnemonic::ThSfenceVmas, Codec::R, "1,2").requires(&[Extension::XTheadSync]),
     ),
     masked(
         0x0180000b,
         0xffffffff,
-        Opcode::new("th.sync", Codec::None, "").requires(&[Extension::XTheadSync]),
+        Opcode::new(Mnemonic::ThSync, Codec::None, "").requires(&[Extension::XTheadSync]),
     ),
     masked(
         0x0190000b,
         0xffffffff,
-        Opcode::new("th.sync.s", Codec::None, "").requires(&[Extension::XTheadSync]),
+        Opcode::new(Mnemonic::ThSyncS, Codec::None, "").requires(&[Extension::XTheadSync]),
     ),
     masked(
         0x01a0000b,
         0xffffffff,
-        Opcode::new("th.sync.i", Codec::None, "").requires(&[Extension::XTheadSync]),
+        Opcode::new(Mnemonic::ThSyncI, Codec::None, "").requires(&[Extension::XTheadSync]),
     ),
     masked(
         0x01b0000b,
         0xffffffff,
-        Opcode::new("th.sync.is", Codec::None, "").requires(&[Extension::XTheadSync]),
+        Opcode::new(Mnemonic::ThSyncIs, Codec::None, "").requires(&[Extension::XTheadSync]),
     ),
 ];
