@@ -259,6 +259,11 @@ fn known_difference(
         if isa == Isa::Rv32 && shift.contains(&objdump.split(' ').next().unwrap()) {
             return Some("RV32 shift amount >= 32");
         }
+        // th.ext and th.extu slice bits RV32 does not have when either bit
+        // position is 32 or more; LLVM rejects them as well.
+        if isa == Isa::Rv32 && ["th.ext", "th.extu"].contains(&objdump.split(' ').next().unwrap()) {
+            return Some("RV32 th.ext/th.extu bit position >= 32");
+        }
         // Zcmp reserves register lists below 4, which objdump decodes.
         if objdump.starts_with("cm.push ") || objdump.starts_with("cm.pop") {
             return Some("cm.push/cm.pop with a reserved register list");

@@ -5,56 +5,57 @@
 
 use super::Constraint::*;
 use super::{Codec, Extra, Opcode, fmt};
-use crate::Extension;
+use crate::{Extension, Mnemonic};
 
 pub(crate) static AMOSWAP_B: Opcode =
-    Opcode::new("amoswap.b", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoswapB, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOSWAP_H: Opcode =
-    Opcode::new("amoswap.h", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoswapH, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOADD_B: Opcode =
-    Opcode::new("amoadd.b", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoaddB, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOADD_H: Opcode =
-    Opcode::new("amoadd.h", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoaddH, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOXOR_B: Opcode =
-    Opcode::new("amoxor.b", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoxorB, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOXOR_H: Opcode =
-    Opcode::new("amoxor.h", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoxorH, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOAND_B: Opcode =
-    Opcode::new("amoand.b", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoandB, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOAND_H: Opcode =
-    Opcode::new("amoand.h", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoandH, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOOR_B: Opcode =
-    Opcode::new("amoor.b", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoorB, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOOR_H: Opcode =
-    Opcode::new("amoor.h", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmoorH, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOMIN_B: Opcode =
-    Opcode::new("amomin.b", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmominB, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOMIN_H: Opcode =
-    Opcode::new("amomin.h", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmominH, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOMAX_B: Opcode =
-    Opcode::new("amomax.b", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmomaxB, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOMAX_H: Opcode =
-    Opcode::new("amomax.h", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmomaxH, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOMINU_B: Opcode =
-    Opcode::new("amominu.b", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmominuB, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOMINU_H: Opcode =
-    Opcode::new("amominu.h", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmominuH, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOMAXU_B: Opcode =
-    Opcode::new("amomaxu.b", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmomaxuB, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOMAXU_H: Opcode =
-    Opcode::new("amomaxu.h", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
+    Opcode::new(Mnemonic::AmomaxuH, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zabha]);
 pub(crate) static AMOCAS_W: Opcode =
-    Opcode::new("amocas.w", Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zacas]);
-pub(crate) static AMOCAS_D: Opcode = Opcode::new("amocas.d", Codec::RA, fmt::RD_RS2_ADDR_RS1)
-    .requires(&[Extension::Zacas])
-    .rv64();
+    Opcode::new(Mnemonic::AmocasW, Codec::RA, fmt::RD_RS2_ADDR_RS1).requires(&[Extension::Zacas]);
+pub(crate) static AMOCAS_D: Opcode =
+    Opcode::new(Mnemonic::AmocasD, Codec::RA, fmt::RD_RS2_ADDR_RS1)
+        .requires(&[Extension::Zacas])
+        .rv64();
 /// On RV32, `amocas.d` operates on even-odd register pairs.
 pub(crate) static AMOCAS_D_RV32: Opcode = Opcode {
     extra: &Extra {
         illegal_if: &[RdOdd, Rs2Odd],
         ..Extra::NONE
     },
-    ..Opcode::new("amocas.d", Codec::RA, fmt::RD_RS2_ADDR_RS1)
+    ..Opcode::new(Mnemonic::AmocasD, Codec::RA, fmt::RD_RS2_ADDR_RS1)
         .requires(&[Extension::Zacas])
         .rv32_only()
 };
@@ -64,11 +65,13 @@ pub(crate) static AMOCAS_Q: Opcode = Opcode {
         illegal_if: &[RdOdd, Rs2Odd],
         ..Extra::NONE
     },
-    ..Opcode::new("amocas.q", Codec::RA, fmt::RD_RS2_ADDR_RS1)
+    ..Opcode::new(Mnemonic::AmocasQ, Codec::RA, fmt::RD_RS2_ADDR_RS1)
         .requires(&[Extension::Zacas])
         .rv64_only()
 };
-pub(crate) static AMOCAS_B: Opcode = Opcode::new("amocas.b", Codec::RA, fmt::RD_RS2_ADDR_RS1)
-    .requires(&[Extension::Zabha, Extension::Zacas]);
-pub(crate) static AMOCAS_H: Opcode = Opcode::new("amocas.h", Codec::RA, fmt::RD_RS2_ADDR_RS1)
-    .requires(&[Extension::Zabha, Extension::Zacas]);
+pub(crate) static AMOCAS_B: Opcode =
+    Opcode::new(Mnemonic::AmocasB, Codec::RA, fmt::RD_RS2_ADDR_RS1)
+        .requires(&[Extension::Zabha, Extension::Zacas]);
+pub(crate) static AMOCAS_H: Opcode =
+    Opcode::new(Mnemonic::AmocasH, Codec::RA, fmt::RD_RS2_ADDR_RS1)
+        .requires(&[Extension::Zabha, Extension::Zacas]);

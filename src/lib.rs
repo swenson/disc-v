@@ -65,13 +65,16 @@ mod decoder;
 mod extension;
 mod format;
 mod instruction;
+mod mnemonic;
 mod opcodes;
 mod reg;
 
+pub use csr::csr_name;
 pub use decoder::{Conflict, Decoder, MarchError};
 pub use extension::{Extension, Extensions};
 pub use format::Operands;
-pub use instruction::Instruction;
+pub use instruction::{Instruction, RoundingMode};
+pub use mnemonic::Mnemonic;
 
 // Compiles and runs the README's examples as doc tests. They use every
 // table.

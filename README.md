@@ -25,6 +25,13 @@ an integer with `decode`. An `Instruction` has the mnemonic, operands,
 address, length and raw encoding, and `without_aliases()` shows it as
 encoded (`c.li a0,1` rather than `li a0,1`), like `objdump -M no-aliases`.
 
+For analysis rather than display, `id()` gives the mnemonic as a
+`Mnemonic` (`Mnemonic::Li`, or `Mnemonic::CLi` without aliases), and the
+operands are typed fields: the register numbers `rd()`, `rs1()`, `rs2()` and
+`rs3()`, `imm()`, `target()`, `rounding_mode()`, the `aq()` and `rl()`
+ordering bits and the `fence` sets. Compressed instructions give the
+registers they execute with, so `c.ld s0,8(a0)` has `rd() == 8`.
+
 The minimum supported Rust version is 1.85.1.
 
 ## Choosing extensions
@@ -43,6 +50,13 @@ let dec = Decoder::RV64GC;
 
 // From an ISA string, as passed to compilers with -march.
 let dec = Decoder::from_march("rv32imac_zicsr_zba_zbb").unwrap();
+
+// From an ISA string that may name extensions disc-v does not decode (an
+// object file's Tag_RISCV_arch): those are reported, the rest decoded.
+let dec = Decoder::from_march_reporting("rv64gc_xventanacondops", |name| {
+    eprintln!("not decoded: {name}");
+})
+.unwrap();
 
 // By adding and removing extensions. Implied extensions follow: D implies F,
 // and removing F removes D.

@@ -6,6 +6,20 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `Mnemonic`, with a variant per instruction and pseudoinstruction
+  (`Mnemonic::Addi`, `Mnemonic::FcvtDWu`), from `Instruction::id`. The
+  vector and vendor variants come with their Cargo features.
+- Typed operands on `Instruction`: `rd`, `rs1`, `rs2`, `rs3`, `imm`, `imm2`,
+  `target`, `rounding_mode` (a `RoundingMode`), `aq`, `rl`, `pred`, `succ`,
+  `is_masked` and `fp_in_x_registers`. Compressed instructions give the
+  registers they execute with.
+- `Decoder::from_march_reporting`, which decodes the extensions of an ISA
+  string that disc-v supports and reports the rest, where `from_march`
+  refuses the string.
+- `csr_name`, the standard name of a CSR number.
+
 ## [0.1.3] - 2026-10-12
 
 ### Added

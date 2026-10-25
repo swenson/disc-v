@@ -7,23 +7,23 @@
 //! other ordering bit is shown as for the atomics (`lw.aqrl`).
 
 use super::{Codec, Opcode, fmt};
-use crate::Extension;
+use crate::{Extension, Mnemonic};
 
 pub(crate) static LB_AQ: Opcode =
-    Opcode::new("lb.aq", Codec::RL, fmt::RD_ADDR_RS1).requires(&[Extension::Zalasr]);
+    Opcode::new(Mnemonic::LbAq, Codec::RL, fmt::RD_ADDR_RS1).requires(&[Extension::Zalasr]);
 pub(crate) static LH_AQ: Opcode =
-    Opcode::new("lh.aq", Codec::RL, fmt::RD_ADDR_RS1).requires(&[Extension::Zalasr]);
+    Opcode::new(Mnemonic::LhAq, Codec::RL, fmt::RD_ADDR_RS1).requires(&[Extension::Zalasr]);
 pub(crate) static LW_AQ: Opcode =
-    Opcode::new("lw.aq", Codec::RL, fmt::RD_ADDR_RS1).requires(&[Extension::Zalasr]);
-pub(crate) static LD_AQ: Opcode = Opcode::new("ld.aq", Codec::RL, fmt::RD_ADDR_RS1)
+    Opcode::new(Mnemonic::LwAq, Codec::RL, fmt::RD_ADDR_RS1).requires(&[Extension::Zalasr]);
+pub(crate) static LD_AQ: Opcode = Opcode::new(Mnemonic::LdAq, Codec::RL, fmt::RD_ADDR_RS1)
     .requires(&[Extension::Zalasr])
     .rv64();
 pub(crate) static SB_RL: Opcode =
-    Opcode::new("sb.rl", Codec::RA, fmt::RS2_ADDR_RS1).requires(&[Extension::Zalasr]);
+    Opcode::new(Mnemonic::SbRl, Codec::RA, fmt::RS2_ADDR_RS1).requires(&[Extension::Zalasr]);
 pub(crate) static SH_RL: Opcode =
-    Opcode::new("sh.rl", Codec::RA, fmt::RS2_ADDR_RS1).requires(&[Extension::Zalasr]);
+    Opcode::new(Mnemonic::ShRl, Codec::RA, fmt::RS2_ADDR_RS1).requires(&[Extension::Zalasr]);
 pub(crate) static SW_RL: Opcode =
-    Opcode::new("sw.rl", Codec::RA, fmt::RS2_ADDR_RS1).requires(&[Extension::Zalasr]);
-pub(crate) static SD_RL: Opcode = Opcode::new("sd.rl", Codec::RA, fmt::RS2_ADDR_RS1)
+    Opcode::new(Mnemonic::SwRl, Codec::RA, fmt::RS2_ADDR_RS1).requires(&[Extension::Zalasr]);
+pub(crate) static SD_RL: Opcode = Opcode::new(Mnemonic::SdRl, Codec::RA, fmt::RS2_ADDR_RS1)
     .requires(&[Extension::Zalasr])
     .rv64();

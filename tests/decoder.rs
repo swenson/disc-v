@@ -283,6 +283,11 @@ fn vendor_extensions() {
     let rv32 = Decoder::with_only(Isa::Rv32, Extensions::GC | Extensions::XTHEAD).unwrap();
     check(rv32, 0x1285950b, "th.srri a0,a1,40");
     check(rv32, 0xfab6450b, ".insn 4, 0xfab6450b"); // th.ldd is RV64-only
+    // A field RV32 does not have is no operand: th.ext slices one. th.tst
+    // tests a bit past the register as clear, as its operation states.
+    check(rv32, 0x8235a50b, ".insn 4, 0x8235a50b"); // th.ext a0,a1,32,3
+    check(rv32, 0x1c35a50b, "th.ext a0,a1,7,3");
+    check(rv32, 0x8a85950b, "th.tst a0,a1,40");
 
     // CORE-V is for RV32. cv.elw and cv.beqimm follow the CV32E40P manual.
     let corev =
@@ -303,6 +308,55 @@ fn vendor_extensions() {
     assert!(dec.with(XTheadBa).is_ok());
     // XTheadFMemIdx uses the floating-point registers.
     assert!(Decoder::with_only(Isa::Rv64, [Zfinx, XTheadFMemIdx]).is_err());
+}
+
+#[test]
+fn reporting_march_strings() {
+    use Extension::*;
+    // The unsupported extensions are reported, in order, and the rest of the
+    // string is decoded: multi-letter and single-letter names alike.
+    let mut unsupported = Vec::new();
+    let dec = Decoder::from_march_reporting("rv64imafdc_xventanacondops_zba_zfoo1p0", |name| {
+        unsupported.push(name)
+    })
+    .unwrap();
+    assert_eq!(unsupported, ["xventanacondops", "zfoo"]);
+    assert_eq!(
+        dec,
+        Decoder::RV64GC
+            .without(Zicsr)
+            .without(Zifencei)
+            .with(Zba)
+            .unwrap()
+    );
+    let mut letters = Vec::new();
+    let dec = Decoder::from_march_reporting("rv32imlc", |name| letters.push(name)).unwrap();
+    assert_eq!(letters, ["l"]);
+    assert_eq!(dec, Decoder::with_only(Isa::Rv32, [M, C]).unwrap());
+    // A fully supported string reports nothing and decodes as from_march does.
+    let march =
+        "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0";
+    let mut none = Vec::new();
+    assert_eq!(
+        Decoder::from_march_reporting(march, |name| none.push(name)),
+        Decoder::from_march(march)
+    );
+    assert!(none.is_empty());
+    assert_eq!(Decoder::from_march(march), Ok(Decoder::RV64GC));
+    // The strict form still refuses the first unsupported name, and both
+    // refuse a missing base and a conflict.
+    assert_eq!(
+        Decoder::from_march("rv64gc_zfoo_xbar"),
+        Err(MarchError::UnsupportedExtension("zfoo"))
+    );
+    assert_eq!(
+        Decoder::from_march_reporting("x86", |_| {}),
+        Err(MarchError::InvalidBase)
+    );
+    assert!(matches!(
+        Decoder::from_march_reporting("rv32imc_xcvmem_xtheadba", |_| {}),
+        Err(MarchError::Conflict(_))
+    ));
 }
 
 #[test]

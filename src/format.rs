@@ -19,7 +19,7 @@ impl Display for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Some names include an ordering (lw.aq); it is shown with the other
         // ordering bit (lw.aqrl) from the encoding.
-        let name = self.op.name;
+        let name = self.op.mnemonic.name();
         let name = match (self.aq || self.rl)
             .then(|| name.strip_suffix(".aq").or(name.strip_suffix(".rl")))
         {
